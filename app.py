@@ -68,6 +68,7 @@ def login():
             session['usuario_id'] = usuario.id
             session['usuario_nombre'] = usuario.nombre
             session['usuario_rol'] = usuario.rol
+            
             flash(f'¡Hola de nuevo, {usuario.nombre}!', 'success')
             return redirect(url_for('index'))
         else:

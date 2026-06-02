@@ -17,6 +17,7 @@ class Usuario:
             try:
                 cursor.execute("SELECT * FROM usuarios WHERE email = %s", (email,))
                 resultado = cursor.fetchone()
+                cursor.close()  # Cerramos el cursor después de leer
                 if resultado:
                     return cls(
                         id=resultado['id'],
@@ -27,6 +28,8 @@ class Usuario:
                     )
             except Exception as e:
                 print(f"Error al buscar usuario: {e}")
+                if cursor:
+                    cursor.close()
         return None
 
 # --- APLICANDO HERENCIA ---
@@ -42,10 +45,15 @@ class Cliente(Usuario):
             try:
                 query = "INSERT INTO usuarios (nombre, email, password, rol) VALUES (%s, %s, %s, 'cliente')"
                 cursor.execute(query, (self.nombre, self.email, self.password))
-                db.commit()
+                
+                # REPARADO: Llama al commit del Singleton que impacta en la conexión real
+                db.commit() 
+                cursor.close()  # Cerramos el cursor de forma segura
                 return True
             except Exception as e:
                 print(f"Error al guardar cliente: {e}")
+                if cursor:
+                    cursor.close()
                 return False
         return False
 

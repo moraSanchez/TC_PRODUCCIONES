@@ -42,6 +42,6 @@ class DatabaseConnection:
         return None
 
     def commit(self):
-        """Confirma los cambios en la base de datos."""
+        """Confirma los cambios pendientes en la base de datos."""
         if self._connection and self._connection.is_connected():
             self._connection.commit()
