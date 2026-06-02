@@ -28,20 +28,20 @@ class DatabaseConnection:
                 )
                 print("¡Conexión exitosa a la base de datos de TC_PRODUCCIONES!")
             except mysql.connector.Error as err:
-                print(error=f"Error al conectar a MySQL: {err}")
+                # Si la BD no está lista, te avisa en consola pero NO te apaga la web
+                print(f"Aviso: No se pudo conectar a MySQL todavía ({err}). Trabajando en modo diseño.")
                 self._connection = None
+                return None
         return self._connection
 
     def get_cursor(self):
         """Devuelve un cursor para ejecutar consultas SQL."""
         connection = self.connect()
         if connection:
-            # dictionary=True hace que los resultados nos lleguen como diccionarios, ideal para Flask
             return connection.cursor(dictionary=True)
         return None
 
-    def close_connection(self):
-        """Cierra la conexión de manera segura."""
+    def commit(self):
+        """Confirma los cambios en la base de datos."""
         if self._connection and self._connection.is_connected():
-            self._connection.close()
-            print("Conexión a la base de datos cerrada de forma segura.")
+            self._connection.commit()
