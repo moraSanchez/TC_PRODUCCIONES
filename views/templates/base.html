@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TC_PRODUCCIONES - Gestión de Cine</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #121212; color: #ffffff; }
+        .navbar { background-color: #1f1f1f !important; }
+        .card { background-color: #1f1f1f; border: 1px solid #333; color: white; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4shadow">
+        <div class="container">
+            <a class="navbar-brand text-danger fw-bold" href="/">🎬 TC_PRODUCCIONES</a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/">Inicio</a>
+                <a class="nav-link btn btn-outline-danger btn-sm text-white px-3 ms-2" href="/login">Iniciar Sesión</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        {% block content %}
+        {% endblock %}
+    </div>
+
+    <footer class="text-center py-4 mt-5 text-muted border-top border-secondary">
+        <p>&copy; 2026 TC_PRODUCCIONES - Proyecto Cine Facultad</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
