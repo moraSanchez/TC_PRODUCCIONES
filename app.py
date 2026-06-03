@@ -1,89 +1,72 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, request, jsonify, render_template
+from flask_cors import CORS
+from controllers.auth_controller import AuthController
 import os
-from dotenv import load_dotenv
 
-# Importamos la conexión Singleton y los Modelos OO
-from config.database import DatabaseConnection
-from models.usuario import Usuario, Cliente
-
-# Cargamos el entorno (.env)
-load_dotenv()
-
+# 1. ACÁ SE DEFINE 'app' (Obligatorio que vaya primero)
 app = Flask(__name__, 
-            template_folder='views/templates', 
-            static_folder='views/static')
+            template_folder="views/templates", 
+            static_folder="views/templates/static")
 
-app.secret_key = os.getenv('FLASK_SECRET_KEY', 'clave_secreta_super_segura_cine')
+CORS(app) 
+app.secret_key = os.getenv("SECRET_KEY", "tu_clave_secreta_aqui")
 
-# Instanciamos la base de datos para asegurar que intente conectar al iniciar
-db = DatabaseConnection()
-db.connect()
-
-# ==========================================
-# CONTROLADORES / RUTAS
-# ==========================================
+# -------------------------------------------------------------------------
+# 💻 VISTAS: Rutas para mostrar tus páginas HTML en el navegador
+# -------------------------------------------------------------------------
 
 @app.route('/')
-def index():
+def home():
     return render_template('index.html')
 
+@app.route('/login')
+def vista_login():
+    return render_template('login.html')
 
-@app.route('/registro', methods=['GET', 'POST'])
-def registro():
-    if request.method == 'POST':
-        nombre = request.form.get('nombre')
-        email = request.form.get('email')
-        password = request.form.get('password')
-
-        # Comprobamos si el email ya existe
-        if Usuario.buscar_por_email(email):
-            flash('Ese correo electrónico ya está registrado.', 'danger')
-            return redirect(url_for('registro'))
-
-        # Instanciamos la clase hija 'Cliente' (Polimorfismo/Herencia)
-        nuevo_cliente = Cliente(nombre=nombre, email=email, password=password)
-        
-        if nuevo_cliente.guardar():
-            flash('¡Registro exitoso guardado en MySQL! Ya podés ingresar.', 'success')
-            return redirect(url_for('login'))
-        else:
-            flash('Error al guardar en la Base de Datos. Revisá tu consola.', 'danger')
-            return redirect(url_for('registro'))
-
+@app.route('/registro')
+def vista_registro():
     return render_template('registro.html')
 
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if 'usuario_id' in session:
-        return redirect(url_for('index'))
+# -------------------------------------------------------------------------
+# 🔌 API: Tus endpoints para procesar los datos
+# -------------------------------------------------------------------------
 
-    if request.method == 'POST':
+@app.route('/api/auth/register', methods=['POST'])
+def register():
+    if request.form:
+        nombre = request.form.get('nombre')
+        apellido = request.form.get('apellido')
         email = request.form.get('email')
-        password = request.form.get('password')
-
-        usuario = Usuario.buscar_por_email(email)
-
-        if usuario and usuario.password == password:
-            session['usuario_id'] = usuario.id
-            session['usuario_nombre'] = usuario.nombre
-            session['usuario_rol'] = usuario.rol
-            
-            flash(f'¡Hola de nuevo, {usuario.nombre}!', 'success')
-            return redirect(url_for('index'))
+        contrasenia = request.form.get('contrasenia')
+    else:
+        data = request.get_json() or {}
+        nombre = data.get('nombre')
+        apellido = data.get('apellido')
+        email = data.get('email')
+        contrasenia = data.get('contrasenia')
+    
+    if not all([nombre, apellido, email, contrasenia]):
+        return jsonify({"error": "Faltan datos obligatorios"}), 400
+        
+    resultado, status_code = AuthController.registrar_usuario(nombre, apellido, email, contrasenia)
+    
+    if request.form:
+        if status_code == 201:
+            return f"<h2>{resultado['mensaje']}</h2><a href='/login'>Ir al Login</a>"
         else:
-            flash('Credenciales incorrectas.', 'danger')
-            return redirect(url_for('login'))
+            return f"<h2>Error: {resultado['error']}</h2><a href='/registro'>Volver a intentar</a>", status_code
+            
+    return jsonify(resultado), status_code
 
-    return render_template('login.html')
-
-
-@app.route('/logout')
-def logout():
-    session.clear()
-    flash('Sesión cerrada.', 'info')
-    return redirect(url_for('index'))
-
+@app.route('/api/auth/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    if not data or 'email' not in data or 'contrasenia' not in data:
+        return jsonify({"error": "Faltan credenciales"}), 400
+        
+    resultado, status_code = AuthController.iniciar_sesion(data['email'], data['contrasenia'])
+    return jsonify(resultado), status_code
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

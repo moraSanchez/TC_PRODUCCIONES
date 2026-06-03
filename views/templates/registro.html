@@ -7,10 +7,14 @@
             <h3 class="text-center text-danger fw-bold mb-2">Crear Cuenta</h3>
             <p class="text-muted text-center small mb-4">Registrate para guardar tus datos en el sistema</p>
             
-            <form action="/registro" method="POST">
+            <form action="/api/auth/register" method="POST">
                 <div class="mb-3">
-                    <label class="form-label">Nombre Completo</label>
+                    <label class="form-label">Nombre</label>
                     <input type="text" name="nombre" class="form-control bg-dark text-white border-secondary" placeholder="Tu nombre" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Apellido</label>
+                    <input type="text" name="apellido" class="form-control bg-dark text-white border-secondary" placeholder="Tu apellido" required>
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Correo Electrónico</label>
@@ -18,7 +22,7 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Contraseña</label>
-                    <input type="password" name="password" class="form-control bg-dark text-white border-secondary" placeholder="••••••••" required>
+                    <input type="password" name="contrasenia" class="form-control bg-dark text-white border-secondary" placeholder="••••••••" required>
                 </div>
                 <button type="submit" class="btn btn-danger w-100 fw-bold mt-2 py-2">Registrarme y probar BD</button>
             </form>
