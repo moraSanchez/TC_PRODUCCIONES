@@ -3,11 +3,11 @@
 {% block content %}
 <div class="row justify-content-center px-2">
     <div class="col-12 col-sm-10 col-md-7 col-lg-5">
-        <div class="card p-4 shadow-lg">
+        <div class="card p-4 shadow-lg bg-dark text-white border-secondary">
             <h3 class="text-center text-danger fw-bold mb-2">Crear Cuenta</h3>
             <p class="text-muted text-center small mb-4">Registrate para guardar tus datos en el sistema</p>
             
-            <form action="/api/auth/register" method="POST">
+            <form id="formRegistro">
                 <div class="mb-3">
                     <label class="form-label">Nombre</label>
                     <input type="text" name="nombre" class="form-control bg-dark text-white border-secondary" placeholder="Tu nombre" required>
@@ -33,4 +33,81 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="modalResultado" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-white border-secondary">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title fw-bold text-danger" id="modalTitulo">Estado del Registro</h5>
+            </div>
+            <div class="modal-body text-center py-4">
+                <p id="modalMensaje" class="fs-5"></p>
+            </div>
+            <div class="modal-footer border-secondary justify-content-center">
+                <button type="button" id="btnModalAccion" class="btn btn-danger px-4 fw-bold">Aceptar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('formRegistro').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const data = Object.fromEntries(formData.entries());
+
+    // Inicializamos el modal de Bootstrap usando su ID
+    const modalElement = document.getElementById('modalResultado');
+    const miModal = new bootstrap.Modal(modalElement);
+    
+    const modalTitulo = document.getElementById('modalTitulo');
+    const modalMensaje = document.getElementById('modalMensaje');
+    const btnModalAccion = document.getElementById('btnModalAccion');
+
+    try {
+        const response = await fetch('/api/auth/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            // Configuramos el modal para el éxito
+            modalTitulo.innerText = "¡Registro Exitoso!";
+            modalTitulo.className = "modal-title fw-bold text-success";
+            modalMensaje.innerText = "Tu usuario fue creado correctamente en el sistema.";
+            
+            // Al hacer clic en Aceptar, redirige al inicio
+            btnModalAccion.onclick = () => {
+                window.location.href = '/';
+            };
+            
+            miModal.show();
+        } else {
+            // Configuramos el modal para el error
+            modalTitulo.innerText = "Error en el Registro";
+            modalTitulo.className = "modal-title fw-bold text-danger";
+            modalMensaje.innerText = result.error || "No se pudieron guardar los datos.";
+            
+            // Al hacer clic en Aceptar, simplemente cierra el modal para corregir los datos
+            btnModalAccion.onclick = () => {
+                miModal.hide();
+            };
+            
+            miModal.show();
+        }
+    } catch (error) {
+        modalTitulo.innerText = "Error de Conexión";
+        modalTitulo.className = "modal-title fw-bold text-warning";
+        modalMensaje.innerText = "No se pudo establecer contacto con el servidor de Flask.";
+        btnModalAccion.onclick = () => { miModal.hide(); };
+        miModal.show();
+    }
+});
+</script>
 {% endblock %}
