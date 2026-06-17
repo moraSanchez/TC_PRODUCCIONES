@@ -67,32 +67,41 @@ document.getElementById('formLogin').addEventListener('submit', async (e) => {
         const result = await response.json();
 
         if (response.ok) {
+            // Guardamos datos críticos de la sesión en el navegador
+            sessionStorage.setItem('idUsuario', result.usuario.idUsuario);
+            sessionStorage.setItem('nombre', result.usuario.nombre);
+            sessionStorage.setItem('tipoUsuario', result.usuario.tipo);
+
             modalTitulo.innerText = "¡Bienvenido!";
             modalTitulo.className = "modal-title fw-bold text-success";
-            modalMensaje.innerText = "Inicio de sesión exitoso. Ingresando a la cartelera...";
             
-            btnModalAccion.onclick = () => {
-                miModal.hide();
-                window.location.href = '/';
-            };
+            if (result.usuario.tipo === 'Administrador') {
+                modalMensaje.innerText = `Hola ${result.usuario.nombre}. Ingresando al Panel de Administración...`;
+                btnModalAccion.onclick = () => {
+                    miModal.hide();
+                    window.location.href = '/admin/dashboard';
+                };
+            } else {
+                modalMensaje.innerText = `Hola ${result.usuario.nombre}. Ingresando a la cartelera...`;
+                btnModalAccion.onclick = () => {
+                    miModal.hide();
+                    window.location.href = '/';
+                };
+            }
             
             miModal.show();
         } else {
             modalTitulo.innerText = "Error de ingreso";
             modalTitulo.className = "modal-title fw-bold text-danger";
             modalMensaje.innerText = result.error || "Correo o contraseña incorrectos.";
-            
-            btnModalAccion.onclick = () => {
-                miModal.hide();
-            };
-            
+            btnModalAccion.onclick = () => { miModal.hide(); };
             miModal.show();
         }
     } catch (error) {
         console.error("Error completo de login:", error);
         modalTitulo.innerText = "Error Técnico";
         modalTitulo.className = "modal-title fw-bold text-warning";
-        modalMensaje.innerText = "No se pudo conectar con el servidor de autenticación.";
+        modalMensaje.innerText = "No se pudo conectar con el servidor.";
         btnModalAccion.onclick = () => { miModal.hide(); };
         miModal.show();
     }

@@ -11,7 +11,6 @@ class Funcion:
         self.id_sala     = id_sala
 
     def obtener_asientos_disponibles(self):
-        """Devuelve los asientos no reservados para esta función."""
         db = DatabaseConnection()
         cursor = db.get_cursor()
         if cursor:
@@ -45,27 +44,46 @@ class Funcion:
                 print(f"Error al guardar función: {e}")
                 return False
 
+    def actualizar(self):
+        db = DatabaseConnection()
+        cursor = db.get_cursor()
+        if cursor:
+            try:
+                cursor.execute("""
+                    UPDATE Funcion 
+                    SET fecha = %s, hora = %s, Pelicula_idPelicula = %s, Sala_idSala = %s
+                    WHERE idFuncion = %s
+                """, (self.fecha, self.hora, self.id_pelicula, self.id_sala, self.id_funcion))
+                db.commit()
+                return True
+            except Exception as e:
+                print(f"Error al actualizar función: {e}")
+                return False
+
+    def eliminar(self):
+        db = DatabaseConnection()
+        cursor = db.get_cursor()
+        if cursor:
+            try:
+                cursor.execute("DELETE FROM Funcion WHERE idFuncion = %s", (self.id_funcion,))
+                db.commit()
+                return True
+            except Exception as e:
+                print(f"Error al eliminar función: {e}")
+                return False
+
     @classmethod
     def buscar_todas(cls):
         db = DatabaseConnection()
         cursor = db.get_cursor()
         if cursor:
             cursor.execute("""
-                SELECT f.*, p.titulo, p.genero, s.numero as num_sala
+                SELECT f.idFuncion, f.fecha, f.hora, f.estado, 
+                       p.titulo, p.genero, s.numero as num_sala
                 FROM Funcion f
                 JOIN Pelicula p ON f.Pelicula_idPelicula = p.idPelicula
                 JOIN Sala s     ON f.Sala_idSala = s.idSala
-                WHERE f.estado = 'activa'
+                ORDER BY f.fecha ASC, f.hora ASC
             """)
             return cursor.fetchall()
         return []
-
-    def to_dict(self):
-        return {
-            "idFuncion":  self.id_funcion,
-            "fecha":      str(self.fecha),
-            "hora":       str(self.hora),
-            "estado":     self.estado,
-            "idPelicula": self.id_pelicula,
-            "idSala":     self.id_sala
-        }

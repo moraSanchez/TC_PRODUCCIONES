@@ -1,6 +1,7 @@
 CREATE DATABASE IF NOT EXISTS tc_producciones;
 USE tc_producciones;
 
+-- 1. Tabla Usuario
 CREATE TABLE IF NOT EXISTS Usuario (
     idUsuario INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
@@ -11,6 +12,7 @@ CREATE TABLE IF NOT EXISTS Usuario (
     fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 2. Tabla Pelicula
 CREATE TABLE IF NOT EXISTS Pelicula (
     idPelicula INT AUTO_INCREMENT PRIMARY KEY,
     titulo VARCHAR(150) NOT NULL,
@@ -20,12 +22,14 @@ CREATE TABLE IF NOT EXISTS Pelicula (
     imagen_url VARCHAR(255)
 );
 
+-- 3. Tabla Sala
 CREATE TABLE IF NOT EXISTS Sala (
     idSala INT AUTO_INCREMENT PRIMARY KEY,
     numero INT NOT NULL,
     capacidad INT NOT NULL
 );
 
+-- 4. Tabla Asiento
 CREATE TABLE IF NOT EXISTS Asiento (
     idAsiento INT AUTO_INCREMENT PRIMARY KEY,
     fila CHAR(1) NOT NULL,
@@ -34,6 +38,7 @@ CREATE TABLE IF NOT EXISTS Asiento (
     FOREIGN KEY (Sala_idSala) REFERENCES Sala(idSala) ON DELETE CASCADE
 );
 
+-- 5. Tabla Funcion
 CREATE TABLE IF NOT EXISTS Funcion (
     idFuncion INT AUTO_INCREMENT PRIMARY KEY,
     fecha DATE NOT NULL,
@@ -45,6 +50,7 @@ CREATE TABLE IF NOT EXISTS Funcion (
     FOREIGN KEY (Sala_idSala) REFERENCES Sala(idSala)
 );
 
+-- 6. Tabla Reserva
 CREATE TABLE IF NOT EXISTS Reserva (
     idReserva INT AUTO_INCREMENT PRIMARY KEY,
     fecha DATE NOT NULL,
@@ -55,6 +61,7 @@ CREATE TABLE IF NOT EXISTS Reserva (
     FOREIGN KEY (Funcion_idFuncion) REFERENCES Funcion(idFuncion)
 );
 
+-- 7. Tabla ReservaAsiento
 CREATE TABLE IF NOT EXISTS ReservaAsiento (
     idReservaAsiento INT AUTO_INCREMENT PRIMARY KEY,
     Reserva_idReserva INT NOT NULL,
@@ -65,6 +72,7 @@ CREATE TABLE IF NOT EXISTS ReservaAsiento (
     FOREIGN KEY (Asiento_idAsiento) REFERENCES Asiento(idAsiento)
 );
 
+-- 8. Tabla Ticket
 CREATE TABLE IF NOT EXISTS Ticket (
     idTicket INT AUTO_INCREMENT PRIMARY KEY,
     codigo VARCHAR(12) NOT NULL UNIQUE,
@@ -73,6 +81,7 @@ CREATE TABLE IF NOT EXISTS Ticket (
     FOREIGN KEY (Reserva_idReserva) REFERENCES Reserva(idReserva)
 );
 
+-- 9. Tabla Pago
 CREATE TABLE IF NOT EXISTS Pago (
     idPago INT AUTO_INCREMENT PRIMARY KEY,
     metodo VARCHAR(50) NOT NULL,
@@ -80,3 +89,24 @@ CREATE TABLE IF NOT EXISTS Pago (
     Reserva_idReserva INT NOT NULL,
     FOREIGN KEY (Reserva_idReserva) REFERENCES Reserva(idReserva)
 );
+
+-- =========================================================================
+-- INSERTS DE DATOS OBLIGATORIOS Y DE PRUEBA
+-- =========================================================================
+
+-- Creamos el usuario Administrador por defecto (Contraseña: admin123)
+INSERT INTO Usuario (nombre, apellido, email, contrasenia, tipo) 
+VALUES ('Alan', 'Admin', 'admin@cine.com', 'scrypt:32768:8:1$v39rX6H87WpZEnZk$9fa07f877fca99d5f7c320d39e55b1bf8df8bf0600bce4cf4b5fde540f25ceb1ba420d43f01b3b2da22572b918b958c2b53569421df89cba00b740523e43db62', 'Administrador')
+ON DUPLICATE KEY UPDATE tipo='Administrador';
+
+-- Creamos películas iniciales en la cartelera
+INSERT IGNORE INTO Pelicula (idPelicula, titulo, sinopsis, duracion, genero, imagen_url) VALUES 
+(1, 'Avengers: Endgame', 'Los Vengadores se reúnen para deshacer el daño de Thanos.', 181, 'Acción / Ciencia Ficción', 'avengers.jpg'),
+(2, 'Interstellar', 'Un grupo de científicos viaja al espacio exterior para salvar a la humanidad.', 169, 'Drama / Sci-Fi', 'interstellar.jpg'),
+(3, 'El Padrino', 'La vida de una organización criminal y su transición generacional.', 175, 'Crimen / Drama', 'padrino.jpg');
+
+-- Creamos las primeras Salas físicas
+INSERT IGNORE INTO Sala (idSala, numero, capacidad) VALUES 
+(1, 1, 48),
+(2, 2, 64),
+(3, 3, 32);

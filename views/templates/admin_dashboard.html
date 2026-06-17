@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container text-white mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom border-secondary pb-3">
+        <h2 class="text-danger fw-bold">Panel de Control (Administración)</h2>
+        <button onclick="cerrarSesion()" class="btn btn-outline-light btn-sm">Cerrar Sesión</button>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card bg-dark text-white border-secondary h-100 p-3 shadow">
+                <div class="card-body">
+                    <h5 class="card-title text-danger fw-bold mb-3">📍 Gestión Funciones</h5>
+                    <p class="card-text text-muted small">Alta de horarios, días y asignación de salas para películas.</p>
+                    <a href="/admin/funciones/nueva" class="btn btn-danger w-100 fw-bold mt-2">Programar Función</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card bg-dark text-white border-secondary h-100 p-3 shadow">
+                <div class="card-body">
+                    <h5 class="card-title text-danger fw-bold mb-3">📋 Funciones Activas en Cartelera</h5>
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover small border-secondary">
+                            <thead>
+                                <tr>
+                                    <th>Película</th>
+                                    <th>Género</th>
+                                    <th>Fecha</th>
+                                    <th>Hora</th>
+                                    <th>Sala</th>
+                                    <th>Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaFunciones">
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-3">Cargando funciones vigentes...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+if (sessionStorage.getItem('tipoUsuario') !== 'Administrador') {
+    window.location.href = '/login';
+}
+
+async function cargarFuncionesDashboard() {
+    const tbody = document.getElementById('tablaFunciones');
+    try {
+        const res = await fetch('/api/funciones');
+        
+        if (!res.ok) {
+            const errData = await res.json();
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center text-warning">Error: ${errData.error}</td></tr>`;
+            return;
+        }
+
+        const funciones = await res.json();
+        tbody.innerHTML = '';
+
+        if (funciones.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">No hay funciones activas programadas.</td></tr>`;
+            return;
+        }
+
+        funciones.forEach(f => {
+            tbody.innerHTML += `
+                <tr>
+                    <td class="fw-bold text-white">${f.titulo}</td>
+                    <td><span class="badge bg-secondary">${f.genero || 'General'}</span></td>
+                    <td>${f.fecha}</td>
+                    <td class="text-danger fw-bold">${f.hora}</td>
+                    <td>Sala ${f.num_sala}</td>
+                    <td>
+                        <button onclick="borrarFuncion(${f.idFuncion})" class="btn btn-sm btn-outline-danger py-0 px-2">Borrar</button>
+                    </td>
+                </tr>
+            `;
+        });
+    } catch (err) {
+        console.error(err);
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">Error de comunicación con el servidor.</td></tr>`;
+    }
+}
+
+async function borrarFuncion(id) {
+    if (!confirm("¿Seguro que querés eliminar esta función de la cartelera?")) return;
+    try {
+        const res = await fetch(`/api/funciones/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+            alert("Función eliminada correctamente");
+            cargarFuncionesDashboard();
+        } else {
+            alert("No se pudo eliminar la función");
+        }
+    } catch (err) {
+        alert("Error de conexión");
+    }
+}
+
+function cerrarSesion() {
+    sessionStorage.clear();
+    window.location.href = '/login';
+}
+
+cargarFuncionesDashboard();
+</script>
+{% endblock %}
