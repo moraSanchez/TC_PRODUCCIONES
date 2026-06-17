@@ -1,0 +1,223 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    body { background: radial-gradient(circle at top, #1a0505 0%, #0d0d0d 100%); }
+    .cinema-card {
+        background: rgba(18, 18, 18, 0.85);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(220, 53, 69, 0.2);
+        border-radius: 16px;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6);
+    }
+    .cinema-input, .cinema-select, .cinema-textarea {
+        background-color: #0a0a0a !important;
+        border: 1px solid #2d2d2d !important;
+        color: #ffffff !important;
+        border-radius: 8px !important;
+    }
+    .cinema-input:focus, .cinema-select:focus, .cinema-textarea:focus {
+        border-color: #dc3545 !important;
+        box-shadow: 0 0 8px rgba(220, 53, 69, 0.4) !important;
+    }
+    .poster-preview-box {
+        background: #050505;
+        border: 2px dashed #2d2d2d;
+        border-radius: 12px;
+    }
+</style>
+
+<div class="container text-white mt-5 pb-5">
+    <div class="row justify-content-center px-2">
+        <div class="col-12 col-lg-9">
+            <div class="card cinema-card p-4 p-md-5">
+                
+                <div class="d-flex justify-content-between align-items-center mb-4 border-bottom border-secondary pb-3">
+                    <div>
+                        <h3 class="text-danger fw-bold m-0" id="form-title">🎬 PROGRAMAR NUEVA FUNCIÓN</h3>
+                        <p class="text-muted small mb-0 mt-1">Sube el póster de la película directamente desde tus archivos.</p>
+                    </div>
+                    <a href="/admin/dashboard" class="btn btn-outline-danger btn-sm px-3 rounded-pill">Volver al Panel</a>
+                </div>
+                
+                <form id="formNuevaFuncion" enctype="multipart/form-data">
+                    <input type="hidden" name="imagen_url_actual" id="in-img-actual">
+
+                    <div class="row g-4">
+                        <div class="col-12 col-md-6 border-end border-secondary pe-md-4">
+                            <h5 class="text-danger mb-3 fw-bold text-uppercase" style="font-size: 14px;">1. Datos de la Obra</h5>
+                            
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold text-muted">TÍTULO DE LA PELÍCULA</label>
+                                <input type="text" name="titulo" id="in-titulo" class="form-control cinema-input py-2" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold text-muted">GÉNERO</label>
+                                <input type="text" name="genero" id="in-genero" class="form-control cinema-input py-2" required>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-6 mb-3">
+                                    <label class="form-label small fw-bold text-muted">DURACIÓN (MIN)</label>
+                                    <input type="number" name="duracion" id="in-duracion" class="form-control cinema-input py-2" min="1" required>
+                                </div>
+                                <div class="col-6 mb-3">
+                                    <label class="form-label small fw-bold text-muted">FORMATO</label>
+                                    <select name="formato" id="in-formato" class="form-select cinema-select py-2">
+                                        <option value="2D">2D Digital</option>
+                                        <option value="3D">3D Digital</option>
+                                        <option value="IMAX">IMAX 3D</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold text-muted">SELECCIONAR PORTADA (.JPG / .PNG)</label>
+                                <input type="file" name="imagen_file" id="inputImagenFile" class="form-control cinema-input py-2" accept="image/*">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold text-muted">SINOPSIS / RESUMEN</label>
+                                <textarea name="sinopsis" id="in-sinopsis" class="form-control cinema-textarea" rows="3" required></textarea>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-md-6 ps-md-4 d-flex flex-column justify-content-between">
+                            <div>
+                                <h5 class="text-danger mb-3 fw-bold text-uppercase" style="font-size: 14px;">2. Ubicación y Horarios</h5>
+
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold text-muted">ASIGNAR SALA CINE</label>
+                                    <select name="idSala" id="selectSala" class="form-select cinema-select py-2" required>
+                                        <option value="">Cargando salas...</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold text-muted">FECHA DE PROYECCIÓN</label>
+                                    <input type="date" name="fecha" id="inputFecha" class="form-control cinema-input py-2" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold text-muted">HORARIO DE INICIO</label>
+                                    <input type="time" name="hora" id="inputHora" class="form-control cinema-input py-2" required>
+                                </div>
+                            </div>
+
+                            <div class="poster-preview-box p-3 text-center d-flex flex-column align-items-center justify-content-center my-3" style="min-height: 190px;">
+                                <span class="text-muted small fw-bold text-uppercase d-block mb-2">Vista Previa Elegida</span>
+                                <img id="previewAfiche" src="https://placehold.co/110x160/0a0a0a/fff?text=Sin+Foto" class="rounded shadow" style="width: 110px; height: 160px; object-fit: cover;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="btn-submit" class="btn btn-danger w-100 fw-bold mt-4 py-3 rounded-pill border-0 shadow">
+                        🚀 Confirmar y Guardar Cambios
+                    </button>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+if (sessionStorage.getItem('tipoUsuario') !== 'Administrador') { window.location.href = '/login'; }
+
+const urlParams = new URLSearchParams(window.location.search);
+const editFuncionId = urlParams.get('edit');
+const inputFecha = document.getElementById('inputFecha');
+const inputHora = document.getElementById('inputHora');
+
+// Restringir el calendario para que no deje marcar días anteriores a hoy
+const hoy = new Date();
+const fechaMinima = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
+inputFecha.min = fechaMinima;
+
+function validarHorarioLogico() {
+    const ahora = new Date();
+    if (inputFecha.value === fechaMinima && inputHora.value) {
+        const tiempoActual = `${String(ahora.getHours()).padStart(2, '0')}:${String(ahora.getMinutes()).padStart(2, '0')}`;
+        if (inputHora.value < tiempoActual) {
+            alert(`❌ Horario inválido. Mínimo permitido para hoy: ${tiempoActual}`);
+            inputHora.value = "";
+            return false;
+        }
+    }
+    return true;
+}
+inputFecha.addEventListener('change', validarHorarioLogico);
+inputHora.addEventListener('change', validarHorarioLogico);
+
+// Capturar el archivo seleccionado y cargarlo localmente en el img de vista previa
+document.getElementById('inputImagenFile').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            document.getElementById('previewAfiche').src = event.target.result;
+        }
+        reader.readAsDataURL(file);
+    }
+});
+
+async function inicializarFormulario() {
+    try {
+        const resSalas = await fetch('/api/salas');
+        const salas = await resSalas.json();
+        const select = document.getElementById('selectSala');
+        select.innerHTML = '<option value="">-- Elige una Sala --</option>';
+        salas.forEach(s => { select.innerHTML += `<option value="${s.idSala}">Sala ${s.numero}</option>`; });
+
+        if (editFuncionId) {
+            document.getElementById('form-title').innerText = "✍️ EDITAR FUNCIÓN OPERATIVA";
+            document.getElementById('btn-submit').innerText = "💾 Actualizar Registro en MySQL";
+            
+            const resF = await fetch(`/api/funciones/detalle/${editFuncionId}`);
+            if (resF.ok) {
+                const data = await resF.json();
+                document.getElementById('in-titulo').value = data.titulo;
+                document.getElementById('in-genero').value = data.genero;
+                document.getElementById('in-duracion').value = data.duracion;
+                document.getElementById('in-sinopsis').value = data.sinopsis;
+                document.getElementById('in-img-actual').value = data.imagen_url;
+                select.value = data.id_sala;
+                inputFecha.value = data.fecha;
+                inputHora.value = data.hora.substring(0,5);
+
+                if(data.imagen_url) {
+                    document.getElementById('previewAfiche').src = data.imagen_url;
+                }
+            }
+        }
+    } catch (err) { console.error(err); }
+}
+
+document.getElementById('formNuevaFuncion').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if(!validarHorarioLogico()) return;
+
+    const formData = new FormData(e.target);
+    const url = editFuncionId ? `/api/funciones/${editFuncionId}` : '/api/funciones';
+    const method = editFuncionId ? 'PUT' : 'POST';
+
+    try {
+        const response = await fetch(url, {
+            method: method,
+            body: formData  // Envía el stream binario directo sin JSON stringify
+        });
+
+        if (response.ok) {
+            alert("¡Procesado correctamente en la base de datos!");
+            window.location.href = '/admin/dashboard';
+        } else {
+            const err = await response.json();
+            alert("Error del servidor: " + err.error);
+        }
+    } catch (f) { alert("Error técnico de comunicación."); }
+});
+
+inicializarFormulario();
+</script>
+{% endblock %}
