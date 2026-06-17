@@ -15,18 +15,21 @@ class DatabaseConnection:
                     host=os.getenv("DB_HOST", "localhost"),
                     user=os.getenv("DB_USER", "root"),
                     password=os.getenv("DB_PASSWORD", ""),
-                    database=os.getenv("DB_NAME", "TC_PRODUCCIONES")
+                    database=os.getenv("DB_NAME", "tc_producciones")  # Unificado en minúsculas
                 )
                 cls._instance.cursor = cls._instance.connection.cursor(dictionary=True)
                 print("Conexión Singleton a MySQL establecida con éxito.")
             except mysql.connector.Error as err:
                 print(f"Error de conexión: {err}")
                 cls._instance.connection = None
+                cls._instance.cursor = None
         return cls._instance
 
     def get_cursor(self):
-        return self.cursor
+        if self.connection and self.connection.is_connected():
+            return self.cursor
+        return None
 
     def commit(self):
-        if self.connection:
+        if self.connection and self.connection.is_connected():
             self.connection.commit()

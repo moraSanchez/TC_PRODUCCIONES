@@ -57,7 +57,6 @@ document.getElementById('formRegistro').addEventListener('submit', async (e) => 
     const formData = new FormData(e.target);
     const data = Object.fromEntries(formData.entries());
 
-    // Inicializamos el modal de Bootstrap usando su ID
     const modalElement = document.getElementById('modalResultado');
     const miModal = new bootstrap.Modal(modalElement);
     
@@ -77,24 +76,21 @@ document.getElementById('formRegistro').addEventListener('submit', async (e) => 
         const result = await response.json();
 
         if (response.ok) {
-            // Configuramos el modal para el éxito
             modalTitulo.innerText = "¡Registro Exitoso!";
             modalTitulo.className = "modal-title fw-bold text-success";
             modalMensaje.innerText = "Tu usuario fue creado correctamente en el sistema.";
             
-            // Al hacer clic en Aceptar, redirige al inicio
             btnModalAccion.onclick = () => {
-                window.location.href = '/';
+                miModal.hide();
+                window.location.href = '/login';
             };
             
             miModal.show();
         } else {
-            // Configuramos el modal para el error
             modalTitulo.innerText = "Error en el Registro";
             modalTitulo.className = "modal-title fw-bold text-danger";
             modalMensaje.innerText = result.error || "No se pudieron guardar los datos.";
             
-            // Al hacer clic en Aceptar, simplemente cierra el modal para corregir los datos
             btnModalAccion.onclick = () => {
                 miModal.hide();
             };
@@ -102,6 +98,7 @@ document.getElementById('formRegistro').addEventListener('submit', async (e) => 
             miModal.show();
         }
     } catch (error) {
+        console.error("Error completo:", error);
         modalTitulo.innerText = "Error de Conexión";
         modalTitulo.className = "modal-title fw-bold text-warning";
         modalMensaje.innerText = "No se pudo establecer contacto con el servidor de Flask.";
