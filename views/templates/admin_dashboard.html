@@ -1,116 +1,114 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container text-white mt-4">
+<style>
+    body { background: radial-gradient(circle at top, #1a0505 0%, #0d0d0d 100%); }
+    .cinema-dashboard-card {
+        background: rgba(18, 18, 18, 0.85);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(220, 53, 69, 0.2);
+        border-radius: 16px;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6);
+    }
+    .movie-row-card {
+        background: #0a0a0a;
+        border: 1px solid #222;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+    }
+    .movie-row-card:hover {
+        border-color: #dc3545;
+        box-shadow: 0 0 12px rgba(220, 53, 69, 0.3);
+    }
+    .poster-img {
+        width: 100px;
+        height: 145px;
+        object-fit: cover;
+        border-radius: 6px;
+        border: 1px solid #333;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.7);
+    }
+</style>
+
+<div class="container text-white mt-5 pb-5">
     <div class="d-flex justify-content-between align-items-center mb-4 border-bottom border-secondary pb-3">
-        <h2 class="text-danger fw-bold">Panel de Control (Administración)</h2>
-        <button onclick="cerrarSesion()" class="btn btn-outline-light btn-sm">Cerrar Sesión</button>
+        <div><h2 class="text-danger fw-bold m-0 tracking-wide">🍿 PANEL DE ADMINISTRACIÓN</h2></div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="/admin/funciones/nueva" class="btn btn-danger fw-bold rounded-pill px-4 shadow-sm">➕ Programar Función</a>
+            <button onclick="cerrarSesion()" class="btn btn-outline-light btn-sm rounded-pill px-3">Salir</button>
+        </div>
     </div>
 
-    <div class="row g-4">
-        <div class="col-md-4">
-            <div class="card bg-dark text-white border-secondary h-100 p-3 shadow">
-                <div class="card-body">
-                    <h5 class="card-title text-danger fw-bold mb-3">📍 Gestión Funciones</h5>
-                    <p class="card-text text-muted small">Alta de horarios, días y asignación de salas para películas.</p>
-                    <a href="/admin/funciones/nueva" class="btn btn-danger w-100 fw-bold mt-2">Programar Función</a>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-8">
-            <div class="card bg-dark text-white border-secondary h-100 p-3 shadow">
-                <div class="card-body">
-                    <h5 class="card-title text-danger fw-bold mb-3">📋 Funciones Activas en Cartelera</h5>
-                    <div class="table-responsive">
-                        <table class="table table-dark table-hover small border-secondary">
-                            <thead>
-                                <tr>
-                                    <th>Película</th>
-                                    <th>Género</th>
-                                    <th>Fecha</th>
-                                    <th>Hora</th>
-                                    <th>Sala</th>
-                                    <th>Acción</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tablaFunciones">
-                                <tr>
-                                    <td colspan="6" class="text-center text-muted py-3">Cargando funciones vigentes...</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+    <div class="row">
+        <div class="col-12">
+            <div class="card cinema-dashboard-card p-4">
+                <h4 class="text-white fw-bold mb-4">🎬 Listado de Funciones en Pantalla</h4>
+                <div id="contenedorCartelera" class="row row-cols-1 row-cols-md-2 g-4"></div>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-if (sessionStorage.getItem('tipoUsuario') !== 'Administrador') {
-    window.location.href = '/login';
-}
+if (sessionStorage.getItem('tipoUsuario') !== 'Administrador') { window.location.href = '/login'; }
+function cerrarSesion() { sessionStorage.clear(); window.location.href = '/login'; }
 
-async function cargarFuncionesDashboard() {
-    const tbody = document.getElementById('tablaFunciones');
+async function renderizarCarteleraCompleta() {
     try {
         const res = await fetch('/api/funciones');
-        
-        if (!res.ok) {
-            const errData = await res.json();
-            tbody.innerHTML = `<tr><td colspan="6" class="text-center text-warning">Error: ${errData.error}</td></tr>`;
-            return;
-        }
-
         const funciones = await res.json();
-        tbody.innerHTML = '';
+        const contenedor = document.getElementById('contenedorCartelera');
+        contenedor.innerHTML = '';
 
         if (funciones.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">No hay funciones activas programadas.</td></tr>`;
+            contenedor.innerHTML = '<div class="col-12 text-center py-5 text-muted"><p class="fs-5">No hay funciones programadas en este momento.</p></div>';
             return;
         }
 
         funciones.forEach(f => {
-            tbody.innerHTML += `
-                <tr>
-                    <td class="fw-bold text-white">${f.titulo}</td>
-                    <td><span class="badge bg-secondary">${f.genero || 'General'}</span></td>
-                    <td>${f.fecha}</td>
-                    <td class="text-danger fw-bold">${f.hora}</td>
-                    <td>Sala ${f.num_sala}</td>
-                    <td>
-                        <button onclick="borrarFuncion(${f.idFuncion})" class="btn btn-sm btn-outline-danger py-0 px-2">Borrar</button>
-                    </td>
-                </tr>
+            const imagenPoster = f.imagen_url ? f.imagen_url : "https://placehold.co/100x145/1a1a1a/ffffff?text=Sin+Foto";
+
+            contenedor.innerHTML += `
+                <div class="col">
+                    <div class="card movie-row-card p-3 d-flex flex-row gap-3 h-100 align-items-center">
+                        <div>
+                            <img src="${imagenPoster}" class="poster-img" onerror="this.src='https://placehold.co/100x145/1a1a1a/ffffff?text=Error+Img'">
+                        </div>
+                        <div class="d-flex flex-column justify-content-between flex-grow-1" style="min-width: 0;">
+                            <div>
+                                <h4 class="text-white fw-bold mb-1 text-truncate">${f.titulo}</h4>
+                                <p class="text-danger small mb-2 fw-semibold">${f.genero}</p>
+                                <div class="d-flex gap-2 mb-3">
+                                    <span class="badge bg-dark border border-secondary text-white-50">Sala ${f.num_sala}</span>
+                                    <span class="badge bg-success bg-opacity-10 text-success border border-success">${f.estado}</span>
+                                </div>
+                            </div>
+                            <div class="border-top border-secondary pt-2 d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-white small fw-bold">🕒 ${f.hora.substring(0,5)} HS</div>
+                                    <div class="text-muted" style="font-size: 11px;">📅 ${f.fecha}</div>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <a href="/admin/funciones/nueva?edit=${f.idFuncion}" class="btn btn-sm btn-outline-warning rounded-pill px-3">✏️ Editar</a>
+                                    <button onclick="eliminarFuncionInmediata(${f.idFuncion})" class="btn btn-sm btn-outline-danger rounded-pill px-3">🗑️ Borrar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             `;
         });
-    } catch (err) {
-        console.error(err);
-        tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">Error de comunicación con el servidor.</td></tr>`;
-    }
+    } catch (err) { console.error(err); }
 }
 
-async function borrarFuncion(id) {
-    if (!confirm("¿Seguro que querés eliminar esta función de la cartelera?")) return;
+async function eliminarFuncionInmediata(id) {
+    if (!confirm("¿Deseas dar de baja este registro?")) return;
     try {
         const res = await fetch(`/api/funciones/${id}`, { method: 'DELETE' });
-        if (res.ok) {
-            alert("Función eliminada correctamente");
-            cargarFuncionesDashboard();
-        } else {
-            alert("No se pudo eliminar la función");
-        }
-    } catch (err) {
-        alert("Error de conexión");
-    }
+        if (res.ok) renderizarCarteleraCompleta();
+    } catch (err) { alert("Error de red."); }
 }
 
-function cerrarSesion() {
-    sessionStorage.clear();
-    window.location.href = '/login';
-}
-
-cargarFuncionesDashboard();
+renderizarCarteleraCompleta();
 </script>
 {% endblock %}

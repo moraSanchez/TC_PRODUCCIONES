@@ -11,6 +11,7 @@ class Funcion:
         self.id_sala     = id_sala
 
     def obtener_asientos_disponibles(self):
+        """Devuelve los asientos no reservados para esta función."""
         db = DatabaseConnection()
         cursor = db.get_cursor()
         if cursor:
@@ -29,6 +30,7 @@ class Funcion:
         return []
 
     def guardar(self):
+        """Inserta la función mapeando correctamente el campo 'estado' recibido."""
         db = DatabaseConnection()
         cursor = db.get_cursor()
         if cursor:
@@ -41,10 +43,12 @@ class Funcion:
                 self.id_funcion = cursor.lastrowid
                 return True
             except Exception as e:
-                print(f"Error al guardar función: {e}")
+                print(f"❌ Error al guardar función en BD: {e}")
                 return False
+        return False
 
     def actualizar(self):
+        """Modifica los datos de una función existente."""
         db = DatabaseConnection()
         cursor = db.get_cursor()
         if cursor:
@@ -57,10 +61,12 @@ class Funcion:
                 db.commit()
                 return True
             except Exception as e:
-                print(f"Error al actualizar función: {e}")
+                print(f"❌ Error al actualizar función en BD: {e}")
                 return False
+        return False
 
     def eliminar(self):
+        """Elimina físicamente la función de la base de datos."""
         db = DatabaseConnection()
         cursor = db.get_cursor()
         if cursor:
@@ -69,11 +75,13 @@ class Funcion:
                 db.commit()
                 return True
             except Exception as e:
-                print(f"Error al eliminar función: {e}")
+                print(f"❌ Error al eliminar función en BD: {e}")
                 return False
+        return False
 
     @classmethod
     def buscar_todas(cls):
+        """Trae las funciones programadas haciendo JOIN exacto con Pelicula y Sala."""
         db = DatabaseConnection()
         cursor = db.get_cursor()
         if cursor:
