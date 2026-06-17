@@ -9,11 +9,11 @@
             <form id="formLogin">
                 <div class="mb-3">
                     <label class="form-label">Correo Electrónico</label>
-                    <input type="email" name="email" class="form-control bg-dark text-white border-secondary" required>
+                    <input type="email" name="email" class="form-control bg-dark text-white border-secondary" placeholder="nombre@email.com" required>
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Contraseña</label>
-                    <input type="password" name="contrasenia" class="form-control bg-dark text-white border-secondary" required>
+                    <input type="password" name="contrasenia" class="form-control bg-dark text-white border-secondary" placeholder="••••••••" required>
                 </div>
                 <button type="submit" class="btn btn-danger w-100 fw-bold mt-2 py-2">Ingresar</button>
             </form>
@@ -43,12 +43,11 @@
 
 <script>
 document.getElementById('formLogin').addEventListener('submit', async (e) => {
-    e.preventDefault(); // Evitamos que la página intente recargarse
+    e.preventDefault();
 
     const formData = new FormData(e.target);
     const data = Object.fromEntries(formData.entries());
 
-    // Inicializamos el modal de Bootstrap
     const modalElement = document.getElementById('modalLogin');
     const miModal = new bootstrap.Modal(modalElement);
     
@@ -57,7 +56,6 @@ document.getElementById('formLogin').addEventListener('submit', async (e) => {
     const btnModalAccion = document.getElementById('btnModalAccion');
 
     try {
-        // Hacemos el envío de datos en limpio hacia el endpoint de la API
         const response = await fetch('/api/auth/login', {
             method: 'POST',
             headers: {
@@ -69,34 +67,41 @@ document.getElementById('formLogin').addEventListener('submit', async (e) => {
         const result = await response.json();
 
         if (response.ok) {
-            // Configuración del modal si el usuario y contraseña son correctos
+            // Guardamos datos críticos de la sesión en el navegador
+            sessionStorage.setItem('idUsuario', result.usuario.idUsuario);
+            sessionStorage.setItem('nombre', result.usuario.nombre);
+            sessionStorage.setItem('tipoUsuario', result.usuario.tipo);
+
             modalTitulo.innerText = "¡Bienvenido!";
             modalTitulo.className = "modal-title fw-bold text-success";
-            modalMensaje.innerText = "Inicio de sesión exitoso. Ingresando a la cartelera...";
             
-            // Al presionar aceptar te redirige directo al inicio de tu app de cine
-            btnModalAccion.onclick = () => {
-                window.location.href = '/';
-            };
+            if (result.usuario.tipo === 'Administrador') {
+                modalMensaje.innerText = `Hola ${result.usuario.nombre}. Ingresando al Panel de Administración...`;
+                btnModalAccion.onclick = () => {
+                    miModal.hide();
+                    window.location.href = '/admin/dashboard';
+                };
+            } else {
+                modalMensaje.innerText = `Hola ${result.usuario.nombre}. Ingresando a la cartelera...`;
+                btnModalAccion.onclick = () => {
+                    miModal.hide();
+                    window.location.href = '/';
+                };
+            }
             
             miModal.show();
         } else {
-            // Configuración del modal si las credenciales son incorrectas
             modalTitulo.innerText = "Error de ingreso";
             modalTitulo.className = "modal-title fw-bold text-danger";
             modalMensaje.innerText = result.error || "Correo o contraseña incorrectos.";
-            
-            // Si falla, el botón solo cierra la ventana para que el usuario intente escribir de nuevo
-            btnModalAccion.onclick = () => {
-                miModal.hide();
-            };
-            
+            btnModalAccion.onclick = () => { miModal.hide(); };
             miModal.show();
         }
     } catch (error) {
+        console.error("Error completo de login:", error);
         modalTitulo.innerText = "Error Técnico";
         modalTitulo.className = "modal-title fw-bold text-warning";
-        modalMensaje.innerText = "No se pudo conectar con el servidor de autenticación.";
+        modalMensaje.innerText = "No se pudo conectar con el servidor.";
         btnModalAccion.onclick = () => { miModal.hide(); };
         miModal.show();
     }

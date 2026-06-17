@@ -11,18 +11,17 @@ class Usuario:
 
     @classmethod
     def buscar_por_email(cls, email):
-        """Busca un usuario en la tabla Usuario y devuelve la instancia correspondiente según su tipo."""
         db = DatabaseConnection()
         cursor = db.get_cursor()
         if cursor:
             try:
+                # Nos aseguramos de leer el estado limpio del cursor antes de ejecutar
                 cursor.execute("SELECT * FROM Usuario WHERE email = %s", (email,))
                 resultado = cursor.fetchone()
                 
                 if resultado:
                     tipo_usuario = resultado.get('tipo', 'Cliente')
                     
-                    # Instanciación limpia respetando los constructores de las clases hijas
                     if tipo_usuario == 'Administrador':
                         return Administrador(
                             id_usuario=resultado['idUsuario'],
@@ -44,7 +43,6 @@ class Usuario:
         return None
 
     def to_dict(self):
-        """Mapea el objeto a un diccionario apto para JSON omitiendo datos sensibles."""
         return {
             "idUsuario": self.id_usuario,
             "nombre": self.nombre,
@@ -53,7 +51,6 @@ class Usuario:
             "tipo": self.tipo
         }
 
-# --- HERENCIA ---
 class Cliente(Usuario):
     def __init__(self, id_usuario=None, nombre=None, apellido=None, email=None, contrasenia=None):
         super().__init__(id_usuario, nombre, apellido, email, contrasenia, tipo='Cliente')
