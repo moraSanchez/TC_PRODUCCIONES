@@ -38,14 +38,18 @@ CREATE TABLE IF NOT EXISTS Asiento (
     FOREIGN KEY (Sala_idSala) REFERENCES Sala(idSala) ON DELETE CASCADE
 );
 
--- 5. Tabla Funcion
+-- 5. Tabla Funcion (Rediseñada para soportar inserciones directas de API y mantener compatibilidad relacional)
 CREATE TABLE IF NOT EXISTS Funcion (
     idFuncion INT AUTO_INCREMENT PRIMARY KEY,
+    titulo VARCHAR(150) NOT NULL,
+    genero VARCHAR(100),
+    imagen_url VARCHAR(255),
+    num_sala INT NOT NULL,
     fecha DATE NOT NULL,
     hora TIME NOT NULL,
     estado VARCHAR(50) DEFAULT 'activa',
-    Pelicula_idPelicula INT NOT NULL,
-    Sala_idSala INT NOT NULL,
+    Pelicula_idPelicula INT NULL,
+    Sala_idSala INT NULL,
     FOREIGN KEY (Pelicula_idPelicula) REFERENCES Pelicula(idPelicula),
     FOREIGN KEY (Sala_idSala) REFERENCES Sala(idSala)
 );
