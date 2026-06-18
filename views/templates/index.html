@@ -1,15 +1,131 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="p-5 mb-4 bg-dark rounded-3 border border-secondary text-center">
-    <div class="container-fluid py-5">
-        <h1 class="display-5 fw-bold text-danger">Bienvenido a TC_PRODUCCIONES</h1>
-        <p class="col-md-12 fs-4 text-muted">Tu sistema definitivo para la gestión y reserva de funciones de cine en tiempo real.</p>
-        <hr class="my-4 border-secondary">
-        <p class="mb-4">Explorá nuestra cartelera o registrate para gestionar tus reservas desde cualquier dispositivo.</p>
-        <div class="d-sm-flex justify-content-center gap-3">
-            <a href="/registro" class="btn btn-danger btn-lg px-4 fw-bold mb-2 mb-sm-0">Comenzar ahora</a>
+<div class="hero-highlight-banner">
+    <div class="container h-100 d-flex flex-column justify-content-end pb-5">
+        <span class="badge bg-danger mb-2 px-3 py-2 fw-bold tracking-wider" style="width: max-content; font-size: 0.8rem;">PRE-ESTRENO DESTACADO</span>
+        <h1 class="display-3 fw-black text-white mb-2">SPIDERMAN: BRAND NEW DAY</h1>
+        <p class="lead text-zinc-300 max-w-2xl mb-4">Ahora en pantalla gigante - XD / 4D / 3D. Sumale movimiento con butacas premium D-BOX para vivir la experiencia al límite.</p>
+        <div>
+            <a href="/login" class="btn btn-light fw-bold px-4 py-3 rounded-xl me-2 shadow-lg">🎟️ COMPRAR ENTRADAS</a>
         </div>
     </div>
 </div>
+
+<div class="container mt-5">
+    
+    <div class="filter-bar-premium p-4 mb-5">
+        <div class="row align-items-center g-3">
+            <div class="col-md-4">
+                <label class="form-label small text-muted fw-bold text-uppercase">¿Qué querés ver?</label>
+                <input type="text" id="inputBuscar" class="form-control text-white border-zinc bg-zinc-900" placeholder="Buscar por título..." onkeyup="filtrarCartelera()">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small text-muted fw-bold text-uppercase">Género</label>
+                <select id="selectGenero" class="form-select text-white border-zinc bg-zinc-900" onchange="filtrarCartelera()">
+                    <option value="">Todos los géneros</option>
+                    <option value="Acción">Acción</option>
+                    <option value="Ciencia ficción">Ciencia ficción</option>
+                    <option value="Terror">Terror</option>
+                    <option value="Animación">Animación</option>
+                </select>
+            </div>
+            <div class="col-md-4 text-md-end pt-4">
+                <span class="text-muted small">Mostrando funciones actualizadas en tiempo real</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="section-header-wireframe mb-4">
+        <h2 class="section-title-wireframe">🔥 PELÍCULAS EN CARTELERA</h2>
+    </div>
+    <div id="carteleraHoy" class="movie-grid mb-5"></div>
+
+    <div class="section-header-wireframe mb-4 mt-5">
+        <h2 class="section-title-wireframe">⏳ PRÓXIMOS ESTRENOS</h2>
+    </div>
+    <div id="proximosEstrenos" class="movie-grid"></div>
+
+</div>
+
+<script>
+let todasLasFunciones = [];
+
+async function obtenerDatos() {
+    try {
+        const res = await fetch('/api/funciones');
+        todasLasFunciones = await res.json();
+        renderizarCarteleras(todasLasFunciones);
+    } catch (err) {
+        console.error("Error al consumir la API:", err);
+    }
+}
+
+function renderizarCarteleras(lista) {
+    const contenedorHoy = document.getElementById('carteleraHoy');
+    const contenedorPróximos = document.getElementById('proximosEstrenos');
+    
+    contenedorHoy.innerHTML = '';
+    contenedorPróximos.innerHTML = '';
+
+    // Separación por estados basados en la API
+    const enCartelera = lista.filter(f => f.estado && f.estado.toLowerCase() === 'activa');
+    const proximos = lista.filter(f => f.estado && f.estado.toLowerCase() !== 'activa');
+
+    // Render Cartelera Actual
+    if(enCartelera.length === 0) {
+        contenedorHoy.innerHTML = `<div class="empty-state">No se encontraron películas en cartelera para este filtro.</div>`;
+    } else {
+        enCartelera.forEach(f => {
+            contenedorHoy.innerHTML += crearCardPelicula(f);
+        });
+    }
+
+    // Render Próximos
+    if(proximos.length === 0) {
+        contenedorPróximos.innerHTML = `<div class="empty-state">No hay próximos estrenos programados por el momento.</div>`;
+    } else {
+        proximos.forEach(f => {
+            contenedorPróximos.innerHTML += crearCardPelicula(f);
+        });
+    }
+}
+
+function crearCardPelicula(f) {
+    const img = f.imagen_url ? f.imagen_url : "https://placehold.co/400x600/141417/ffffff?text=TC+Cine";
+    return `
+        <div class="movie-card-premium">
+            <div class="poster-wrapper">
+                <span class="tag-genre">${f.genero}</span>
+                <img src="${img}" class="premium-poster" onerror="this.src='https://placehold.co/400x600/141417/ffffff?text=Cine'">
+                <div class="poster-overlay"></div>
+            </div>
+            <div class="movie-details">
+                <h3 class="movie-title-premium text-truncate" title="${f.titulo}">${f.titulo}</h3>
+                <div class="meta-info-row">
+                    <span class="badge-sala-premium">Sala ${f.num_sala}</span>
+                    <span class="text-white fw-bold">🕒 ${f.hora.substring(0,5)} HS</span>
+                </div>
+                <div class="text-muted small mb-3">📅 Fecha: ${f.fecha}</div>
+                <a href="/login" class="btn-premium-cta">COMPRAR ENTRADAS</a>
+            </div>
+        </div>
+    `;
+}
+
+function filtrarCartelera() {
+    const texto = document.getElementById('inputBuscar').value.toLowerCase();
+    const genero = document.getElementById('selectGenero').value;
+
+    const filtradas = todasLasFunciones.filter(f => {
+        const coincideTexto = f.titulo.toLowerCase().includes(texto);
+        const coincideGenero = genero === "" || f.genero === genero;
+        return coincideTexto && coincideGenero;
+    });
+
+    renderizarCarteleras(filtradas);
+}
+
+document.addEventListener('DOMContentLoaded', obtenerDatos);
+</script>
 {% endblock %}
