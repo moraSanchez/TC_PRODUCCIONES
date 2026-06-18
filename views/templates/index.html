@@ -53,7 +53,8 @@ let todasLasFunciones = [];
 
 async function obtenerDatos() {
     try {
-        const res = await fetch('/api/funciones');
+        // CORRECCIÓN: Apuntamos exactamente a la ruta que configuramos en Flask
+        const res = await fetch('/api/funciones/lista');
         todasLasFunciones = await res.json();
         renderizarCarteleras(todasLasFunciones);
     } catch (err) {
@@ -68,7 +69,6 @@ function renderizarCarteleras(lista) {
     contenedorHoy.innerHTML = '';
     contenedorPróximos.innerHTML = '';
 
-    // Separación por estados basados en la API...
     const enCartelera = lista.filter(f => f.estado && f.estado.toLowerCase() === 'activa');
     const proximos = lista.filter(f => f.estado && f.estado.toLowerCase() !== 'activa');
 
