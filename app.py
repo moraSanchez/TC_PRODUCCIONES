@@ -1,217 +1,140 @@
-from flask import Flask, request, jsonify, render_template, redirect, url_for
-from flask_cors import CORS
-from controllers.auth_controller import AuthController
-from models.funcion import Funcion
-from werkzeug.utils import secure_filename
+# app.py
+from flask import Flask, render_template, request, jsonify, redirect, url_for, flash
 import os
-import sys
+import requests  
+from dotenv import load_dotenv
+
+# Cargar las variables de entorno desde el archivo .env
+load_dotenv()
+
+# DETECTAR LA RUTA ABSOLUTA AUTOMÁTICAMENTE PARA EVITAR ERRORES DE RUTA EN WINDOWS
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+TEMPLATES_DIR = os.path.join(BASE_DIR, "views", "templates")
+STATIC_DIR = os.path.join(BASE_DIR, "views", "templates", "static")
 
 app = Flask(__name__, 
-            template_folder="views/templates", 
-            static_folder="views/templates/static")
+            template_folder=TEMPLATES_DIR, 
+            static_folder=STATIC_DIR)
 
-CORS(app, resources={r"/*": {"origins": "*"}})
-app.secret_key = os.getenv("SECRET_KEY", "tu_clave_secreta_aqui")
+# Lee la clave secreta desde el archivo .env de forma segura
+app.secret_key = os.getenv("FLASK_SECRET_KEY", "super_secret_session_key_cinema")
 
-# CONFIGURACIÓN ABSOLUTA PARA SUBIDA DE IMÁGENES
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-UPLOAD_FOLDER = os.path.join(BASE_DIR, 'views', 'templates', 'static', 'uploads')
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp'}
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+# ==========================================
+#          RUTAS DE VISTAS (WEB)
+# ==========================================
 
-# Forzar la creación de la carpeta uploads si no existe en el disco duro
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-
-def archivo_permitido(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-# -------------------------------------------------------------------------
-# VISTAS (PÁGINAS HTML)
-# -------------------------------------------------------------------------
 @app.route('/')
-def home(): 
-    return render_template('index.html')
+def inicio():
+    return render_template('index.html')  # Tu landing o cartelera pública
 
 @app.route('/login')
-def vista_login(): 
+def login():
     return render_template('login.html')
 
 @app.route('/registro')
-def vista_registro(): 
+def registro():
     return render_template('registro.html')
 
-@app.route('/admin/dashboard')
-def admin_dashboard(): 
-    return render_template('admin_dashboard.html')
+@app.route('/admin/funciones')
+def admin_panel():
+    return render_template('admin_panel.html') 
 
 @app.route('/admin/funciones/nueva')
-def vista_nueva_funcion(): 
+def nueva_funcion():
     return render_template('nueva_funcion.html')
 
-# -------------------------------------------------------------------------
-# API - AUTENTICACIÓN
-# -------------------------------------------------------------------------
-@app.route('/api/auth/register', methods=['POST'])
-def register():
-    data = request.get_json() or {}
-    resultado, status_code = AuthController.registrar_usuario(
-        data.get('nombre'), 
-        data.get('apellido', 'Defecto'), 
-        data.get('email'), 
-        data.get('contrasenia')
-    )
-    return jsonify(resultado), status_code
 
-@app.route('/api/auth/login', methods=['POST'])
-def login():
-    data = request.get_json() or {}
-    resultado, status_code = AuthController.iniciar_sesion(data.get('email'), data.get('contrasenia'))
-    return jsonify(resultado), status_code
+# ==========================================
+#          RUTAS DE API (ASINCRÓNICAS)
+# ==========================================
 
-# -------------------------------------------------------------------------
-# API - GESTIÓN DE FUNCIONES Y PELÍCULAS
-# -------------------------------------------------------------------------
+@app.route('/api/login', methods=['POST'])
+def api_login():
+    data = request.get_json() or {}
+    email = data.get('email')
+    contrasenia = data.get('contrasenia')
+    
+    if not email or not contrasenia:
+        return jsonify({"error": "Faltan datos obligatorios."}), 400
+        
+    return jsonify({"status": "success"}), 200
+
 @app.route('/api/funciones', methods=['GET'])
-def listar_funciones():
+def api_obtener_funciones():
+    """Retorna las funciones consumiendo datos EN VIVO de la API de TMDb filtradas por idioma."""
     try:
-        funciones = Funcion.buscar_todas()
-        for f in funciones:
-            if 'fecha' in f and f['fecha'] is not None: f['fecha'] = str(f['fecha'])
-            if 'hora' in f and f['hora'] is not None: f['hora'] = str(f['hora'])
-        return jsonify(funciones), 200
+        # Extrae la API KEY desde tu archivo .env
+        TMDB_API_KEY = os.getenv("TMDB_API_KEY")
+        
+        if not TMDB_API_KEY or TMDB_API_KEY == "PEGA_AQUI_TU_CLAVE_DE_TMDB":
+            print("Error: No se configuró una TMDB_API_KEY válida en el archivo .env")
+            return jsonify([]), 200
+            
+        # Consulta a TMDb pidiendo los datos localizados en español latino (es-MX)
+        url_tmdb = f"https://api.themoviedb.org/3/movie/now_playing?api_key={TMDB_API_KEY}&language=es-MX&page=1"
+        
+        response = requests.get(url_tmdb, timeout=5)
+        
+        if response.status_code == 200:
+            datos_tmdb = response.json().get('results', [])
+            funciones_formateadas = []
+            
+            # Mapeo de IDs de géneros numéricos de TMDb a los textos que maneja tu frontend
+            generos_map = {
+                28: "Acción",
+                878: "Ciencia ficción",
+                27: "Terror",
+                16: "Animación",
+                35: "Comedia"
+            }
+            
+            # Usamos enumerate para recuperar el 'index' idéntico a tu primer código estable
+            for index, peli in enumerate(datos_tmdb):
+                # Si ya metimos las 12 películas deseadas, cortamos el bucle
+                if len(funciones_formateadas) >= 12:
+                    break
+                    
+                idioma_original = peli.get('original_language')
+                
+                # FILTRO ESTRICTO: Descartar todo lo que no sea Español ('es') o Inglés ('en')
+                if idioma_original not in ['es', 'en']:
+                    continue  
+                
+                # REPARADO: Volvemos a usar 'index' para la distribución idéntica de estados y salas
+                estado_peli = "activa" if index < 6 else "proximamente"
+                
+                # Mapear géneros válidos
+                genre_ids = peli.get('genre_ids', [])
+                genero_texto = "Acción"  
+                for g_id in genre_ids:
+                    if g_id in generos_map:
+                        genero_texto = generos_map[g_id]
+                        break
+                
+                # Construcción de la URL de la portada oficial desde los servidores CDN de TMDb
+                poster_path = peli.get('poster_path')
+                imagen_url = f"https://image.tmdb.org/t/p/w500{poster_path}" if poster_path else "https://placehold.co/400x600/141417/ffffff?text=Cine"
+                
+                # REPARADO: Estructura exacta con cálculos basados en 'index' para que tu JS lo lea perfecto
+                funciones_formateadas.append({
+                    "titulo": peli.get('title', 'Película de Estrenos').upper(),
+                    "genero": genero_texto,
+                    "num_sala": (index % 4) + 1,  
+                    "hora": f"{15 + (index % 5)}:15:00",  
+                    "fecha": peli.get('release_date', '2026-06-17'),
+                    "estado": estado_peli,
+                    "imagen_url": imagen_url
+                })
+                
+            return jsonify(funciones_formateadas), 200
+        else:
+            print(f"Error: TMDb respondió con código de estado HTTP {response.status_code}")
+            return jsonify([]), 200
+
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print(f"Error crítico al conectar con la API de TMDb: {e}")
+        return jsonify([]), 200
 
-@app.route('/api/funciones/detalle/<int:id_funcion>', methods=['GET'])
-def obtener_detalle_funcion(id_funcion):
-    try:
-        from config.database import DatabaseConnection
-        db = DatabaseConnection()
-        cursor = db.get_cursor()
-        cursor.execute("""
-            SELECT f.idFuncion, f.fecha, f.hora, f.Sala_idSala,
-                   p.idPelicula, p.titulo, p.genero, p.duracion, p.sinopsis, p.imagen_url
-            FROM Funcion f
-            JOIN Pelicula p ON f.Pelicula_idPelicula = p.idPelicula
-            WHERE f.idFuncion = %s
-        """, (id_funcion,))
-        f = cursor.fetchone()
-        if f:
-            f['fecha'] = str(f['fecha'])
-            f['hora'] = str(f['hora'])
-            return jsonify(f), 200
-        return jsonify({"error": "No encontrada"}), 404
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-@app.route('/api/funciones', methods=['POST'])
-def crear_funcion():
-    try:
-        from config.database import DatabaseConnection
-        db = DatabaseConnection()
-        cursor = db.get_cursor()
-        
-        # Obtener campos desde el formulario multipart
-        titulo = request.form.get('titulo')
-        sinopsis = request.form.get('sinopsis')
-        duracion = request.form.get('duracion')
-        genero = request.form.get('genero')
-        id_sala = request.form.get('idSala')
-        fecha = request.form.get('fecha')
-        hora = request.form.get('hora')
-        
-        # Subida de archivo de imagen
-        imagen_url = ""
-        if 'imagen_file' in request.files:
-            file = request.files['imagen_file']
-            if file and archivo_permitido(file.filename):
-                filename = secure_filename(file.filename)
-                # Guardar el archivo físicamente en la carpeta del servidor
-                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-                # Guardar la ruta web relativa para usar en los src del HTML
-                imagen_url = f"/static/uploads/{filename}"
-        
-        # 1. Insertar Película
-        cursor.execute("""
-            INSERT INTO Pelicula (titulo, sinopsis, duracion, genero, imagen_url)
-            VALUES (%s, %s, %s, %s, %s)
-        """, (titulo, sinopsis, duracion, genero, imagen_url))
-        db.commit()
-        id_peli = cursor.lastrowid
-        
-        # 2. Insertar Función vinculada
-        nueva_f = Funcion(fecha=fecha, hora=hora, estado='activa', id_pelicula=id_peli, id_sala=id_sala)
-        if nueva_f.guardar():
-            return jsonify({"mensaje": "Guardado exitosamente"}), 201
-        return jsonify({"error": "Falló guardar función"}), 500
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-@app.route('/api/funciones/<int:id_funcion>', methods=['PUT'])
-def modificar_funcion(id_funcion):
-    try:
-        from config.database import DatabaseConnection
-        db = DatabaseConnection()
-        cursor = db.get_cursor()
-        
-        titulo = request.form.get('titulo')
-        sinopsis = request.form.get('sinopsis')
-        duracion = request.form.get('duracion')
-        genero = request.form.get('genero')
-        id_sala = request.form.get('idSala')
-        fecha = request.form.get('fecha')
-        hora = request.form.get('hora')
-        
-        cursor.execute("SELECT Pelicula_idPelicula FROM Funcion WHERE idFuncion = %s", (id_funcion,))
-        res = cursor.fetchone()
-        if not res: 
-            return jsonify({"error": "No encontrada"}), 404
-        id_pelicula = res['Pelicula_idPelicula']
-
-        # Si no se sube un archivo nuevo, se mantiene la imagen que ya estaba
-        imagen_url = request.form.get('imagen_url_actual')
-        if 'imagen_file' in request.files:
-            file = request.files['imagen_file']
-            if file and archivo_permitido(file.filename):
-                filename = secure_filename(file.filename)
-                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-                imagen_url = f"/static/uploads/{filename}"
-
-        # Actualizar Película
-        cursor.execute("""
-            UPDATE Pelicula 
-            SET titulo=%s, sinopsis=%s, duracion=%s, genero=%s, imagen_url=%s
-            WHERE idPelicula=%s
-        """, (titulo, sinopsis, duracion, genero, imagen_url, id_pelicula))
-
-        # Actualizar Función
-        cursor.execute("""
-            UPDATE Funcion 
-            SET fecha=%s, hora=%s, Sala_idSala=%s
-            WHERE idFuncion=%s
-        """, (fecha, hora, id_sala, id_funcion))
-        
-        db.commit()
-        return jsonify({"mensaje": "Actualizado correctamente"}), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-@app.route('/api/funciones/<int:id_funcion>', methods=['DELETE'])
-def borrar_funcion(id_funcion):
-    funcion_a_eliminar = Funcion(id_funcion=id_funcion)
-    if funcion_a_eliminar.eliminar():
-        return jsonify({"mensaje": "Eliminada con éxito"}), 200
-    return jsonify({"error": "No se pudo borrar"}), 500
-
-@app.route('/api/salas', methods=['GET'])
-def listar_salas_aux():
-    from config.database import DatabaseConnection
-    db = DatabaseConnection()
-    cursor = db.get_cursor()
-    if cursor:
-        cursor.execute("SELECT idSala, numero, capacidad FROM Sala")
-        return jsonify(cursor.fetchall()), 200
-    return jsonify([]), 200
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
