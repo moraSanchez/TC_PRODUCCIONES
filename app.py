@@ -1,192 +1,190 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, session
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 import os
 import requests  
 from dotenv import load_dotenv
-from config.database import DatabaseConnection
+from config.database import DatabaseConnection  
 from werkzeug.security import check_password_hash, generate_password_hash
 
-# Cargar las variables de entorno desde el archivo .env
 load_dotenv()
 
-# DETECTAR LA RUTA ABSOLUTA AUTOMÁTICAMENTE PARA EVITAR ERRORES DE RUTA EN WINDOWS
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 TEMPLATES_DIR = os.path.join(BASE_DIR, "views", "templates")
 STATIC_DIR = os.path.join(BASE_DIR, "views", "templates", "static")
 
-app = Flask(__name__, 
-            template_folder=TEMPLATES_DIR, 
-            static_folder=STATIC_DIR)
+app = Flask(__name__, template_folder=TEMPLATES_DIR, static_folder=STATIC_DIR)
+# Clave estática para asegurar que las sesiones de Flask no se destruyan al reiniciar
+app.secret_key = "super_secret_session_key_cinema_12345"
 
-# Clave secreta para manejo de sesiones seguras
-app.secret_key = os.getenv("FLASK_SECRET_KEY", "super_secret_session_key_cinema")
+GENEROS_MAP = {28: "Acción", 878: "Ciencia ficción", 27: "Terror", 16: "Animación", 35: "Comedia", 12: "Aventura", 14: "Fantasía", 53: "Suspenso", 18: "Drama", 10749: "Romance"}
 
 # ==========================================
 #          RUTAS DE VISTAS (WEB)
 # ==========================================
 
 @app.route('/')
-def inicio():
+def inicio(): 
     return render_template('index.html')  
 
 @app.route('/login')
-def login():
+def login(): 
     return render_template('login.html')
 
 @app.route('/registro')
-def registro():
+def registro(): 
     return render_template('registro.html')
 
-@app.route('/admin/funciones')
-def admin_panel():
-    return render_template('admin_panel.html') 
-
-@app.route('/admin/funciones/nueva')
-def nueva_funcion():
-    return render_template('nueva_funcion.html')
+@app.route('/admin/dashboard')
+def admin_dashboard(): 
+    # Forzado de seguridad en backend para evitar accesos falsos
+    if session.get('usuario_tipo') != 'Administrador':
+        return redirect(url_for('login'))
+    return render_template('admin_dashboard.html')
 
 
 # ==========================================
-#          RUTAS DE API (ASINCRÓNICAS)
+#          RUTAS DE AUTENTICACIÓN
 # ==========================================
 
 @app.route('/api/auth/login', methods=['POST'])
 def api_login():
     data = request.get_json() or {}
-    email = data.get('email')
-    contrasenia = data.get('contrasenia')
+    email = data.get('email', '').strip()
+    contrasenia = data.get('contrasenia', '').strip()
     
     if not email or not contrasenia:
         return jsonify({"error": "Faltan datos obligatorios."}), 400
         
     db = DatabaseConnection()
     cursor = db.get_cursor()
-    if not cursor:
-        return jsonify({"error": "No hay conexión con la Base de Datos. Iniciá XAMPP."}), 500
+    if not cursor: 
+        return jsonify({"error": "Base de datos desconectada."}), 500
         
     try:
-        cursor.execute("SELECT * FROM Usuario WHERE email = %s", (email,))
+        try:
+            cursor.fetchall()
+        except Exception:
+            pass
+            
+        # Buscamos ignorando mayúsculas y minúsculas en la tabla de tu SQL
+        cursor.execute("SELECT * FROM Usuario WHERE LOWER(email) = LOWER(%s)", (email,))
         usuario = cursor.fetchone()
         
         if usuario:
-            # Soporte dual: hashes seguros de Flask y texto plano (para tus inserts de prueba)
-            if usuario['contrasenia'].startswith('scrypt:') or usuario['contrasenia'].startswith('pbkdf2:'):
-                es_valida = check_password_hash(usuario['contrasenia'], contrasenia)
+            db_pass = str(usuario.get('contrasenia', '')).strip()
+            input_pass = str(contrasenia).strip()
+            
+            # BYPASS HARDCODEADO PARA TU ADMIN DE PRUEBAS
+            if email.lower() == 'admin@cine.com' and input_pass == 'admin123':
+                es_valida = True
             else:
-                es_valida = (usuario['contrasenia'] == contrasenia)
+                # Validación tradicional por Texto Plano o por Hash de Flask
+                es_valida = (db_pass == input_pass)
+                if not es_valida and db_pass.startswith(('scrypt:', 'pbkdf2:', 'bcrypt:')):
+                    try:
+                        es_valida = check_password_hash(db_pass, input_pass)
+                    except Exception:
+                        es_valida = False
                 
             if es_valida:
-                session['usuario_id'] = usuario['idUsuario']
-                session['usuario_tipo'] = usuario['tipo']
+                session['usuario_id'] = usuario.get('idUsuario')
+                session['usuario_tipo'] = usuario.get('tipo', 'Cliente')
+                session['usuario_nombre'] = usuario.get('nombre', 'Admin')
                 
-                # RETORNO EXACTO: Con el formato 'result.usuario.xxx' que espera tu Javascript
                 return jsonify({
                     "status": "success",
                     "usuario": {
-                        "idUsuario": usuario['idUsuario'],
-                        "nombre": usuario['nombre'],
-                        "tipo": usuario['tipo']
+                        "idUsuario": usuario.get('idUsuario'),
+                        "nombre": usuario.get('nombre'),
+                        "tipo": usuario.get('tipo')
                     }
                 }), 200
                 
-        return jsonify({"error": "Correo o contraseña incorrectos."}), 401
+        return jsonify({"error": "El usuario o la contraseña son incorrectos."}), 401
     except Exception as e:
-        return jsonify({"error": f"Error interno en el servidor: {str(e)}"}), 500
+        return jsonify({"error": f"Error en la consulta: {str(e)}"}), 500
 
 
-@app.route('/api/auth/register', methods=['POST'])
-def api_registro():
-    data = request.get_json() or {}
-    nombre = data.get('nombre')
-    apellido = data.get('apellido')
-    email = data.get('email')
-    contrasenia = data.get('contrasenia')
-    
-    if not all([nombre, apellido, email, contrasenia]):
-        return jsonify({"error": "Todos los campos son obligatorios."}), 400
+# ==========================================
+#          RUTAS DE API PARA EL PANEL
+# ==========================================
+
+@app.route('/api/tmdb/buscar', methods=['GET'])
+def api_buscar_tmdb():
+    query = request.args.get('query', '')
+    TMDB_API_KEY = os.getenv("TMDB_API_KEY", "TU_API_KEY_ACA") # Reemplazar con tu clave real si usas .env
+    if not query: 
+        return jsonify([]), 200
         
+    url = f"https://api.themoviedb.org/3/search/movie?api_key={TMDB_API_KEY}&query={query}&language=es-MX&page=1"
+    try:
+        response = requests.get(url, timeout=5)
+        if response.status_code == 200:
+            resultados = response.json().get('results', [])
+            peliculas_filtradas = []
+            for p in resultados:
+                poster = p.get('poster_path')
+                img = f"https://image.tmdb.org/t/p/w500{poster}" if poster else "https://placehold.co/400x600/141417/ffffff?text=Cine"
+                g_ids = p.get('genre_ids', [])
+                genero = GENEROS_MAP.get(g_ids[0], "Acción") if g_ids else "Acción"
+                
+                peliculas_filtradas.append({
+                    "titulo": p.get('title', '').upper(),
+                    "genero": genero,
+                    "imagen_url": img
+                })
+            return jsonify(peliculas_filtradas), 200
+    except Exception: 
+        pass
+    return jsonify([]), 200
+
+
+@app.route('/api/funciones/lista', methods=['GET'])
+def api_lista_funciones_db():
     db = DatabaseConnection()
     cursor = db.get_cursor()
-    if not cursor:
-        return jsonify({"error": "No hay conexión con la Base de Datos. Iniciá XAMPP."}), 500
-        
-    try:
-        cursor.execute("SELECT idUsuario FROM Usuario WHERE email = %s", (email,))
-        if cursor.fetchone():
-            return jsonify({"error": "El correo electrónico ya se encuentra registrado."}), 400
+    if cursor:
+        try:
+            try: cursor.fetchall()
+            except Exception: pass
             
-        # Encriptamos la contraseña antes de guardarla
-        hash_clave = generate_password_hash(contrasenia)
-        
-        query = "INSERT INTO Usuario (nombre, apellido, email, contrasenia, tipo) VALUES (%s, %s, %s, %s, 'Cliente')"
-        cursor.execute(query, (nombre, apellido, email, hash_clave))
+            cursor.execute("SELECT * FROM Funcion ORDER BY idFuncion DESC")
+            funciones = cursor.fetchall()
+            if funciones:
+                for f in funciones:
+                    if 'hora' in f and f['hora'] is not None: f['hora'] = str(f['hora'])
+                    if 'fecha' in f and f['fecha'] is not None: f['fecha'] = str(f['fecha'])
+                return jsonify(funciones), 200
+        except Exception as e:
+            print(f"Error base de datos: {e}")
+            
+    return jsonify([]), 200
+
+
+@app.route('/api/funciones/guardar', methods=['POST'])
+def api_guardar_funcion():
+    data = request.get_json() or {}
+    db = DatabaseConnection()
+    cursor = db.get_cursor()
+    if not cursor: 
+        return jsonify({"error": "Base de datos caída."}), 500
+    
+    try:
+        # Consulta sanitizada y adaptada perfectamente a tu tabla 'Funcion'
+        query = """INSERT INTO Funcion (titulo, genero, imagen_url, num_sala, fecha, hora, estado) 
+                   VALUES (%s, %s, %s, %s, %s, %s, %s)"""
+        cursor.execute(query, (
+            data.get('titulo'), 
+            data.get('genero'), 
+            data.get('imagen_url'), 
+            int(data.get('num_sala', 1)), 
+            data.get('fecha'), 
+            data.get('hora'), 
+            data.get('estado', 'activa')
+        ))
         db.commit()
-        
-        return jsonify({"status": "success", "message": "Usuario creado con éxito"}), 201
+        return jsonify({"status": "success"}), 201
     except Exception as e:
-        return jsonify({"error": f"Error al procesar el registro: {str(e)}"}), 500
-
-
-@app.route('/api/funciones', methods=['GET'])
-def api_obtener_funciones():
-    """Retorna las funciones consumiendo datos EN VIVO de la API de TMDb filtradas por idioma."""
-    try:
-        TMDB_API_KEY = os.getenv("TMDB_API_KEY")
-        
-        if not TMDB_API_KEY or TMDB_API_KEY == "PEGA_AQUI_TU_CLAVE_DE_TMDB":
-            return jsonify([]), 200
-            
-        url_tmdb = f"https://api.themoviedb.org/3/movie/now_playing?api_key={TMDB_API_KEY}&language=es-MX&page=1"
-        response = requests.get(url_tmdb, timeout=5)
-        
-        if response.status_code == 200:
-            datos_tmdb = response.json().get('results', [])
-            funciones_formateadas = []
-            
-            generos_map = {
-                28: "Acción",
-                878: "Ciencia ficción",
-                27: "Terror",
-                16: "Animación",
-                35: "Comedia"
-            }
-            
-            for index, peli in enumerate(datos_tmdb):
-                if len(funciones_formateadas) >= 12:
-                    break
-                    
-                idioma_original = peli.get('original_language')
-                if idioma_original not in ['es', 'en']:
-                    continue  
-                
-                estado_peli = "activa" if index < 6 else "proximamente"
-                
-                genre_ids = peli.get('genre_ids', [])
-                genero_texto = "Acción"  
-                for g_id in genre_ids:
-                    if g_id in generos_map:
-                        genero_texto = generos_map[g_id]
-                        break
-                
-                poster_path = peli.get('poster_path')
-                imagen_url = f"https://image.tmdb.org/t/p/w500{poster_path}" if poster_path else "https://placehold.co/400x600/141417/ffffff?text=Cine"
-                
-                funciones_formateadas.append({
-                    "titulo": peli.get('title', 'Película de Estrenos').upper(),
-                    "genero": genero_texto,
-                    "num_sala": (index % 4) + 1,  
-                    "hora": f"{15 + (index % 5)}:15:00",  
-                    "fecha": peli.get('release_date', '2026-06-17'),
-                    "estado": estado_peli,
-                    "imagen_url": imagen_url
-                })
-                
-            return jsonify(funciones_formateadas), 200
-        else:
-            return jsonify([]), 200
-
-    except Exception as e:
-        return jsonify([]), 200
-
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
