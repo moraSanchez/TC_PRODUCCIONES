@@ -3,28 +3,10 @@
 {% block content %}
 <style>
     body { background: radial-gradient(circle at top, #1a0505 0%, #0d0d0d 100%); }
-    .cinema-dashboard-card {
-        background: rgba(18, 18, 18, 0.85);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(220, 53, 69, 0.2);
-        border-radius: 16px;
-    }
-    .movie-row-card {
-        background: #0a0a0a;
-        border: 1px solid #222;
-        border-radius: 12px;
-    }
-    .poster-img {
-        width: 100px;
-        height: 145px;
-        object-fit: cover;
-        border-radius: 6px;
-    }
-    .search-result-item {
-        background: #141414;
-        border: 1px solid #222;
-        cursor: pointer;
-    }
+    .cinema-dashboard-card { background: rgba(18, 18, 18, 0.85); backdrop-filter: blur(10px); border: 1px solid rgba(220, 53, 69, 0.2); border-radius: 16px; }
+    .movie-row-card { background: #0a0a0a; border: 1px solid #222; border-radius: 12px; }
+    .poster-img { width: 100px; height: 145px; object-fit: cover; border-radius: 6px; }
+    .search-result-item { background: #141414; border: 1px solid #222; cursor: pointer; }
 </style>
 
 <div class="container text-white mt-5 pb-5">
@@ -57,9 +39,11 @@
             </div>
             <div class="modal-body">
                 <form id="formFuncion">
+                    <input type="hidden" id="formIdFuncion">
                     <input type="hidden" id="formTitulo">
                     <input type="hidden" id="formGenero">
                     <input type="hidden" id="formImagenUrl">
+                    <input type="hidden" id="formSinopsis">
                     
                     <div class="mb-3">
                         <label class="form-label fw-bold text-muted small">PELÍCULA</label>
@@ -78,13 +62,13 @@
                         <input type="date" id="formFecha" class="form-control bg-dark text-white border-secondary" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Estado Inicial</label>
+                        <label class="form-label">Estado</label>
                         <select id="formEstado" class="form-select bg-dark text-white border-secondary">
                             <option value="activa">Activa</option>
                             <option value="proximamente">Próximamente</option>
                         </select>
                     </div>
-                    <button type="submit" class="btn btn-danger w-100 fw-bold mt-2 py-2">Guardar e Insertar en DB</button>
+                    <button type="submit" class="btn btn-danger w-100 fw-bold mt-2 py-2">Guardar Datos</button>
                 </form>
             </div>
         </div>
@@ -93,7 +77,6 @@
 
 <script>
 function cerrarSesion() { sessionStorage.clear(); localStorage.clear(); window.location.replace('/login'); }
-
 let modalBootstrap = null;
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -110,21 +93,27 @@ async function renderizarCarteleraCompleta() {
         contenedor.innerHTML = '';
 
         if (!funciones || funciones.length === 0) {
-            contenedor.innerHTML = '<p class="text-muted text-center w-100 py-4">No hay funciones guardadas en la tabla.</p>';
+            contenedor.innerHTML = '<p class="text-muted text-center w-100 py-4">No hay funciones guardadas.</p>';
             return;
         }
 
         funciones.forEach(f => {
             const img = f.imagen_url ? f.imagen_url : "https://placehold.co/100x145/1a1a1a/ffffff?text=Cine";
+            const JSONString = JSON.stringify(f).replace(/"/g, '&quot;');
+            
             contenedor.innerHTML += `
                 <div class="col">
                     <div class="card movie-row-card p-3 d-flex flex-row gap-3 align-items-center">
                         <img src="${img}" class="poster-img">
-                        <div class="flex-grow-1">
-                            <h5 class="text-white fw-bold mb-1">${f.titulo}</h5>
+                        <div class="flex-grow-1" style="min-width:0;">
+                            <h5 class="text-white fw-bold mb-1 text-truncate">${f.titulo}</h5>
                             <p class="text-danger small mb-2">${f.genero}</p>
-                            <span class="badge bg-dark border border-secondary">Sala ${f.num_sala}</span>
-                            <div class="mt-2 text-white-50 small">🕒 ${f.hora} | 📅 ${f.fecha}</div>
+                            <span class="badge bg-dark border border-secondary mb-2">Sala ${f.num_sala}</span>
+                            <div class="text-white-50 small mb-2">🕒 ${f.hora.substring(0,5)} HS | 📅 ${f.fecha}</div>
+                            <div class="d-flex gap-2">
+                                <button onclick="abrirModalEditar(${JSONString})" class="btn btn-sm btn-outline-warning rounded-pill px-3">✏️ Editar</button>
+                                <button onclick="eliminarFuncionInmediata(${f.idFuncion})" class="btn btn-sm btn-outline-danger rounded-pill px-3">🗑️ Borrar</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -143,9 +132,11 @@ async function buscarEnAPI() {
         contenedor.innerHTML = '';
         
         peliculas.forEach(p => {
+            const tituloEscapado = p.titulo.replace(/'/g, "\\'");
+            const sinopsisEscapada = p.sinopsis.replace(/'/g, "\\'").replace(/"/g, '\\"');
             contenedor.innerHTML += `
                 <div class="col">
-                    <div class="card search-result-item p-2 d-flex flex-row gap-2 align-items-center rounded" onclick="abrirModalAgregar('${p.titulo.replace(/'/g, "\\'")}', '${p.genero}', '${p.imagen_url}')">
+                    <div class="card search-result-item p-2 d-flex flex-row gap-2 align-items-center rounded" onclick="abrirModalAgregar('${tituloEscapado}', '${p.genero}', '${p.imagen_url}', '${sinopsisEscapada}')">
                         <img src="${p.imagen_url}" style="width: 40px; height: 60px; object-fit: cover;">
                         <div style="min-width: 0;">
                             <h6 class="text-white fw-bold m-0 text-truncate">${p.titulo}</h6>
@@ -158,42 +149,68 @@ async function buscarEnAPI() {
     } catch(err) { console.error(err); }
 }
 
-function abrirModalAgregar(titulo, genero, imagenUrl) {
+function abrirModalAgregar(titulo, genero, imagenUrl, sinopsis) {
+    document.getElementById('formIdFuncion').value = '';
     document.getElementById('formTitulo').value = titulo;
     document.getElementById('formGenero').value = genero;
     document.getElementById('formImagenUrl').value = imagenUrl;
+    document.getElementById('formSinopsis').value = sinopsis;
     document.getElementById('txtPeliculaSeleccionada').innerText = titulo;
+    document.getElementById('modalTitulo').innerText = "Programar Nueva Función";
     document.getElementById('formHora').value = "20:00";
     document.getElementById('formFecha').value = new Date().toISOString().split('T')[0];
     modalBootstrap.show();
 }
 
+function abrirModalEditar(f) {
+    document.getElementById('formIdFuncion').value = f.idFuncion;
+    document.getElementById('formTitulo').value = f.titulo;
+    document.getElementById('formGenero').value = f.genero;
+    document.getElementById('formImagenUrl').value = f.imagen_url;
+    document.getElementById('txtPeliculaSeleccionada').innerText = f.titulo;
+    document.getElementById('modalTitulo').innerText = "Modificar Parámetros de la Función";
+    document.getElementById('formSala').value = f.num_sala;
+    document.getElementById('formHora').value = f.hora.substring(0,5);
+    document.getElementById('formFecha').value = f.fecha;
+    document.getElementById('formEstado').value = f.estado;
+    modalBootstrap.show();
+}
+
 async function guardarDatosFuncion(e) {
     e.preventDefault();
+    const idFuncion = document.getElementById('formIdFuncion').value;
     const data = {
         titulo: document.getElementById('formTitulo').value,
         genero: document.getElementById('formGenero').value,
         imagen_url: document.getElementById('formImagenUrl').value,
+        sinopsis: document.getElementById('formSinopsis').value,
         num_sala: document.getElementById('formSala').value,
         hora: document.getElementById('formHora').value,
         fecha: document.getElementById('formFecha').value,
         estado: document.getElementById('formEstado').value
     };
     
+    const url = idFuncion ? `/api/funciones/editar/${idFuncion}` : '/api/funciones/guardar';
+    const method = idFuncion ? 'PUT' : 'POST';
+    
     try {
-        const res = await fetch('/api/funciones/guardar', {
-            method: 'POST',
+        const res = await fetch(url, {
+            method: method,
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
         if (res.ok) {
             modalBootstrap.hide();
-            document.getElementById('resultadosAPI').innerHTML = '';
-            document.getElementById('inputBuscarAPI').value = '';
             renderizarCarteleraCompleta();
-        } else {
-            alert("No se pudo insertar en MySQL. Revisá la consola.");
         }
+    } catch (err) { console.error(err); }
+}
+
+async function eliminarFuncionInmediata(id) {
+    if (!confirm("¿Eliminar por completo de la cartelera?")) return;
+    try {
+        const res = await fetch(`/api/funciones/eliminar/${id}`, { method: 'DELETE' });
+        if (res.ok) renderizarCarteleraCompleta();
     } catch (err) { console.error(err); }
 }
 </script>
