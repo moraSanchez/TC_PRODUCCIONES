@@ -1,8 +1,9 @@
-# app.py
-from flask import Flask, render_template, request, jsonify, redirect, url_for, flash
+from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, session
 import os
 import requests  
 from dotenv import load_dotenv
+from config.database import DatabaseConnection
+from werkzeug.security import check_password_hash, generate_password_hash
 
 # Cargar las variables de entorno desde el archivo .env
 load_dotenv()
@@ -16,7 +17,7 @@ app = Flask(__name__,
             template_folder=TEMPLATES_DIR, 
             static_folder=STATIC_DIR)
 
-# Lee la clave secreta desde el archivo .env de forma segura
+# Clave secreta para manejo de sesiones seguras
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "super_secret_session_key_cinema")
 
 # ==========================================
@@ -25,7 +26,7 @@ app.secret_key = os.getenv("FLASK_SECRET_KEY", "super_secret_session_key_cinema"
 
 @app.route('/')
 def inicio():
-    return render_template('index.html')  # Tu landing o cartelera pública
+    return render_template('index.html')  
 
 @app.route('/login')
 def login():
@@ -48,7 +49,7 @@ def nueva_funcion():
 #          RUTAS DE API (ASINCRÓNICAS)
 # ==========================================
 
-@app.route('/api/login', methods=['POST'])
+@app.route('/api/auth/login', methods=['POST'])
 def api_login():
     data = request.get_json() or {}
     email = data.get('email')
@@ -57,29 +58,90 @@ def api_login():
     if not email or not contrasenia:
         return jsonify({"error": "Faltan datos obligatorios."}), 400
         
-    return jsonify({"status": "success"}), 200
+    db = DatabaseConnection()
+    cursor = db.get_cursor()
+    if not cursor:
+        return jsonify({"error": "No hay conexión con la Base de Datos. Iniciá XAMPP."}), 500
+        
+    try:
+        cursor.execute("SELECT * FROM Usuario WHERE email = %s", (email,))
+        usuario = cursor.fetchone()
+        
+        if usuario:
+            # Soporte dual: hashes seguros de Flask y texto plano (para tus inserts de prueba)
+            if usuario['contrasenia'].startswith('scrypt:') or usuario['contrasenia'].startswith('pbkdf2:'):
+                es_valida = check_password_hash(usuario['contrasenia'], contrasenia)
+            else:
+                es_valida = (usuario['contrasenia'] == contrasenia)
+                
+            if es_valida:
+                session['usuario_id'] = usuario['idUsuario']
+                session['usuario_tipo'] = usuario['tipo']
+                
+                # RETORNO EXACTO: Con el formato 'result.usuario.xxx' que espera tu Javascript
+                return jsonify({
+                    "status": "success",
+                    "usuario": {
+                        "idUsuario": usuario['idUsuario'],
+                        "nombre": usuario['nombre'],
+                        "tipo": usuario['tipo']
+                    }
+                }), 200
+                
+        return jsonify({"error": "Correo o contraseña incorrectos."}), 401
+    except Exception as e:
+        return jsonify({"error": f"Error interno en el servidor: {str(e)}"}), 500
+
+
+@app.route('/api/auth/register', methods=['POST'])
+def api_registro():
+    data = request.get_json() or {}
+    nombre = data.get('nombre')
+    apellido = data.get('apellido')
+    email = data.get('email')
+    contrasenia = data.get('contrasenia')
+    
+    if not all([nombre, apellido, email, contrasenia]):
+        return jsonify({"error": "Todos los campos son obligatorios."}), 400
+        
+    db = DatabaseConnection()
+    cursor = db.get_cursor()
+    if not cursor:
+        return jsonify({"error": "No hay conexión con la Base de Datos. Iniciá XAMPP."}), 500
+        
+    try:
+        cursor.execute("SELECT idUsuario FROM Usuario WHERE email = %s", (email,))
+        if cursor.fetchone():
+            return jsonify({"error": "El correo electrónico ya se encuentra registrado."}), 400
+            
+        # Encriptamos la contraseña antes de guardarla
+        hash_clave = generate_password_hash(contrasenia)
+        
+        query = "INSERT INTO Usuario (nombre, apellido, email, contrasenia, tipo) VALUES (%s, %s, %s, %s, 'Cliente')"
+        cursor.execute(query, (nombre, apellido, email, hash_clave))
+        db.commit()
+        
+        return jsonify({"status": "success", "message": "Usuario creado con éxito"}), 201
+    except Exception as e:
+        return jsonify({"error": f"Error al procesar el registro: {str(e)}"}), 500
+
 
 @app.route('/api/funciones', methods=['GET'])
 def api_obtener_funciones():
     """Retorna las funciones consumiendo datos EN VIVO de la API de TMDb filtradas por idioma."""
     try:
-        # Extrae la API KEY desde tu archivo .env
         TMDB_API_KEY = os.getenv("TMDB_API_KEY")
         
         if not TMDB_API_KEY or TMDB_API_KEY == "PEGA_AQUI_TU_CLAVE_DE_TMDB":
-            print("Error: No se configuró una TMDB_API_KEY válida en el archivo .env")
             return jsonify([]), 200
             
-        # Consulta a TMDb pidiendo los datos localizados en español latino (es-MX)
         url_tmdb = f"https://api.themoviedb.org/3/movie/now_playing?api_key={TMDB_API_KEY}&language=es-MX&page=1"
-        
         response = requests.get(url_tmdb, timeout=5)
         
         if response.status_code == 200:
             datos_tmdb = response.json().get('results', [])
             funciones_formateadas = []
             
-            # Mapeo de IDs de géneros numéricos de TMDb a los textos que maneja tu frontend
             generos_map = {
                 28: "Acción",
                 878: "Ciencia ficción",
@@ -88,22 +150,16 @@ def api_obtener_funciones():
                 35: "Comedia"
             }
             
-            # Usamos enumerate para recuperar el 'index' idéntico a tu primer código estable
             for index, peli in enumerate(datos_tmdb):
-                # Si ya metimos las 12 películas deseadas, cortamos el bucle
                 if len(funciones_formateadas) >= 12:
                     break
                     
                 idioma_original = peli.get('original_language')
-                
-                # FILTRO ESTRICTO: Descartar todo lo que no sea Español ('es') o Inglés ('en')
                 if idioma_original not in ['es', 'en']:
                     continue  
                 
-                # REPARADO: Volvemos a usar 'index' para la distribución idéntica de estados y salas
                 estado_peli = "activa" if index < 6 else "proximamente"
                 
-                # Mapear géneros válidos
                 genre_ids = peli.get('genre_ids', [])
                 genero_texto = "Acción"  
                 for g_id in genre_ids:
@@ -111,11 +167,9 @@ def api_obtener_funciones():
                         genero_texto = generos_map[g_id]
                         break
                 
-                # Construcción de la URL de la portada oficial desde los servidores CDN de TMDb
                 poster_path = peli.get('poster_path')
                 imagen_url = f"https://image.tmdb.org/t/p/w500{poster_path}" if poster_path else "https://placehold.co/400x600/141417/ffffff?text=Cine"
                 
-                # REPARADO: Estructura exacta con cálculos basados en 'index' para que tu JS lo lea perfecto
                 funciones_formateadas.append({
                     "titulo": peli.get('title', 'Película de Estrenos').upper(),
                     "genero": genero_texto,
@@ -128,11 +182,9 @@ def api_obtener_funciones():
                 
             return jsonify(funciones_formateadas), 200
         else:
-            print(f"Error: TMDb respondió con código de estado HTTP {response.status_code}")
             return jsonify([]), 200
 
     except Exception as e:
-        print(f"Error crítico al conectar con la API de TMDb: {e}")
         return jsonify([]), 200
 
 
