@@ -68,7 +68,7 @@ function renderizarCarteleras(lista) {
     contenedorHoy.innerHTML = '';
     contenedorPróximos.innerHTML = '';
 
-    // Separación por estados basados en la API
+    // Separación por estados basados en la API...
     const enCartelera = lista.filter(f => f.estado && f.estado.toLowerCase() === 'activa');
     const proximos = lista.filter(f => f.estado && f.estado.toLowerCase() !== 'activa');
 
