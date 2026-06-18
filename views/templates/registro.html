@@ -34,6 +34,7 @@
     </div>
 </div>
 
+<<<<<<< Updated upstream
 <div class="modal fade" id="modalResultado" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content bg-dark text-white border-secondary">
@@ -65,6 +66,18 @@ document.getElementById('formRegistro').addEventListener('submit', async (e) => 
     const btnModalAccion = document.getElementById('btnModalAccion');
 
     try {
+=======
+<script>
+document.getElementById('formRegistro').addEventListener('submit', async (e) => {
+    e.preventDefault(); // Evita que la página se recargue de forma tradicional
+    
+    // Capturamos los datos del formulario
+    const formData = new FormData(e.target);
+    const data = Object.fromEntries(formData.entries());
+
+    try {
+        // Enviamos los datos a Flask como JSON limpio
+>>>>>>> Stashed changes
         const response = await fetch('/api/auth/register', {
             method: 'POST',
             headers: {
@@ -76,6 +89,7 @@ document.getElementById('formRegistro').addEventListener('submit', async (e) => 
         const result = await response.json();
 
         if (response.ok) {
+<<<<<<< Updated upstream
             modalTitulo.innerText = "¡Registro Exitoso!";
             modalTitulo.className = "modal-title fw-bold text-success";
             modalMensaje.innerText = "Tu usuario fue creado correctamente en el sistema.";
@@ -104,6 +118,18 @@ document.getElementById('formRegistro').addEventListener('submit', async (e) => 
         modalMensaje.innerText = "No se pudo establecer contacto con el servidor de Flask.";
         btnModalAccion.onclick = () => { miModal.hide(); };
         miModal.show();
+=======
+            // ¡VENTANA EMERGENTE DE EXITO!
+            alert("✨ ¡Usuario registrado exitosamente! ✨");
+            // Redirige al inicio de la app de cine automáticamente
+            window.location.href = '/'; 
+        } else {
+            // Ventana emergente por si hay un error (ej: el email ya existe)
+            alert("Error: " + (result.error || "No se pudo registrar"));
+        }
+    } catch (error) {
+        alert("Hubo un problema al conectar con el servidor.");
+>>>>>>> Stashed changes
     }
 });
 </script>
