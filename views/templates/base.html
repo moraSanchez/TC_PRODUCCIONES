@@ -20,20 +20,20 @@
                     <li class="nav-item">
                         <a class="nav-link active" href="/">PELÍCULAS</a>
                     </li>
-                    <li class="nav-item d-none" id="navLinkAdmin">
+                    <li class="nav-item {% if session.get('usuario_tipo') != 'Administrador' %}d-none{% endif %}" id="navLinkAdmin">
                         <a class="nav-link text-warning fw-bold" href="/admin/dashboard">PANEL ADMIN</a>
                     </li>
                 </ul>
                 <div class="navbar-nav ms-auto align-items-center">
                     
-                    <div id="navInvitado" class="d-flex align-items-center">
+                    <div id="navInvitado" class="d-flex align-items-center {% if session.get('usuario_nombre') %}d-none{% endif %}">
                         <a href="/registro" class="nav-link">REGISTRARSE</a>
                         <a href="/login" class="btn btn-danger btn-sm rounded-pill px-4 ms-lg-2 fw-bold">INGRESAR</a>
                     </div>
                     
-                    <div id="navUsuario" class="d-flex align-items-center d-none gap-3">
-                        <span class="text-white small">Hola, <strong class="text-danger fw-bold" id="lblNombreUsuario">...</strong></span>
-                        <button onclick="cerrarSesionGlobal()" class="btn btn-outline-light btn-sm rounded-pill px-3 fw-bold">SALIR</button>
+                    <div id="navUsuario" class="d-flex align-items-center {% if not session.get('usuario_nombre') %}d-none{% endif %} gap-3">
+                        <span class="text-white small">Hola, <strong class="text-danger fw-bold" id="lblNombreUsuario">{{ session.get('usuario_nombre', '...') }}</strong></span>
+                        <a href="/logout" class="btn btn-outline-light btn-sm rounded-pill px-3 fw-bold">SALIR</a>
                     </div>
 
                 </div>
@@ -52,38 +52,5 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-    <script>
-        function manejarEstadoNavbar() {
-            const nombre = sessionStorage.getItem('nombreUsuario');
-            const tipo = sessionStorage.getItem('tipoUsuario');
-            
-            const navInvitado = document.getElementById('navInvitado');
-            const navUsuario = document.getElementById('navUsuario');
-            const navLinkAdmin = document.getElementById('navLinkAdmin');
-            const lblNombreUsuario = document.getElementById('lblNombreUsuario');
-            
-            if (nombre) {
-                if(navInvitado) navInvitado.classList.add('d-none');
-                if(navUsuario) navUsuario.classList.remove('d-none');
-                if(lblNombreUsuario) lblNombreUsuario.innerText = nombre;
-                
-                if (tipo === 'Administrador' && navLinkAdmin) {
-                    navLinkAdmin.classList.remove('d-none');
-                }
-            } else {
-                if(navInvitado) navInvitado.classList.remove('d-none');
-                if(navUsuario) navUsuario.classList.add('d-none');
-                if(navLinkAdmin) navLinkAdmin.classList.add('d-none');
-            }
-        }
-
-        function cerrarSesionGlobal() {
-            sessionStorage.clear();
-            window.location.href = '/login';
-        }
-
-        document.addEventListener('DOMContentLoaded', manejarEstadoNavbar);
-    </script>
 </body>
 </html>
