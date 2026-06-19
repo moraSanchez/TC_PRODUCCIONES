@@ -44,17 +44,16 @@ document.getElementById('formLogin').addEventListener('submit', async (e) => {
         const result = await response.json();
 
         if (response.ok && result.status === 'success') {
-            // Guardamos localmente para doble verificación inmediata del Dashboard
+            // Guardamos localmente para soporte inmediato en Front-End
             sessionStorage.setItem('usuario_id', result.usuario.idUsuario);
             sessionStorage.setItem('nombreUsuario', result.usuario.nombre);
             sessionStorage.setItem('tipoUsuario', result.usuario.tipo);
-            localStorage.setItem('tipoUsuario', result.usuario.tipo);
 
-            // Redirección definitiva
+            // Redirección segura según rol
             if (result.usuario.tipo === 'Administrador') {
-                window.location.replace('/admin/dashboard');
+                window.location.href = '/admin/dashboard';
             } else {
-                window.location.replace('/');
+                window.location.href = '/';
             }
         } else {
             alertError.innerText = result.error || 'Credenciales incorrectas.';

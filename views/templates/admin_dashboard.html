@@ -49,10 +49,27 @@
                         <label class="form-label fw-bold text-muted small">PELÍCULA</label>
                         <p id="txtPeliculaSeleccionada" class="fs-5 fw-bold m-0 text-white"></p>
                     </div>
+                    
                     <div class="mb-3">
                         <label class="form-label">Sala Destinada</label>
-                        <input type="number" id="formSala" class="form-control bg-dark text-white border-secondary" min="1" max="10" value="1" required>
+                        <select id="formSala" class="form-select bg-dark text-white border-secondary" required>
+                            <option value="1">Sala 1</option>
+                            <option value="2">Sala 2</option>
+                            <option value="3">Sala 3</option>
+                            <option value="4">Sala 4</option>
+                            <option value="5">Sala 5</option>
+                            <option value="6">Sala 6</option>
+                        </select>
                     </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Idioma / Audio</label>
+                        <select id="formIdioma" class="form-select bg-dark text-white border-secondary">
+                            <option value="Doblada">Doblada al Español</option>
+                            <option value="Subtitulada">Subtitulada</option>
+                        </select>
+                    </div>
+                    
                     <div class="mb-3">
                         <label class="form-label">Horario (HH:MM)</label>
                         <input type="time" id="formHora" class="form-control bg-dark text-white border-secondary" required>
@@ -83,6 +100,10 @@ document.addEventListener('DOMContentLoaded', () => {
     modalBootstrap = new bootstrap.Modal(document.getElementById('modalFuncion'));
     renderizarCarteleraCompleta();
     document.getElementById('formFuncion').addEventListener('submit', guardarDatosFuncion);
+    
+    const campoFecha = document.getElementById('formFecha');
+    const hoyString = new Date().toLocaleDateString('sv-SE'); 
+    campoFecha.min = hoyString;
 });
 
 async function renderizarCarteleraCompleta() {
@@ -100,6 +121,7 @@ async function renderizarCarteleraCompleta() {
         funciones.forEach(f => {
             const img = f.imagen_url ? f.imagen_url : "https://placehold.co/100x145/1a1a1a/ffffff?text=Cine";
             const JSONString = JSON.stringify(f).replace(/"/g, '&quot;');
+            const idiomaMostrado = f.idioma ? f.idioma.toUpperCase() : 'DOBLADA';
             
             contenedor.innerHTML += `
                 <div class="col">
@@ -107,7 +129,7 @@ async function renderizarCarteleraCompleta() {
                         <img src="${img}" class="poster-img">
                         <div class="flex-grow-1" style="min-width:0;">
                             <h5 class="text-white fw-bold mb-1 text-truncate">${f.titulo}</h5>
-                            <p class="text-danger small mb-2">${f.genero}</p>
+                            <p class="text-danger small mb-2">${f.genero} <span class="text-muted">|</span> <span class="text-warning">${idiomaMostrado}</span></p>
                             <span class="badge bg-dark border border-secondary mb-2">Sala ${f.num_sala}</span>
                             <div class="text-white-50 small mb-2">🕒 ${f.hora.substring(0,5)} HS | 📅 ${f.fecha}</div>
                             <div class="d-flex gap-2">
@@ -158,7 +180,8 @@ function abrirModalAgregar(titulo, genero, imagenUrl, sinopsis) {
     document.getElementById('txtPeliculaSeleccionada').innerText = titulo;
     document.getElementById('modalTitulo').innerText = "Programar Nueva Función";
     document.getElementById('formHora').value = "20:00";
-    document.getElementById('formFecha').value = new Date().toISOString().split('T')[0];
+    document.getElementById('formIdioma').value = "Doblada";
+    document.getElementById('formFecha').value = new Date().toLocaleDateString('sv-SE');
     modalBootstrap.show();
 }
 
@@ -170,6 +193,7 @@ function abrirModalEditar(f) {
     document.getElementById('txtPeliculaSeleccionada').innerText = f.titulo;
     document.getElementById('modalTitulo').innerText = "Modificar Parámetros de la Función";
     document.getElementById('formSala').value = f.num_sala;
+    document.getElementById('formIdioma').value = f.idioma ? f.idioma : "Doblada";
     document.getElementById('formHora').value = f.hora.substring(0,5);
     document.getElementById('formFecha').value = f.fecha;
     document.getElementById('formEstado').value = f.estado;
@@ -185,6 +209,7 @@ async function guardarDatosFuncion(e) {
         imagen_url: document.getElementById('formImagenUrl').value,
         sinopsis: document.getElementById('formSinopsis').value,
         num_sala: document.getElementById('formSala').value,
+        idioma: document.getElementById('formIdioma').value,
         hora: document.getElementById('formHora').value,
         fecha: document.getElementById('formFecha').value,
         estado: document.getElementById('formEstado').value
@@ -202,6 +227,9 @@ async function guardarDatosFuncion(e) {
         if (res.ok) {
             modalBootstrap.hide();
             renderizarCarteleraCompleta();
+        } else {
+            const errData = await res.json();
+            alert(errData.error || "Error al procesar la función.");
         }
     } catch (err) { console.error(err); }
 }
