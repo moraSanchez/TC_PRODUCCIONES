@@ -1,3 +1,5 @@
+#administrador.py
+
 from models.usuario import Usuario
 from models.funcion import Funcion
 

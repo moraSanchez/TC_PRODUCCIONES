@@ -1,10 +1,11 @@
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 import os
 import requests  
-from datetime import datetime, timedelta  # <-- Se agregó timedelta para calcular los estrenos futuros
+from datetime import datetime, timedelta  
 from dotenv import load_dotenv
 from config.database import DatabaseConnection  
-from werkzeug.security import check_password_hash
+# Agregamos generate_password_hash para solucionar el problema del registro
+from werkzeug.security import generate_password_hash, check_password_hash
 
 load_dotenv()
 
@@ -22,7 +23,7 @@ GENEROS_MAP = {
 }
 
 # ==========================================
-#          RUTAS DE VISTAS (WEB)
+#           RUTAS DE VISTAS (WEB)
 # ==========================================
 
 @app.route('/')
@@ -108,7 +109,7 @@ def seleccionar_funcion(id_pelicula):
 
 
 # ==========================================
-#          RUTAS DE AUTENTICACIÓN
+#           RUTAS DE AUTENTICACIÓN
 # ==========================================
 
 @app.route('/api/auth/login', methods=['POST'])
@@ -155,28 +156,34 @@ def api_registro():
     contrasenia = data.get('contrasenia', '').strip()
 
     if not nombre or not email or not contrasenia:
-        return jsonify({"error": "Faltan campos obligatorios para el registro."}), 400
+        return jsonify({"status": "error", "error": "Faltan campos obligatorios para el registro."}), 400
 
     db = DatabaseConnection()
     cursor = db.get_cursor()
     if not cursor: 
-        return jsonify({"error": "Base de datos desconectada."}), 500
+        return jsonify({"status": "error", "error": "Base de datos desconectada del sistema."}), 500
 
     try:
         try: cursor.fetchall()
         except Exception: pass
 
+        # Validar si el mail ya está en la Base de Datos
         cursor.execute("SELECT idUsuario FROM Usuario WHERE LOWER(email) = LOWER(%s)", (email,))
         if cursor.fetchone():
-            return jsonify({"error": "El correo electrónico ya se encuentra registrado."}), 400
+            return jsonify({"status": "error", "error": "El correo electrónico ya se encuentra registrado."}), 400
+
+        # Encriptamos la contraseña de manera segura para evitar que rompa el validador del login
+        pass_encriptada = generate_password_hash(contrasenia)
 
         query = "INSERT INTO Usuario (nombre, apellido, email, contrasenia, tipo) VALUES (%s, %s, %s, %s, %s)"
-        cursor.execute(query, (nombre, apellido, email, contrasenia, 'Cliente'))
+        cursor.execute(query, (nombre, apellido, email, pass_encriptada, 'Cliente'))
         db.commit()
 
+        # Mandamos la respuesta con "status": "success" para que el JS del HTML la procese correctamente
         return jsonify({"status": "success", "message": "Usuario registrado correctamente."}), 201
     except Exception as e:
-        return jsonify({"error": f"Error en la base de datos: {str(e)}"}), 500
+        print(f"Fallo crítico en Query de Registro: {e}")
+        return jsonify({"status": "error", "error": f"Error interno en la base de datos: {str(e)}"}), 500
 
 
 @app.route('/logout')
@@ -186,7 +193,7 @@ def logout():
 
 
 # ==========================================
-#          RUTAS DE API INTERNA
+#           RUTAS DE API INTERNA
 # ==========================================
 
 @app.route('/api/tmdb/buscar', methods=['GET'])
@@ -222,7 +229,6 @@ def api_lista_funciones_db():
         try: cursor.fetchall()
         except Exception: pass
         
-        # 1. Intentamos consultar si ya existen funciones cargadas en la Base de Datos
         cursor.execute("""
             SELECT idFuncion, titulo, genero, imagen_url, num_sala, fecha, hora, estado, Pelicula_idPelicula, COALESCE(idioma, 'Doblada') as idioma
             FROM Funcion 
@@ -233,24 +239,20 @@ def api_lista_funciones_db():
         """)
         funciones = cursor.fetchall()
         
-        # Si la BDD ya tiene registros, los enviamos directamente al frontend
         if funciones:
             for f in funciones:
                 if f.get('hora'): f['hora'] = str(f['hora'])
                 if f.get('fecha'): f['fecha'] = str(f['fecha'])
             return jsonify(funciones), 200
 
-        # 2. Si la Base de Datos está VACÍA, traemos datos reales desde la API de TMDB (Latinoamérica)
         print("Base de datos vacía. Cargando películas iniciales por defecto desde TMDB...")
         TMDB_API_KEY = os.getenv("TMDB_API_KEY", "TU_API_KEY_ACA")
         
-        # Endpoints configurados para español e historias de cines en Latinoamérica (Región: Argentina)
         url_now_playing = f"https://api.themoviedb.org/3/movie/now_playing?api_key={TMDB_API_KEY}&language=es-MX&region=AR&page=1"
         url_upcoming = f"https://api.themoviedb.org/3/movie/upcoming?api_key={TMDB_API_KEY}&language=es-MX&region=AR&page=1"
         
         peliculas_a_guardar = []
         
-        # Obtener exactamente 5 Películas en Cartelera (Activas)
         res_np = requests.get(url_now_playing, timeout=5)
         if res_np.status_code == 200:
             movies_np = res_np.json().get('results', [])
@@ -262,7 +264,6 @@ def api_lista_funciones_db():
                     "index": index
                 })
                 
-        # Obtener exactamente 5 Próximos Estrenos (Próximamente)
         res_up = requests.get(url_upcoming, timeout=5)
         if res_up.status_code == 200:
             movies_up = res_up.json().get('results', [])
@@ -277,7 +278,6 @@ def api_lista_funciones_db():
 
         funciones_retorno = []
         
-        # Procesar e insertar los registros de forma automática en MySQL
         for item in peliculas_a_guardar:
             peli = item["peli"]
             titulo = peli.get('title', '').upper()
@@ -288,7 +288,6 @@ def api_lista_funciones_db():
             g_ids = peli.get('genre_ids', [])
             genero = GENEROS_MAP.get(g_ids[0], "Acción") if g_ids else "Acción"
             
-            # Verificar o registrar la Película
             cursor.execute("SELECT idPelicula FROM Pelicula WHERE UPPER(titulo) = UPPER(%s)", (titulo,))
             pelicula_existente = cursor.fetchone()
             
@@ -300,7 +299,6 @@ def api_lista_funciones_db():
                 db.commit()
                 id_pelicula = cursor.lastrowid
             
-            # Configurar las propiedades de la Funcion
             num_sala = (item["index"] % 4) + 1
             hora = f"{16 + item['index']}:30:00"
             estado_final = item["estado"]
@@ -312,7 +310,6 @@ def api_lista_funciones_db():
             db.commit()
             id_funcion = cursor.lastrowid
             
-            # Estructurar la lista de respuesta
             funciones_retorno.append({
                 "idFuncion": id_funcion,
                 "titulo": titulo,
@@ -337,81 +334,135 @@ def api_lista_funciones_db():
 def api_guardar_funcion():
     data = request.get_json() or {}
     fecha_recibida = data.get('fecha')
+    horarios = data.get('horarios', [])  # Recibe el array enviado por JS
+
+    if not horarios:
+        return jsonify({"error": "Debe proporcionar al menos un horario para la función."}), 400
     
     if fecha_recibida:
         try:
             fecha_funcion = datetime.strptime(fecha_recibida, '%Y-%m-%d').date()
             if fecha_funcion < datetime.today().date():
-                return jsonify({"error": "No se pueden programar funciones en días anteriores al actual."}), 400
+                return jsonify({"error": "No se pueden programar funciones en días anteriores al de hoy."}), 400
         except ValueError:
             return jsonify({"error": "Formato de fecha inválido."}), 400
 
     db = DatabaseConnection()
     cursor = db.get_cursor()
-    if not cursor: return jsonify({"error": "Base de datos caída."}), 500
+    if not cursor: 
+        return jsonify({"error": "Conexión a la base de datos caída."}), 500
     
     try:
+        # 1. Comprobar si la película ya existe única en catálogo por su título
         cursor.execute("SELECT idPelicula FROM Pelicula WHERE UPPER(titulo) = UPPER(%s)", (data.get('titulo'),))
         pelicula_existente = cursor.fetchone()
         
         if pelicula_existente:
             id_pelicula = pelicula_existente['idPelicula']
         else:
+            # Si no existe, la damos de alta primero
             query_pelicula = "INSERT INTO Pelicula (titulo, sinopsis, duracion, genero, imagen_url) VALUES (%s, %s, %s, %s, %s)"
-            cursor.execute(query_pelicula, (data.get('titulo'), data.get('sinopsis', 'Sin sinopsis disponible.'), 120, data.get('genero'), data.get('imagen_url')))
+            cursor.execute(query_pelicula, (
+                data.get('titulo'), 
+                data.get('sinopsis', 'Sin sinopsis disponible.'), 
+                int(data.get('duracion', 120)), 
+                data.get('genero'), 
+                data.get('imagen_url')
+            ))
             db.commit()
             id_pelicula = cursor.lastrowid
 
         idioma_crudo = data.get('idioma', 'Doblada')
-        if "dob" in idioma_crudo.lower():
-            idioma_final = "Doblada"
-        elif "sub" in idioma_crudo.lower():
-            idioma_final = "Subtitulada"
-        else:
-            idioma_final = "Doblada"
+        idioma_final = "Subtitulada" if "sub" in idioma_crudo.lower() else "Doblada"
 
+        # 2. INSERCIÓN MÚLTIPLE: Un registro por cada horario mapeado
         query_funcion = """INSERT INTO Funcion (titulo, genero, imagen_url, num_sala, fecha, hora, estado, Pelicula_idPelicula, idioma) 
                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"""
-        cursor.execute(query_funcion, (
-            data.get('titulo'), data.get('genero'), data.get('imagen_url'),
-            int(data.get('num_sala', 1)), data.get('fecha'), data.get('hora'),
-            data.get('estado', 'activa'), id_pelicula, idioma_final
-        ))
+        
+        for hora in horarios:
+            cursor.execute(query_funcion, (
+                data.get('titulo'), 
+                data.get('genero'), 
+                data.get('imagen_url'),
+                int(data.get('num_sala', 1)), 
+                data.get('fecha'), 
+                hora,
+                data.get('estado', 'activa'), 
+                id_pelicula, 
+                idioma_final
+            ))
+            
         db.commit()
-        return jsonify({"status": "success"}), 201
-    except Exception as e: return jsonify({"error": str(e)}), 500
+        return jsonify({"status": "success", "message": f"{len(horarios)} horarios registrados."}), 201
+    except Exception as e:
+        db.rollback()
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route('/api/funciones/editar/<int:id_funcion>', methods=['PUT'])
 def api_editar_funcion(id_funcion):
     data = request.get_json() or {}
+    horarios = data.get('horarios', [])
     fecha_recibida = data.get('fecha')
     
-    if fecha_recibida:
-        try:
-            fecha_funcion = datetime.strptime(fecha_recibida, '%Y-%m-%d').date()
-            if fecha_funcion < datetime.today().date():
-                return jsonify({"error": "No se pueden modificar funciones a días anteriores al actual."}), 400
-        except ValueError:
-            return jsonify({"error": "Formato de fecha inválido."}), 400
-
+    if not horarios:
+        return jsonify({"error": "La función editada debe contener al menos un horario."}), 400
+        
     db = DatabaseConnection()
     cursor = db.get_cursor()
-    if not cursor: return jsonify({"error": "Base de datos caída."}), 500
+    if not cursor: 
+        return jsonify({"error": "Conexión a la base de datos caída."}), 500
+    
     try:
-        idioma_crudo = data.get('idioma', 'Doblada')
-        if "dob" in idioma_crudo.lower():
-            idioma_final = "Doblada"
-        elif "sub" in idioma_crudo.lower():
-            idioma_final = "Subtitulada"
-        else:
-            idioma_final = "Doblada"
+        # Localizamos cuál es la película asignada originalmente a esta función
+        cursor.execute("SELECT Pelicula_idPelicula, fecha FROM Funcion WHERE idFuncion = %s", (id_funcion,))
+        funcion_actual = cursor.fetchone()
+        if not funcion_actual:
+            return jsonify({"error": "La función que intenta editar no existe."}), 404
+            
+        id_pelicula = funcion_actual['Pelicula_idPelicula']
+        fecha_evaluar = fecha_recibida if fecha_recibida else funcion_actual['fecha']
 
-        query = "UPDATE Funcion SET num_sala=%s, hora=%s, fecha=%s, estado=%s, idioma=%s WHERE idFuncion=%s"
-        cursor.execute(query, (int(data.get('num_sala')), data.get('hora'), data.get('fecha'), data.get('estado'), idioma_final, id_funcion))
+        # 1. Actualizamos datos de la Película global primero
+        query_update_pelicula = """UPDATE Pelicula SET titulo=%s, genero=%s, sinopsis=%s, duracion=%s, imagen_url=%s 
+                                   WHERE idPelicula=%s"""
+        cursor.execute(query_update_pelicula, (
+            data.get('titulo'), 
+            data.get('genero'), 
+            data.get('sinopsis'), 
+            int(data.get('duracion', 120)), 
+            data.get('imagen_url'), 
+            id_pelicula
+        ))
+
+        # 2. CLEAR: Eliminamos temporalmente los horarios previos de la película para esta fecha específica
+        cursor.execute("DELETE FROM Funcion WHERE Pelicula_idPelicula = %s AND fecha = %s", (id_pelicula, fecha_evaluar))
+        
+        # 3. INSERT: Re-insertamos los horarios actualizados que quedaron guardados en la modal
+        idioma_crudo = data.get('idioma', 'Doblada')
+        idioma_final = "Subtitulada" if "sub" in idioma_crudo.lower() else "Doblada"
+        
+        query_reinsertar = """INSERT INTO Funcion (titulo, genero, imagen_url, num_sala, fecha, hora, estado, Pelicula_idPelicula, idioma) 
+                              VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"""
+                           
+        for hora in horarios:
+            cursor.execute(query_reinsertar, (
+                data.get('titulo'), 
+                data.get('genero'), 
+                data.get('imagen_url'),
+                int(data.get('num_sala', 1)), 
+                fecha_evaluar, 
+                hora,
+                data.get('estado', 'activa'), 
+                id_pelicula, 
+                idioma_final
+            ))
+            
         db.commit()
-        return jsonify({"status": "success"}), 200
-    except Exception as e: return jsonify({"error": str(e)}), 500
+        return jsonify({"status": "success", "message": "Horarios y datos actualizados correctamente."}), 200
+    except Exception as e:
+        db.rollback()
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route('/api/funciones/eliminar/<int:id_funcion>', methods=['DELETE'])

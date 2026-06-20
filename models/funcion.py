@@ -43,7 +43,7 @@ class Funcion:
                 self.id_funcion = cursor.lastrowid
                 return True
             except Exception as e:
-                print(f"❌ Error al guardar función en BD: {e}")
+                print(f"Error al guardar función en BD: {e}")
                 return False
         return False
 
@@ -61,7 +61,7 @@ class Funcion:
                 db.commit()
                 return True
             except Exception as e:
-                print(f"❌ Error al actualizar función en BD: {e}")
+                print(f"Error al actualizar función en BD: {e}")
                 return False
         return False
 
@@ -75,7 +75,7 @@ class Funcion:
                 db.commit()
                 return True
             except Exception as e:
-                print(f"❌ Error al eliminar función en BD: {e}")
+                print(f"Error al eliminar función en BD: {e}")
                 return False
         return False
 
