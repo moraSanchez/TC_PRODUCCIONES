@@ -1,25 +1,38 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
-    <div class="card p-4 text-white bg-dark border-secondary" style="width: 100%; max-width: 400px; border-radius: 15px;">
-        <h3 class="text-center text-danger fw-bold mb-4">INGRESAR AL CINE</h3>
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 85vh;">
+    <div class="auth-card-premium p-4 p-sm-5 text-white shadow-2xl" style="width: 100%; max-width: 440px; border-radius: 24px; background: var(--bg-card); border: 1px solid rgba(255, 255, 255, 0.06); position: relative;">
         
-        <div id="alertError" class="alert alert-danger d-none" role="alert"></div>
+        <div style="position: absolute; top: -10%; left: 50%; transform: translateX(-50%); width: 120px; height: 120px; background: var(--accent); filter: blur(70px); opacity: 0.15; pointer-events: none;"></div>
 
-        <form id="formLogin">
+        <div class="text-center mb-4">
+            <span class="text-uppercase tracking-wider small text-muted fw-bold" style="letter-spacing: 2px;">BIENVENIDO DE NUEVO</span>
+            <h2 class="fw-black text-white mt-1 mb-2" style="font-size: 1.85rem; letter-spacing: -0.5px;">INGRESAR AL CINE</h2>
+            <div style="width: 40px; height: 4px; background: var(--accent); margin: 0 auto; border-radius: 2px;"></div>
+        </div>
+        
+        <div id="alertError" class="alert alert-danger border-0 text-white small p-3 mb-4 rounded-xl d-none shadow-lg" style="background: rgba(220, 38, 38, 0.2); backdrop-filter: blur(4px);" role="alert"></div>
+
+        <form id="formLogin" autocomplete="off">
             <div class="mb-3">
-                <label for="email" class="form-label">Correo Electrónico</label>
-                <input type="email" class="form-control bg-dark text-white border-secondary" id="email" required>
+                <label for="email" class="form-label small fw-bold text-uppercase mb-2" style="letter-spacing: 0.5px; font-size: 0.75rem;">Correo Electrónico</label>
+                <input type="email" class="form-control text-white py-3 px-3 rounded-xl" id="email" required placeholder="nombre@ejemplo.com" style="font-size: 0.95rem;">
             </div>
+            
             <div class="mb-4">
-                <label for="contrasenia" class="form-label">Contraseña</label>
-                <input type="password" class="form-control bg-dark text-white border-secondary" id="contrasenia" required>
+                <label for="contrasenia" class="form-label small fw-bold text-uppercase mb-2" style="letter-spacing: 0.5px; font-size: 0.75rem;">Contraseña</label>
+                <input type="password" class="form-control text-white py-3 px-3 rounded-xl" id="contrasenia" required placeholder="••••••••" style="font-size: 0.95rem;">
             </div>
-            <button type="submit" class="btn btn-danger w-100 fw-bold py-2">Iniciar Sesión</button>
+            
+            <button type="submit" class="btn btn-premium-cta w-100 fw-bold py-3 rounded-xl shadow-lg mt-2 transition-all" style="font-size: 0.95rem; background: #ffffff; color: #09090b; letter-spacing: 0.5px;">
+                INICIAR SESIÓN
+            </button>
         </form>
         
-        <p class="text-center mt-3 text-muted small">¿No tenés cuenta? <a href="/registro" class="text-danger decoration-none">Registrate acá</a></p>
+        <div class="text-center mt-4">
+            <p class="text-muted small mb-0">¿No tenés cuenta? <a href="/registro" class="text-white fw-bold text-decoration-none border-bottom border-secondary pb-1 ms-1" style="transition: color 0.2s;">Registrate acá</a></p>
+        </div>
     </div>
 </div>
 
@@ -44,12 +57,10 @@ document.getElementById('formLogin').addEventListener('submit', async (e) => {
         const result = await response.json();
 
         if (response.ok && result.status === 'success') {
-            // Guardamos localmente para soporte inmediato en Front-End
             sessionStorage.setItem('usuario_id', result.usuario.idUsuario);
             sessionStorage.setItem('nombreUsuario', result.usuario.nombre);
             sessionStorage.setItem('tipoUsuario', result.usuario.tipo);
 
-            // Redirección segura según rol
             if (result.usuario.tipo === 'Administrador') {
                 window.location.href = '/admin/dashboard';
             } else {

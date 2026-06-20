@@ -1,35 +1,49 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
-    <div class="card p-4 bg-dark text-white border-secondary" style="width: 100%; max-width: 450px; border-radius: 12px;">
-        <h3 class="text-center text-danger fw-bold mb-4">CREAR CUENTA</h3>
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 85vh; padding: 2rem 0;">
+    <div class="auth-card-premium p-4 p-sm-5 text-white shadow-2xl" style="width: 100%; max-width: 480px; border-radius: 24px; background: #141417; border: 1px solid rgba(255, 255, 255, 0.06); position: relative;">
         
-        <div id="alertaError" class="alert alert-danger d-none" role="alert"></div>
-        <div id="alertaExito" class="alert alert-success d-none" role="alert">¡Registro exitoso! Redirigiendo...</div>
+        <div style="position: absolute; top: -10%; left: 50%; transform: translateX(-50%); width: 120px; height: 120px; background: var(--accent); filter: blur(70px); opacity: 0.15; pointer-events: none;"></div>
 
-        <form id="formRegistro">
-            <div class="mb-3">
-                <label class="form-label small text-muted fw-bold">NOMBRE</label>
-                <input type="text" id="regNombre" class="form-control bg-zinc-900 text-white border-secondary" required placeholder="Tu nombre">
+        <div class="text-center mb-4">
+            <span class="text-uppercase tracking-wider small text-muted fw-bold" style="letter-spacing: 2px;">UNITE A NUESTRA COMUNIDAD</span>
+            <h2 class="fw-black text-white mt-1 mb-2" style="font-size: 1.85rem; letter-spacing: -0.5px;">CREAR CUENTA</h2>
+            <div style="width: 40px; height: 4px; background: var(--accent); margin: 0 auto; border-radius: 2px;"></div>
+        </div>
+        
+        <div id="alertaError" class="alert alert-danger border-0 text-white small p-3 mb-4 rounded-xl d-none shadow-lg" style="background: rgba(220, 38, 38, 0.2); backdrop-filter: blur(4px);" role="alert"></div>
+        <div id="alertaExito" class="alert alert-success border-0 text-white small p-3 mb-4 rounded-xl d-none shadow-lg" style="background: rgba(16, 185, 129, 0.2); backdrop-filter: blur(4px);" role="alert">¡Registro exitoso! Redirigiendo...</div>
+
+        <form id="formRegistro" autocomplete="off">
+            <div class="row g-3 mb-3">
+                <div class="col-sm-6">
+                    <label class="form-label small text-zinc-300 fw-bold text-uppercase mb-2" style="letter-spacing: 0.5px; font-size: 0.72rem;">Nombre</label>
+                    <input type="text" id="regNombre" class="form-control text-white border-zinc bg-zinc-900 py-3 px-3 rounded-xl" required placeholder="Tu nombre" style="font-size: 0.95rem; background-color: #18181b !important; border-color: #27272a !important;">
+                </div>
+                <div class="col-sm-6">
+                    <label class="form-label small text-zinc-300 fw-bold text-uppercase mb-2" style="letter-spacing: 0.5px; font-size: 0.72rem;">Apellido</label>
+                    <input type="text" id="regApellido" class="form-control text-white border-zinc bg-zinc-900 py-3 px-3 rounded-xl" placeholder="Tu apellido" style="font-size: 0.95rem; background-color: #18181b !important; border-color: #27272a !important;">
+                </div>
             </div>
+            
             <div class="mb-3">
-                <label class="form-label small text-muted fw-bold">APELLIDO</label>
-                <input type="text" id="regApellido" class="form-control bg-zinc-900 text-white border-secondary" placeholder="Tu apellido">
+                <label class="form-label small text-zinc-300 fw-bold text-uppercase mb-2" style="letter-spacing: 0.5px; font-size: 0.72rem;">Correo Electrónico</label>
+                <input type="email" id="regEmail" class="form-control text-white border-zinc bg-zinc-900 py-3 px-3 rounded-xl" required placeholder="correo@ejemplo.com" style="font-size: 0.95rem; background-color: #18181b !important; border-color: #27272a !important;">
             </div>
-            <div class="mb-3">
-                <label class="form-label small text-muted fw-bold">CORREO ELECTRÓNICO</label>
-                <input type="email" id="regEmail" class="form-control bg-zinc-900 text-white border-secondary" required placeholder="correo@ejemplo.com">
+            
+            <div class="mb-4">
+                <label class="form-label small text-zinc-300 fw-bold text-uppercase mb-2" style="letter-spacing: 0.5px; font-size: 0.72rem;">Contraseña</label>
+                <input type="password" id="regContrasenia" class="form-control text-white border-zinc bg-zinc-900 py-3 px-3 rounded-xl" required placeholder="••••••••" style="font-size: 0.95rem; background-color: #18181b !important; border-color: #27272a !important;">
             </div>
-            <div class="mb-3">
-                <label class="form-label small text-muted fw-bold">CONTRASEÑA</label>
-                <input type="password" id="regContrasenia" class="form-control bg-zinc-900 text-white border-secondary" required placeholder="••••••••">
-            </div>
-            <button type="submit" class="btn btn-danger w-100 fw-bold py-2 mt-3">Registrarme y probar BD</button>
+            
+            <button type="submit" class="btn btn-premium-cta w-100 fw-bold py-3 rounded-xl shadow-lg mt-2 transition-all" style="font-size: 0.95rem; background: #ffffff; color: #09090b; letter-spacing: 0.5px;">
+                REGISTRARME
+            </button>
         </form>
         
-        <div class="text-center mt-3">
-            <a href="/login" class="text-danger small text-decoration-none">¿Ya tenés cuenta? Ingresá acá</a>
+        <div class="text-center mt-4">
+            <a href="/login" class="text-zinc-400 small text-decoration-none">¿Ya tenés cuenta? <span class="text-white fw-bold border-bottom border-secondary pb-1 ms-1" style="transition: color 0.2s;">Ingresá acá</span></a>
         </div>
     </div>
 </div>

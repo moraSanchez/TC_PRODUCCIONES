@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 import os
 import requests  
-from datetime import datetime
+from datetime import datetime, timedelta  # <-- Se agregó timedelta para calcular los estrenos futuros
 from dotenv import load_dotenv
 from config.database import DatabaseConnection  
 from werkzeug.security import check_password_hash
@@ -15,7 +15,11 @@ STATIC_DIR = os.path.join(BASE_DIR, "views", "templates", "static")
 app = Flask(__name__, template_folder=TEMPLATES_DIR, static_folder=STATIC_DIR)
 app.secret_key = "super_secret_session_key_cinema_12345"
 
-GENEROS_MAP = {28: "Acción", 878: "Ciencia ficción", 27: "Terror", 16: "Animación", 35: "Comedia", 12: "Aventura", 14: "Fantasía", 53: "Suspenso", 18: "Drama", 10749: "Romance"}
+GENEROS_MAP = {
+    28: "Acción", 878: "Ciencia ficción", 27: "Terror", 16: "Animación", 
+    35: "Comedia", 12: "Aventura", 14: "Fantasía", 53: "Suspenso", 
+    18: "Drama", 10749: "Romance"
+}
 
 # ==========================================
 #          RUTAS DE VISTAS (WEB)
@@ -39,8 +43,9 @@ def admin_dashboard():
         return redirect(url_for('login'))
     return render_template('admin_dashboard.html')
 
+
 # ==========================================
-#     VISTA DE SELECCIÓN DE HORARIOS (CLIENTE)
+#      VISTA DE SELECCIÓN DE HORARIOS
 # ==========================================
 @app.route('/pelicula/<int:id_pelicula>/funciones')
 def seleccionar_funcion(id_pelicula):
@@ -100,6 +105,7 @@ def seleccionar_funcion(id_pelicula):
     except Exception as e:
         print(f"Error en seleccionar_funcion: {e}")
         return redirect(url_for('inicio'))
+
 
 # ==========================================
 #          RUTAS DE AUTENTICACIÓN
@@ -209,11 +215,14 @@ def api_buscar_tmdb():
 def api_lista_funciones_db():
     db = DatabaseConnection()
     cursor = db.get_cursor()
-    if not cursor: return jsonify([]), 200
+    if not cursor: 
+        return jsonify([]), 200
+        
     try:
         try: cursor.fetchall()
         except Exception: pass
         
+        # 1. Intentamos consultar si ya existen funciones cargadas en la Base de Datos
         cursor.execute("""
             SELECT idFuncion, titulo, genero, imagen_url, num_sala, fecha, hora, estado, Pelicula_idPelicula, COALESCE(idioma, 'Doblada') as idioma
             FROM Funcion 
@@ -223,13 +232,105 @@ def api_lista_funciones_db():
             ORDER BY idFuncion DESC
         """)
         funciones = cursor.fetchall()
+        
+        # Si la BDD ya tiene registros, los enviamos directamente al frontend
         if funciones:
             for f in funciones:
                 if f.get('hora'): f['hora'] = str(f['hora'])
                 if f.get('fecha'): f['fecha'] = str(f['fecha'])
             return jsonify(funciones), 200
-    except Exception as e: print(f"Error: {e}")
-    return jsonify([]), 200
+
+        # 2. Si la Base de Datos está VACÍA, traemos datos reales desde la API de TMDB (Latinoamérica)
+        print("Base de datos vacía. Cargando películas iniciales por defecto desde TMDB...")
+        TMDB_API_KEY = os.getenv("TMDB_API_KEY", "TU_API_KEY_ACA")
+        
+        # Endpoints configurados para español e historias de cines en Latinoamérica (Región: Argentina)
+        url_now_playing = f"https://api.themoviedb.org/3/movie/now_playing?api_key={TMDB_API_KEY}&language=es-MX&region=AR&page=1"
+        url_upcoming = f"https://api.themoviedb.org/3/movie/upcoming?api_key={TMDB_API_KEY}&language=es-MX&region=AR&page=1"
+        
+        peliculas_a_guardar = []
+        
+        # Obtener exactamente 5 Películas en Cartelera (Activas)
+        res_np = requests.get(url_now_playing, timeout=5)
+        if res_np.status_code == 200:
+            movies_np = res_np.json().get('results', [])
+            for index, peli in enumerate(movies_np[:5]):
+                peliculas_a_guardar.append({
+                    "peli": peli,
+                    "estado": "activa",
+                    "fecha": datetime.today().strftime('%Y-%m-%d'),
+                    "index": index
+                })
+                
+        # Obtener exactamente 5 Próximos Estrenos (Próximamente)
+        res_up = requests.get(url_upcoming, timeout=5)
+        if res_up.status_code == 200:
+            movies_up = res_up.json().get('results', [])
+            for index, peli in enumerate(movies_up[:5]):
+                fecha_estreno = (datetime.today().date() + timedelta(days=14)).strftime('%Y-%m-%d')
+                peliculas_a_guardar.append({
+                    "peli": peli,
+                    "estado": "proximamente",
+                    "fecha": peli.get('release_date', fecha_estreno),
+                    "index": index
+                })
+
+        funciones_retorno = []
+        
+        # Procesar e insertar los registros de forma automática en MySQL
+        for item in peliculas_a_guardar:
+            peli = item["peli"]
+            titulo = peli.get('title', '').upper()
+            sinopsis = peli.get('overview', 'Sin sinopsis disponible.')
+            poster = peli.get('poster_path')
+            img_url = f"https://image.tmdb.org/t/p/w500{poster}" if poster else "https://placehold.co/400x600/141417/ffffff?text=Cine"
+            
+            g_ids = peli.get('genre_ids', [])
+            genero = GENEROS_MAP.get(g_ids[0], "Acción") if g_ids else "Acción"
+            
+            # Verificar o registrar la Película
+            cursor.execute("SELECT idPelicula FROM Pelicula WHERE UPPER(titulo) = UPPER(%s)", (titulo,))
+            pelicula_existente = cursor.fetchone()
+            
+            if pelicula_existente:
+                id_pelicula = pelicula_existente['idPelicula']
+            else:
+                query_pelicula = "INSERT INTO Pelicula (titulo, sinopsis, duracion, genero, imagen_url) VALUES (%s, %s, %s, %s, %s)"
+                cursor.execute(query_pelicula, (titulo, sinopsis, 120, genero, img_url))
+                db.commit()
+                id_pelicula = cursor.lastrowid
+            
+            # Configurar las propiedades de la Funcion
+            num_sala = (item["index"] % 4) + 1
+            hora = f"{16 + item['index']}:30:00"
+            estado_final = item["estado"]
+            fecha_final = item["fecha"]
+            
+            query_funcion = """INSERT INTO Funcion (titulo, genero, imagen_url, num_sala, fecha, hora, estado, Pelicula_idPelicula, idioma) 
+                               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"""
+            cursor.execute(query_funcion, (titulo, genero, img_url, num_sala, fecha_final, hora, estado_final, id_pelicula, "Doblada"))
+            db.commit()
+            id_funcion = cursor.lastrowid
+            
+            # Estructurar la lista de respuesta
+            funciones_retorno.append({
+                "idFuncion": id_funcion,
+                "titulo": titulo,
+                "genero": genero,
+                "imagen_url": img_url,
+                "num_sala": num_sala,
+                "fecha": str(fecha_final),
+                "hora": str(hora),
+                "estado": estado_final,
+                "Pelicula_idPelicula": id_pelicula,
+                "idioma": "Doblada"
+            })
+            
+        return jsonify(funciones_retorno), 200
+
+    except Exception as e: 
+        print(f"Error procesando la carga predeterminada: {e}")
+        return jsonify([]), 200
 
 
 @app.route('/api/funciones/guardar', methods=['POST'])
