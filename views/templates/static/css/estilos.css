@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght=400;600;700;900&display=swap');
 
 :root {
     --bg-dark: #09090b;
@@ -38,13 +38,15 @@ body {
     color: #ffffff !important;
 }
 
-/* HERO BANNER HIGHLIGHT (Wireframe) */
+/* HERO BANNER HIGHLIGHT */
 .hero-highlight-banner {
-    height: 70vh;
-    min-height: 450px;
-    background-size: cover !important;
-    background-position: center !important;
     position: relative;
+    height: 90vh;
+    min-height: 400px;
+    background: linear-gradient(to bottom, rgba(9, 9, 11, 0.3) 0%, rgba(9, 9, 11, 0.85) 85%, #09090b 100%), 
+                url('../uploads/banner.jpg');
+    background-size: cover !important;
+    background-position: center 20% !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
@@ -176,13 +178,169 @@ body {
     color: var(--text-muted);
 }
 
-.hero-highlight-banner {
+/* ==========================================================================
+   CORRECCIÓN ESPECÍFICA PARA INPUTS Y LABELS (LOGIN Y REGISTRO)
+   ========================================================================== */
+.auth-card-premium .form-control {
+    color: #ffffff !important;
+    background-color: #18181b !important; /* bg-zinc-900 */
+    border: 1px solid #27272a !important;   /* border-zinc */
+}
+
+/* Hace perfectamente legibles los placeholders */
+.auth-card-premium .form-control::placeholder {
+    color: rgba(255, 255, 255, 0.4) !important;
+    opacity: 1 !important;
+}
+.auth-card-premium .form-control:-ms-input-placeholder {
+    color: rgba(255, 255, 255, 0.4) !important;
+}
+.auth-card-premium .form-control::-ms-input-placeholder {
+    color: rgba(255, 255, 255, 0.4) !important;
+}
+
+/* Asegura alto contraste en los labels del formulario */
+.auth-card-premium .form-label {
+    color: #e4e4e7 !important; /* Gris claro de excelente visibilidad */
+}
+
+/* Corregir el texto "BIENVENIDO DE NUEVO" / "UNITE A NUESTRA COMUNIDAD" */
+.auth-card-premium .text-muted {
+    color: #a1a1aa !important; /* Un gris claro con excelente contraste */
+}
+
+.rounded-xl {
+    border-radius: 14px !important;
+}
+.transition-all {
+    transition: all 0.2s ease-in-out;
+}
+
+/* ==========================================================================
+   DISEÑO VISUAL AVANZADO PARA LOGIN Y REGISTRO (ANTI-PLANO)
+   ========================================================================== */
+
+.auth-card-premium {
+    /* Reemplazamos el fondo plano por un sutil degradado oscuro con profundidad */
+    background: linear-gradient(145deg, #16161a 0%, #0e0e11 100%) !important;
+    
+    /* Un borde semi-traslúcido que deja pasar la luz del fondo */
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    
+    /* Una sombra profunda combinada con un levísimo resplandor rojo alrededor de toda la tarjeta */
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 
+                0 0 40px rgba(220, 38, 38, 0.05) !important;
+    
     position: relative;
-    height: 90vh;
-    min-height: 400px;
-    background: linear-gradient(to bottom, rgba(9, 9, 11, 0.3) 0%, rgba(9, 9, 11, 0.85) 85%, #09090b 100%), 
-                url('../uploads/banner.jpg');
-    background-size: cover !important;
-    background-position: center 20% !important;
-    border-bottom: 1px solid var(--border-color);
+    overflow: hidden;
+}
+
+/* Efecto de línea de luz superior (un detalle muy fino de UI premium) */
+.auth-card-premium::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 10%;
+    width: 80%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(220, 38, 38, 0.5), transparent);
+}
+
+/* Mejoramos los inputs para que tengan profundidad (efecto内sombra) */
+.auth-card-premium .form-control {
+    color: #ffffff !important;
+    background-color: #0c0c0e !important; /* Más oscuro que la tarjeta para dar profundidad */
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4) !important;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* Al hacer clic en un input, el borde se ilumina de color rojo fuego */
+.auth-card-premium .form-control:focus {
+    border-color: var(--accent) !important;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4),
+                0 0 12px rgba(220, 38, 38, 0.2) !important;
+}
+
+/* Hace perfectamente legibles los placeholders */
+.auth-card-premium .form-control::placeholder {
+    color: rgba(255, 255, 255, 0.35) !important;
+    opacity: 1 !important;
+}
+
+/* Asegura alto contraste en los labels del formulario */
+.auth-card-premium .form-label {
+    color: #e4e4e7 !important;
+}
+
+/* Corregir el texto "BIENVENIDO DE NUEVO" / "UNITE A NUESTRA COMUNIDAD" */
+.auth-card-premium .text-muted {
+    color: #a1a1aa !important;
+}
+
+/* ==========================================================================
+   FONDO GENERAL ATMOSFÉRICO (ANTI-PLANO PARA EL SITIO)
+   ========================================================================== */
+body { 
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    color: var(--text-main);
+    overflow-x: hidden;
+    
+    /* Reemplazamos el negro liso por un degradado radial dinámico */
+    background: radial-gradient(circle at 50% 30%, #1c1313 0%, #0c0a0a 50%, #050506 100%);
+    background-attachment: fixed; /* Hace que el fondo se quede quieto al scrolear dando paralafe */
+    
+    /* Agrega una sutil capa de textura de líneas de escaneo de cine (opcional y súper fina) */
+    position: relative;
+}
+
+/* Un destello extra de luz roja desenfocada en el fondo para separar las secciones */
+body::before {
+    content: "";
+    position: fixed;
+    top: -10%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80vw;
+    height: 60vh;
+    background: radial-gradient(circle, rgba(220, 38, 38, 0.08) 0%, transparent 70%);
+    z-index: -1; /* Se queda completamente atrás de todo */
+    pointer-events: none;
+}
+
+/* ==========================================================================
+   FILTROS DEL INDEX (ALTO CONTRASTE)
+   ========================================================================== */
+.filter-bar-premium {
+    background: #111114 !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 20px;
+    padding: 20px; /* Le da un poco más de aire a la barra */
+}
+
+/* Forzar que los textos fijos de los filtros ("¿Qué querés ver?", etc.) se vean claros */
+.filter-bar-premium .form-label, 
+.filter-bar-premium h5,
+.filter-bar-premium p {
+    color: #e4e4e7 !important; /* Gris claro de alta visibilidad */
+    font-weight: 600;
+}
+
+/* Estilizar las cajas de texto y selects dentro de los filtros */
+.filter-bar-premium .form-control,
+.filter-bar-premium .form-select {
+    color: #ffffff !important;
+    background-color: #18181b !important; /* Fondo zinc oscuro */
+    border: 1px solid #27272a !important;   /* Borde zinc */
+}
+
+/* Hacer visibles los placeholders de la barra de búsqueda */
+.filter-bar-premium .form-control::placeholder {
+    color: rgba(255, 255, 255, 0.4) !important;
+    opacity: 1 !important;
+}
+
+/* Cambiar el color de la flechita del menú desplegable (select) a blanco para que se note */
+.filter-bar-premium .form-select {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important;
 }
