@@ -1,3 +1,5 @@
+#auth_controller.py
+
 from config.database import DatabaseConnection
 from werkzeug.security import generate_password_hash, check_password_hash
 import sys

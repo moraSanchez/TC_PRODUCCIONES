@@ -1,3 +1,5 @@
+#sala.py
+
 from config.database import DatabaseConnection
 from models.asiento import Asiento
 

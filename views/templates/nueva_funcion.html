@@ -1,232 +1,204 @@
-{% extends 'base.html' %}
-
-{% block content %}
-<style>
-    body { background: radial-gradient(circle at top, #1a0505 0%, #0d0d0d 100%); }
-    .cinema-card {
-        background: rgba(18, 18, 18, 0.85);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(220, 53, 69, 0.2);
-        border-radius: 16px;
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6);
-    }
-    .cinema-input, .cinema-select, .cinema-textarea {
-        background-color: #0a0a0a !important;
-        border: 1px solid #2d2d2d !important;
-        color: #ffffff !important;
-        border-radius: 8px !important;
-    }
-    .cinema-input:focus, .cinema-select:focus, .cinema-textarea:focus {
-        border-color: #dc3545 !important;
-        box-shadow: 0 0 8px rgba(220, 53, 69, 0.4) !important;
-    }
-    .poster-preview-box {
-        background: #050505;
-        border: 2px dashed #2d2d2d;
-        border-radius: 12px;
-    }
-</style>
-
-<div class="container text-white mt-5 pb-5">
-    <div class="row justify-content-center px-2">
-        <div class="col-12 col-lg-9">
-            <div class="card cinema-card p-4 p-md-5">
-                
-                <div class="d-flex justify-content-between align-items-center mb-4 border-bottom border-secondary pb-3">
-                    <div>
-                        <h3 class="text-danger fw-bold m-0" id="form-title">🎬 PROGRAMAR NUEVA FUNCIÓN</h3>
-                        <p class="text-muted small mb-0 mt-1">Sube el póster de la película directamente desde tus archivos.</p>
-                    </div>
-                    <a href="/admin/dashboard" class="btn btn-outline-danger btn-sm px-3 rounded-pill">Volver al Panel</a>
+<form id="formNuevaFuncion" class="needs-validation" novalidate>
+    <div class="row">
+        <div class="col-md-7">
+            <div class="mb-3 position-relative">
+                <label class="form-label small fw-bold text-muted">BUSCAR PELÍCULA (TMDB)</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-dark border-secondary text-muted"><i class="fas fa-search"></i></span>
+                    <input type="text" id="buscarPeliculaTMDB" class="form-control cinema-input py-2" placeholder="Escribe el nombre de la película...">
                 </div>
-                
-                <form id="formNuevaFuncion" enctype="multipart/form-data">
-                    <input type="hidden" name="imagen_url_actual" id="in-img-actual">
+                <div id="listaResultadosTMDB" class="list-group position-absolute w-100 mt-1 shadow" style="z-index: 1050; max-height: 200px; overflow-y: auto; display: none;"></div>
+            </div>
 
-                    <div class="row g-4">
-                        <div class="col-12 col-md-6 border-end border-secondary pe-md-4">
-                            <h5 class="text-danger mb-3 fw-bold text-uppercase" style="font-size: 14px;">1. Datos de la Obra</h5>
-                            
-                            <div class="mb-3">
-                                <label class="form-label small fw-bold text-muted">TÍTULO DE LA PELÍCULA</label>
-                                <input type="text" name="titulo" id="in-titulo" class="form-control cinema-input py-2" required>
-                            </div>
+            <input type="hidden" id="in-img-actual" name="imagen_url">
+            
+            <div class="mb-3">
+                <label class="form-label small fw-bold text-muted">TÍTULO DE LA PELÍCULA</label>
+                <input type="text" id="in-titulo" name="titulo" class="form-control cinema-input py-2" required>
+            </div>
 
-                            <div class="mb-3">
-                                <label class="form-label small fw-bold text-muted">GÉNERO</label>
-                                <input type="text" name="genero" id="in-genero" class="form-control cinema-input py-2" required>
-                            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label small fw-bold text-muted">GÉNERO</label>
+                    <input type="text" id="in-genero" name="genero" class="form-control cinema-input py-2" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label small fw-bold text-muted">DURACIÓN (MINUTOS)</label>
+                    <input type="number" id="in-duracion" name="duracion" class="form-control cinema-input py-2" required min="1">
+                </div>
+            </div>
 
-                            <div class="row">
-                                <div class="col-6 mb-3">
-                                    <label class="form-label small fw-bold text-muted">DURACIÓN (MIN)</label>
-                                    <input type="number" name="duracion" id="in-duracion" class="form-control cinema-input py-2" min="1" required>
-                                </div>
-                                <div class="col-6 mb-3">
-                                    <label class="form-label small fw-bold text-muted">FORMATO</label>
-                                    <select name="formato" id="in-formato" class="form-select cinema-select py-2">
-                                        <option value="2D">2D Digital</option>
-                                        <option value="3D">3D Digital</option>
-                                        <option value="IMAX">IMAX 3D</option>
-                                    </select>
-                                </div>
-                            </div>
+            <div class="mb-3">
+                <label class="form-label small fw-bold text-muted">SINOPSIS</label>
+                <textarea id="in-sinopsis" name="sinopsis" class="form-control cinema-input" rows="3" required></textarea>
+            </div>
+        </div>
 
-                            <!-- INPUT DE IDIOMA SELECCIONABLE -->
-                            <div class="mb-3">
-                                <label class="form-label small fw-bold text-muted">IDIOMA / AUDIO TRADUCIDO</label>
-                                <select name="idioma" id="in-idioma" class="form-select cinema-select py-2">
-                                    <option value="Castellano">Castellano (Español)</option>
-                                    <option value="Doblada">Doblada al Español</option>
-                                    <option value="Subtitulada">Subtitulada</option>
-                                </select>
-                            </div>
+        <div class="col-md-5 border-start border-secondary ps-md-4">
+            <div class="mb-3 text-center">
+                <label class="form-label small fw-bold text-muted d-block mb-2">PÓSTER</label>
+                <div class="cinema-poster-preview mx-auto d-flex align-items-center justify-content-center border border-secondary rounded" style="width: 140px; height: 200px; background: #151515; overflow: hidden;">
+                    <img id="img-preview" src="" alt="Vista previa" class="w-100 h-100 d-none" style="object-fit: cover;">
+                    <i id="icon-preview" class="fas fa-film fa-3x text-muted"></i>
+                </div>
+            </div>
 
-                            <div class="mb-3">
-                                <label class="form-label small fw-bold text-muted">SELECCIONAR PORTADA (.JPG / .PNG)</label>
-                                <input type="file" name="imagen_file" id="inputImagenFile" class="form-control cinema-input py-2" accept="image/*">
-                            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label small fw-bold text-muted">SALA</label>
+                    <select name="idSala" id="selectSala" class="form-select cinema-input py-2" required>
+                        <option value="1">Sala 1 (Tradicional)</option>
+                        <option value="2">Sala 2 (3D Premium)</option>
+                        <option value="3">Sala 3 (VIP)</option>
+                    </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label small fw-bold text-muted">IDIOMA / FORMATO</label>
+                    <select name="idioma" id="selectIdioma" class="form-select cinema-input py-2" required>
+                        <option value="Español (Doblada)">Español (Doblada)</option>
+                        <option value="Subtitulada">Subtitulada</option>
+                    </select>
+                </div>
+            </div>
 
-                            <div class="mb-3">
-                                <label class="form-label small fw-bold text-muted">SINOPSIS / RESUMEN</label>
-                                <textarea name="sinopsis" id="in-sinopsis" class="form-control cinema-textarea" rows="3" required></textarea>
-                            </div>
-                        </div>
+            <div class="mb-3">
+                <label class="form-label small fw-bold text-muted">FECHA DE FUNCIÓN</label>
+                <input type="date" name="fecha" id="in-fecha" class="form-control cinema-input py-2" required>
+            </div>
 
-                        <div class="col-12 col-md-6 ps-md-4 d-flex flex-column justify-content-between">
-                            <div>
-                                <h5 class="text-danger mb-3 fw-bold text-uppercase" style="font-size: 14px;">2. Ubicación y Horarios</h5>
-
-                                <div class="mb-3">
-                                    <label class="form-label small fw-bold text-muted">ASIGNAR SALA CINE</label>
-                                    <select name="idSala" id="selectSala" class="form-select cinema-select py-2" required>
-                                        <option value="">Cargando salas...</option>
-                                    </select>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label small fw-bold text-muted">FECHA DE PROYECCIÓN</label>
-                                    <input type="date" name="fecha" id="inputFecha" class="form-control cinema-input py-2" required>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label small fw-bold text-muted">HORARIO DE INICIO</label>
-                                    <input type="time" name="hora" id="inputHora" class="form-control cinema-input py-2" required>
-                                </div>
-                            </div>
-
-                            <div class="poster-preview-box p-3 text-center d-flex flex-column align-items-center justify-content-center my-3" style="min-height: 190px;">
-                                <span class="text-muted small fw-bold text-uppercase d-block mb-2">Vista Previa Elegida</span>
-                                <img id="previewAfiche" src="https://placehold.co/110x160/0a0a0a/fff?text=Sin+Foto" class="rounded shadow" style="width: 110px; height: 160px; object-fit: cover;">
-                            </div>
-                        </div>
-                    </div>
-
-                    <button type="submit" id="btn-submit" class="btn btn-danger w-100 fw-bold mt-4 py-3 rounded-pill border-0 shadow">
-                        🚀 Confirmar y Guardar Cambios
+            <div class="mb-3">
+                <label class="form-label small fw-bold text-muted">HORARIOS DE LA FUNCIÓN</label>
+                <div id="contenedor-horarios" class="d-flex flex-wrap gap-2 mb-2 p-2 border border-secondary rounded mini-scrollbar" style="min-height: 45px; background: #111;">
+                    <span class="text-muted small em-vacio">No hay horarios agregados</span>
+                </div>
+                <div class="d-flex gap-2">
+                    <input type="time" id="inputHoraTemporal" class="form-control cinema-input py-2">
+                    <button type="button" class="btn btn-danger px-3" id="btnAgregarHora">
+                        <i class="fas fa-plus"></i>
                     </button>
-                </form>
-
+                </div>
             </div>
         </div>
     </div>
-</div>
+
+    <div class="text-end mt-4 pt-3 border-top border-secondary">
+        <button type="button" class="btn btn-outline-secondary px-4 me-2" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-danger px-4" id="btnGuardarFuncion">Guardar Funciones</button>
+    </div>
+</form>
 
 <script>
-if (sessionStorage.getItem('tipoUsuario') !== 'Administrador') { window.location.href = '/login'; }
+// Lista global de control para almacenar los horarios
+let listaHorarios = [];
+let editFuncionId = null; // Cambiar dinámicamente si se abre en modo edición
 
-const urlParams = new URLSearchParams(window.location.search);
-const editFuncionId = urlParams.get('edit');
-const inputFecha = document.getElementById('inputFecha');
-const inputHora = document.getElementById('inputHora');
-
-const hoy = new Date();
-const fechaMinima = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
-inputFecha.min = fechaMinima;
-
-function validarHorarioLogico() {
-    const ahora = new Date();
-    if (inputFecha.value === fechaMinima && inputHora.value) {
-        const tiempoActual = `${String(ahora.getHours()).padStart(2, '0')}:${String(ahora.getMinutes()).padStart(2, '0')}`;
-        if (inputHora.value < tiempoActual) {
-            alert(`❌ Horario inválido. Mínimo permitido para hoy: ${tiempoActual}`);
-            inputHora.value = "";
-            return false;
-        }
+// Evento para añadir horas a la lista temporal
+document.getElementById('btnAgregarHora').addEventListener('click', function() {
+    const inputHora = document.getElementById('inputHoraTemporal');
+    const horaValor = inputHora.value;
+    
+    if (!horaValor) {
+        alert("Por favor, selecciona una hora válida.");
+        return;
     }
-    return true;
-}
-inputFecha.addEventListener('change', validarHorarioLogico);
-inputHora.addEventListener('change', validarHorarioLogico);
-
-document.getElementById('inputImagenFile').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function(event) {
-            document.getElementById('previewAfiche').src = event.target.result;
-        }
-        reader.readAsDataURL(file);
+    if (listaHorarios.includes(horaValor)) {
+        alert("Este horario ya fue agregado para este día.");
+        return;
     }
+    
+    listaHorarios.push(horaValor);
+    listaHorarios.sort(); // Mantiene ordenados los horarios cronológicamente
+    actualizarBadgesHorarios();
+    inputHora.value = ""; // Limpiar el input temporal
 });
 
-async function inicializarFormulario() {
-    try {
-        const resSalas = await fetch('/api/salas');
-        const salas = await resSalas.json();
-        const select = document.getElementById('selectSala');
-        select.innerHTML = '<option value="">-- Elige una Sala --</option>';
-        salas.forEach(s => { select.innerHTML += `<option value="${s.idSala}">Sala ${s.numero}</option>`; });
-
-        if (editFuncionId) {
-            document.getElementById('form-title').innerText = "✍️ EDITAR FUNCIÓN OPERATIVA";
-            document.getElementById('btn-submit').innerText = "💾 Actualizar Registro en MySQL";
-            
-            const resF = await fetch(`/api/funciones/detalle/${editFuncionId}`);
-            if (resF.ok) {
-                const data = await resF.json();
-                document.getElementById('in-titulo').value = data.titulo;
-                document.getElementById('in-genero').value = data.genero;
-                document.getElementById('in-duracion').value = data.duracion;
-                document.getElementById('in-sinopsis').value = data.sinopsis;
-                document.getElementById('in-img-actual').value = data.imagen_url;
-                document.getElementById('in-idioma').value = data.idioma ? data.idioma : "Doblada";
-                select.value = data.id_sala;
-                inputFecha.value = data.fecha;
-                inputHora.value = data.hora.substring(0,5);
-
-                if(data.imagen_url) {
-                    document.getElementById('previewAfiche').src = data.imagen_url;
-                }
-            }
-        }
-    } catch (err) { console.error(err); }
+// Actualiza los elementos gráficos en la interfaz
+function actualizarBadgesHorarios() {
+    const contenedor = document.getElementById('contenedor-horarios');
+    if (listaHorarios.length === 0) {
+        contenedor.innerHTML = '<span class="text-muted small em-vacio">No hay horarios agregados</span>';
+        return;
+    }
+    
+    contenedor.innerHTML = "";
+    listaHorarios.forEach((hora, index) => {
+        contenedor.innerHTML += `
+            <span class="badge bg-danger text-white d-flex align-items-center gap-2 px-2 py-2 fs-6 rounded border border-light border-opacity-25">
+                <i class="far fa-clock"></i> ${hora.substring(0, 5)}
+                <button type="button" class="btn-close btn-close-white" style="font-size: 10px;" onclick="eliminarHora(${index})"></button>
+            </span>
+        `;
+    });
 }
 
-document.getElementById('formNuevaFuncion').addEventListener('submit', async (e) => {
+// Elimina un horario del array
+function eliminarHora(index) {
+    listaHorarios.splice(index, 1);
+    actualizarBadgesHorarios();
+}
+
+// Interceptamos el envío del Formulario hacia las APIs
+document.getElementById('formNuevaFuncion').addEventListener('submit', async function(e) {
     e.preventDefault();
-    if(!validarHorarioLogico()) return;
-
-    const formData = new FormData(e.target);
-    const url = editFuncionId ? `/api/funciones/${editFuncionId}` : '/api/funciones';
-    const method = editFuncionId ? 'PUT' : 'POST';
-
+    
+    if (listaHorarios.length === 0) {
+        alert("Error: Debes agregar por lo menos un horario antes de guardar la función.");
+        return;
+    }
+    
+    const formData = new FormData(this);
+    
+    // Armamos la estructura estructurada como JSON estructurado
+    const payload = {
+        titulo: formData.get('titulo'),
+        genero: formData.get('genero'),
+        sinopsis: formData.get('sinopsis'),
+        duracion: formData.get('duracion'),
+        imagen_url: document.getElementById('in-img-actual').value || "",
+        num_sala: formData.get('idSala'),
+        fecha: formData.get('fecha'),
+        idioma: formData.get('idioma'),
+        estado: 'activa',
+        horarios: listaHorarios  // Envió de la lista completa
+    };
+    
     try {
-        const response = await fetch(url, {
-            method: method,
-            body: formData  
+        const url = editFuncionId ? `/api/funciones/editar/${editFuncionId}` : '/api/funciones/guardar';
+        const metodo = editFuncionId ? 'PUT' : 'POST';
+        
+        const res = await fetch(url, {
+            method: metodo,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
         });
-
-        if (response.ok) {
-            alert("¡Procesado correctamente en la base de datos!");
-            window.location.href = '/admin/dashboard';
+        
+        const data = await res.json();
+        if (data.status === "success") {
+            alert("¡Funciones procesadas y guardadas correctamente!");
+            window.location.reload(); // Recarga el panel para actualizar tablas
         } else {
-            const err = await response.json();
-            alert("Error del servidor: " + err.error);
+            alert("Error del servidor: " + data.error);
         }
-    } catch (f) { alert("Error técnico de comunicación."); }
+    } catch(err) {
+        console.error("Error crítico en la llamada de red:", err);
+        alert("Ocurrió un error inesperado al conectar.");
+    }
 });
 
-inicializarFormulario();
+// Función auxiliar para cuando abras la ventana modal para EDITAR desde tu dashboard:
+function prepararEdicionModal(funcionData, arrayDeHorasExistentes = []) {
+    editFuncionId = funcionData.idFuncion;
+    document.getElementById('in-titulo').value = funcionData.titulo;
+    document.getElementById('in-genero').value = funcionData.genero;
+    document.getElementById('in-duracion').value = funcionData.duracion;
+    document.getElementById('in-sinopsis').value = funcionData.sinopsis;
+    document.getElementById('in-fecha').value = funcionData.fecha;
+    document.getElementById('selectSala').value = funcionData.num_sala;
+    document.getElementById('selectIdioma').value = funcionData.idioma;
+    document.getElementById('in-img-actual').value = funcionData.imagen_url;
+    
+    // Asignar los horarios ya registrados en la BDD para cargarlos al editar
+    listaHorarios = [...arrayDeHorasExistentes];
+    actualizarBadgesHorarios();
+}
 </script>
-{% endblock %}
