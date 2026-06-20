@@ -1,51 +1,35 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="row justify-content-center px-2">
-    <div class="col-12 col-sm-10 col-md-7 col-lg-5">
-        <div class="card p-4 shadow-lg bg-dark text-white border-secondary">
-            <h3 class="text-center text-danger fw-bold mb-2">Crear Cuenta</h3>
-            <p class="text-muted text-center small mb-4">Registrate para guardar tus datos en el sistema</p>
-            
-            <form id="formRegistro">
-                <div class="mb-3">
-                    <label class="form-label">Nombre</label>
-                    <input type="text" name="nombre" class="form-control bg-dark text-white border-secondary" placeholder="Tu nombre" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Apellido</label>
-                    <input type="text" name="apellido" class="form-control bg-dark text-white border-secondary" placeholder="Tu apellido" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Correo Electrónico</label>
-                    <input type="email" name="email" class="form-control bg-dark text-white border-secondary" placeholder="nombre@email.com" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Contraseña</label>
-                    <input type="password" name="contrasenia" class="form-control bg-dark text-white border-secondary" placeholder="••••••••" required>
-                </div>
-                <button type="submit" class="btn btn-danger w-100 fw-bold mt-2 py-2">Registrarme y probar BD</button>
-            </form>
-            
-            <div class="text-center mt-3">
-                <a href="/login" class="text-muted small text-decoration-none">¿Ya tenés cuenta? Iniciá sesión</a>
-            </div>
-        </div>
-    </div>
-</div>
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="card p-4 bg-dark text-white border-secondary" style="width: 100%; max-width: 450px; border-radius: 12px;">
+        <h3 class="text-center text-danger fw-bold mb-4">CREAR CUENTA</h3>
+        
+        <div id="alertaError" class="alert alert-danger d-none" role="alert"></div>
+        <div id="alertaExito" class="alert alert-success d-none" role="alert">¡Registro exitoso! Redirigiendo...</div>
 
-<div class="modal fade" id="modalResultado" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content bg-dark text-white border-secondary">
-            <div class="modal-header border-secondary">
-                <h5 class="modal-title fw-bold text-danger" id="modalTitulo">Estado del Registro</h5>
+        <form id="formRegistro">
+            <div class="mb-3">
+                <label class="form-label small text-muted fw-bold">NOMBRE</label>
+                <input type="text" id="regNombre" class="form-control bg-zinc-900 text-white border-secondary" required placeholder="Tu nombre">
             </div>
-            <div class="modal-body text-center py-4">
-                <p id="modalMensaje" class="fs-5"></p>
+            <div class="mb-3">
+                <label class="form-label small text-muted fw-bold">APELLIDO</label>
+                <input type="text" id="regApellido" class="form-control bg-zinc-900 text-white border-secondary" placeholder="Tu apellido">
             </div>
-            <div class="modal-footer border-secondary justify-content-center">
-                <button type="button" id="btnModalAccion" class="btn btn-danger px-4 fw-bold">Aceptar</button>
+            <div class="mb-3">
+                <label class="form-label small text-muted fw-bold">CORREO ELECTRÓNICO</label>
+                <input type="email" id="regEmail" class="form-control bg-zinc-900 text-white border-secondary" required placeholder="correo@ejemplo.com">
             </div>
+            <div class="mb-3">
+                <label class="form-label small text-muted fw-bold">CONTRASEÑA</label>
+                <input type="password" id="regContrasenia" class="form-control bg-zinc-900 text-white border-secondary" required placeholder="••••••••">
+            </div>
+            <button type="submit" class="btn btn-danger w-100 fw-bold py-2 mt-3">Registrarme y probar BD</button>
+        </form>
+        
+        <div class="text-center mt-3">
+            <a href="/login" class="text-danger small text-decoration-none">¿Ya tenés cuenta? Ingresá acá</a>
         </div>
     </div>
 </div>
@@ -54,59 +38,37 @@
 document.getElementById('formRegistro').addEventListener('submit', async (e) => {
     e.preventDefault();
     
-    const formData = new FormData(e.target);
-    const data = Object.fromEntries(formData.entries());
-
-    const modalElement = document.getElementById('modalResultado');
-    const miModal = new bootstrap.Modal(modalElement);
+    const divError = document.getElementById('alertaError');
+    const divExito = document.getElementById('alertaExito');
+    divError.classList.add('d-none');
     
-    const modalTitulo = document.getElementById('modalTitulo');
-    const modalMensaje = document.getElementById('modalMensaje');
-    const btnModalAccion = document.getElementById('btnModalAccion');
+    const data = {
+        nombre: document.getElementById('regNombre').value.trim(),
+        apellido: document.getElementById('regApellido').value.trim(),
+        email: document.getElementById('regEmail').value.trim(),
+        contrasenia: document.getElementById('regContrasenia').value.strip ? document.getElementById('regContrasenia').value.strip() : document.getElementById('regContrasenia').value
+    };
 
     try {
-        const response = await fetch('/api/auth/register', {
+        const response = await fetch('/api/auth/registro', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
 
         const result = await response.json();
 
         if (response.ok) {
-            modalTitulo.innerText = "¡Registro Exitoso!";
-            modalTitulo.className = "modal-title fw-bold text-success";
-            modalMensaje.innerText = "Tu usuario fue creado correctamente en el sistema.";
-            
-            btnModalAccion.onclick = () => {
-                miModal.hide();
-                window.location.href = '/login';
-            };
-            
-            miModal.show();
+            divExito.classList.remove('d-none');
+            setTimeout(() => { window.location.href = '/login'; }, 2000);
         } else {
-            modalTitulo.innerText = "Error en el Registro";
-            modalTitulo.className = "modal-title fw-bold text-danger";
-            modalMensaje.innerText = result.error || "No se pudieron guardar los datos.";
-            
-            btnModalAccion.onclick = () => {
-                miModal.hide();
-            };
-            
-            miModal.show();
+            divError.innerText = result.error || "Ocurrió un error inesperado.";
+            divError.classList.remove('d-none');
         }
-    } catch (error) {
-        console.error("Error completo:", error);
-        modalTitulo.innerText = "Error de Conexión";
-        modalTitulo.className = "modal-title fw-bold text-warning";
-        modalMensaje.innerText = "No se pudo establecer contacto con el servidor de Flask.";
-        
-        btnModalAccion.onclick = () => { 
-            miModal.hide(); 
-        };
-        miModal.show();
+    } catch (err) {
+        divError.innerText = "No se pudo establecer contacto con el servidor de Flask.";
+        divError.classList.remove('d-none');
+        console.error(err);
     }
 });
 </script>

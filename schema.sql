@@ -41,11 +41,16 @@ CREATE TABLE IF NOT EXISTS Asiento (
 -- 5. Tabla Funcion
 CREATE TABLE IF NOT EXISTS Funcion (
     idFuncion INT AUTO_INCREMENT PRIMARY KEY,
+    titulo VARCHAR(150) NOT NULL,
+    genero VARCHAR(100),
+    imagen_url VARCHAR(255),
+    num_sala INT NOT NULL,
     fecha DATE NOT NULL,
     hora TIME NOT NULL,
     estado VARCHAR(50) DEFAULT 'activa',
-    Pelicula_idPelicula INT NOT NULL,
-    Sala_idSala INT NOT NULL,
+    idioma VARCHAR(50) DEFAULT 'Doblada',
+    Pelicula_idPelicula INT NULL,
+    Sala_idSala INT NULL,
     FOREIGN KEY (Pelicula_idPelicula) REFERENCES Pelicula(idPelicula),
     FOREIGN KEY (Sala_idSala) REFERENCES Sala(idSala)
 );
@@ -90,23 +95,21 @@ CREATE TABLE IF NOT EXISTS Pago (
     FOREIGN KEY (Reserva_idReserva) REFERENCES Reserva(idReserva)
 );
 
--- =========================================================================
 -- INSERTS DE DATOS OBLIGATORIOS Y DE PRUEBA
--- =========================================================================
-
--- Creamos el usuario Administrador por defecto (Contraseña: admin123)
 INSERT INTO Usuario (nombre, apellido, email, contrasenia, tipo) 
 VALUES ('Alan', 'Admin', 'admin@cine.com', 'scrypt:32768:8:1$v39rX6H87WpZEnZk$9fa07f877fca99d5f7c320d39e55b1bf8df8bf0600bce4cf4b5fde540f25ceb1ba420d43f01b3b2da22572b918b958c2b53569421df89cba00b740523e43db62', 'Administrador')
 ON DUPLICATE KEY UPDATE tipo='Administrador';
 
--- Creamos películas iniciales en la cartelera
 INSERT IGNORE INTO Pelicula (idPelicula, titulo, sinopsis, duracion, genero, imagen_url) VALUES 
 (1, 'Avengers: Endgame', 'Los Vengadores se reúnen para deshacer el daño de Thanos.', 181, 'Acción / Ciencia Ficción', 'avengers.jpg'),
 (2, 'Interstellar', 'Un grupo de científicos viaja al espacio exterior para salvar a la humanidad.', 169, 'Drama / Sci-Fi', 'interstellar.jpg'),
 (3, 'El Padrino', 'La vida de una organización criminal y su transición generacional.', 175, 'Crimen / Drama', 'padrino.jpg');
 
--- Creamos las primeras Salas físicas
+-- CORRECCIÓN: Definición estricta de las 6 salas del sistema con sus capacidades respectivas
 INSERT IGNORE INTO Sala (idSala, numero, capacidad) VALUES 
 (1, 1, 48),
 (2, 2, 64),
-(3, 3, 32);
+(3, 3, 32),
+(4, 4, 50),
+(5, 5, 50),
+(6, 6, 40);

@@ -1,109 +1,67 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="row justify-content-center px-2">
-    <div class="col-12 col-sm-10 col-md-7 col-lg-5">
-        <div class="card p-4 shadow-lg bg-dark text-white border-secondary">
-            <h3 class="text-center text-danger fw-bold mb-4">Iniciar Sesión</h3>
-            
-            <form id="formLogin">
-                <div class="mb-3">
-                    <label class="form-label">Correo Electrónico</label>
-                    <input type="email" name="email" class="form-control bg-dark text-white border-secondary" placeholder="nombre@email.com" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Contraseña</label>
-                    <input type="password" name="contrasenia" class="form-control bg-dark text-white border-secondary" placeholder="••••••••" required>
-                </div>
-                <button type="submit" class="btn btn-danger w-100 fw-bold mt-2 py-2">Ingresar</button>
-            </form>
-            
-            <div class="text-center mt-3">
-                <a href="/registro" class="text-muted small text-decoration-none">¿No tenés cuenta? Registrate acá</a>
-            </div>
-        </div>
-    </div>
-</div>
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="card p-4 text-white bg-dark border-secondary" style="width: 100%; max-width: 400px; border-radius: 15px;">
+        <h3 class="text-center text-danger fw-bold mb-4">INGRESAR AL CINE</h3>
+        
+        <div id="alertError" class="alert alert-danger d-none" role="alert"></div>
 
-<div class="modal fade" id="modalLogin" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content bg-dark text-white border-secondary">
-            <div class="modal-header border-secondary">
-                <h5 class="modal-title fw-bold" id="modalTitulo">Validando Sesión</h5>
+        <form id="formLogin">
+            <div class="mb-3">
+                <label for="email" class="form-label">Correo Electrónico</label>
+                <input type="email" class="form-control bg-dark text-white border-secondary" id="email" required>
             </div>
-            <div class="modal-body text-center py-4">
-                <p id="modalMensaje" class="fs-5"></p>
+            <div class="mb-4">
+                <label for="contrasenia" class="form-label">Contraseña</label>
+                <input type="password" class="form-control bg-dark text-white border-secondary" id="contrasenia" required>
             </div>
-            <div class="modal-footer border-secondary justify-content-center">
-                <button type="button" id="btnModalAccion" class="btn btn-danger px-4 fw-bold">Aceptar</button>
-            </div>
-        </div>
+            <button type="submit" class="btn btn-danger w-100 fw-bold py-2">Iniciar Sesión</button>
+        </form>
+        
+        <p class="text-center mt-3 text-muted small">¿No tenés cuenta? <a href="/registro" class="text-danger decoration-none">Registrate acá</a></p>
     </div>
 </div>
 
 <script>
 document.getElementById('formLogin').addEventListener('submit', async (e) => {
     e.preventDefault();
+    const alertError = document.getElementById('alertError');
+    alertError.classList.add('d-none');
 
-    const formData = new FormData(e.target);
-    const data = Object.fromEntries(formData.entries());
-
-    const modalElement = document.getElementById('modalLogin');
-    const miModal = new bootstrap.Modal(modalElement);
-    
-    const modalTitulo = document.getElementById('modalTitulo');
-    const modalMensaje = document.getElementById('modalMensaje');
-    const btnModalAccion = document.getElementById('btnModalAccion');
+    const data = {
+        email: document.getElementById('email').value.trim(),
+        contrasenia: document.getElementById('contrasenia').value.trim()
+    };
 
     try {
         const response = await fetch('/api/auth/login', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
 
         const result = await response.json();
 
-        if (response.ok) {
-            // Guardamos datos críticos de la sesión en el navegador
-            sessionStorage.setItem('idUsuario', result.usuario.idUsuario);
-            sessionStorage.setItem('nombre', result.usuario.nombre);
+        if (response.ok && result.status === 'success') {
+            // Guardamos localmente para soporte inmediato en Front-End
+            sessionStorage.setItem('usuario_id', result.usuario.idUsuario);
+            sessionStorage.setItem('nombreUsuario', result.usuario.nombre);
             sessionStorage.setItem('tipoUsuario', result.usuario.tipo);
 
-            modalTitulo.innerText = "¡Bienvenido!";
-            modalTitulo.className = "modal-title fw-bold text-success";
-            
+            // Redirección segura según rol
             if (result.usuario.tipo === 'Administrador') {
-                modalMensaje.innerText = `Hola ${result.usuario.nombre}. Ingresando al Panel de Administración...`;
-                btnModalAccion.onclick = () => {
-                    miModal.hide();
-                    window.location.href = '/admin/dashboard';
-                };
+                window.location.href = '/admin/dashboard';
             } else {
-                modalMensaje.innerText = `Hola ${result.usuario.nombre}. Ingresando a la cartelera...`;
-                btnModalAccion.onclick = () => {
-                    miModal.hide();
-                    window.location.href = '/';
-                };
+                window.location.href = '/';
             }
-            
-            miModal.show();
         } else {
-            modalTitulo.innerText = "Error de ingreso";
-            modalTitulo.className = "modal-title fw-bold text-danger";
-            modalMensaje.innerText = result.error || "Correo o contraseña incorrectos.";
-            btnModalAccion.onclick = () => { miModal.hide(); };
-            miModal.show();
+            alertError.innerText = result.error || 'Credenciales incorrectas.';
+            alertError.classList.remove('d-none');
         }
-    } catch (error) {
-        console.error("Error completo de login:", error);
-        modalTitulo.innerText = "Error Técnico";
-        modalTitulo.className = "modal-title fw-bold text-warning";
-        modalMensaje.innerText = "No se pudo conectar con el servidor.";
-        btnModalAccion.onclick = () => { miModal.hide(); };
-        miModal.show();
+    } catch (err) {
+        alertError.innerText = 'Error al conectar con el servidor Flask.';
+        alertError.classList.remove('d-none');
     }
 });
 </script>

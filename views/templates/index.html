@@ -31,7 +31,7 @@
                 </select>
             </div>
             <div class="col-md-4 text-md-end pt-4">
-                <span class="text-muted small">Mostrando funciones actualizadas en tiempo real</span>
+                <span class="text-muted small">Mostrando funciones en tiempo real</span>
             </div>
         </div>
     </div>
@@ -53,7 +53,7 @@ let todasLasFunciones = [];
 
 async function obtenerDatos() {
     try {
-        const res = await fetch('/api/funciones');
+        const res = await fetch('/api/funciones/lista');
         todasLasFunciones = await res.json();
         renderizarCarteleras(todasLasFunciones);
     } catch (err) {
@@ -65,14 +65,14 @@ function renderizarCarteleras(lista) {
     const contenedorHoy = document.getElementById('carteleraHoy');
     const contenedorPróximos = document.getElementById('proximosEstrenos');
     
+    if (!contenedorHoy || !contenedorPróximos) return;
+    
     contenedorHoy.innerHTML = '';
     contenedorPróximos.innerHTML = '';
 
-    // Separación por estados basados en la API...
     const enCartelera = lista.filter(f => f.estado && f.estado.toLowerCase() === 'activa');
     const proximos = lista.filter(f => f.estado && f.estado.toLowerCase() !== 'activa');
 
-    // Render Cartelera Actual
     if(enCartelera.length === 0) {
         contenedorHoy.innerHTML = `<div class="empty-state">No se encontraron películas en cartelera para este filtro.</div>`;
     } else {
@@ -81,7 +81,6 @@ function renderizarCarteleras(lista) {
         });
     }
 
-    // Render Próximos
     if(proximos.length === 0) {
         contenedorPróximos.innerHTML = `<div class="empty-state">No hay próximos estrenos programados por el momento.</div>`;
     } else {
@@ -93,21 +92,24 @@ function renderizarCarteleras(lista) {
 
 function crearCardPelicula(f) {
     const img = f.imagen_url ? f.imagen_url : "https://placehold.co/400x600/141417/ffffff?text=TC+Cine";
+    const generoBadge = f.genero ? f.genero.split(' ')[0] : 'Cine';
+    
+    // Captura del ID de la película para armar la URL dinámica hacia tus horarios
+    const idAsignado = f.Pelicula_idPelicula || f.idPelicula || f.idFuncion;
+    const urlDestino = idAsignado ? `/pelicula/${idAsignado}/funciones` : '#';
+
+    // Retorna la tarjeta LIMPIA: Solo póster, título y botón. Sin salas, horas ni fechas.
     return `
         <div class="movie-card-premium">
             <div class="poster-wrapper">
-                <span class="tag-genre">${f.genero}</span>
+                <span class="tag-genre">${generoBadge}</span>
                 <img src="${img}" class="premium-poster" onerror="this.src='https://placehold.co/400x600/141417/ffffff?text=Cine'">
                 <div class="poster-overlay"></div>
             </div>
             <div class="movie-details">
                 <h3 class="movie-title-premium text-truncate" title="${f.titulo}">${f.titulo}</h3>
-                <div class="meta-info-row">
-                    <span class="badge-sala-premium">Sala ${f.num_sala}</span>
-                    <span class="text-white fw-bold">🕒 ${f.hora.substring(0,5)} HS</span>
-                </div>
-                <div class="text-muted small mb-3">📅 Fecha: ${f.fecha}</div>
-                <a href="/login" class="btn-premium-cta">COMPRAR ENTRADAS</a>
+                
+                <a href="${urlDestino}" class="btn-premium-cta text-center w-100 mt-2">COMPRAR ENTRADAS</a>
             </div>
         </div>
     `;
@@ -118,8 +120,8 @@ function filtrarCartelera() {
     const genero = document.getElementById('selectGenero').value;
 
     const filtradas = todasLasFunciones.filter(f => {
-        const coincideTexto = f.titulo.toLowerCase().includes(texto);
-        const coincideGenero = genero === "" || f.genero === genero;
+        const coincideTexto = f.titulo && f.titulo.toLowerCase().includes(texto);
+        const coincideGenero = genero === "" || (f.genero && f.genero.includes(genero));
         return coincideTexto && coincideGenero;
     });
 

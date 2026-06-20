@@ -3,95 +3,138 @@
 {% block content %}
 <style>
     body { background: radial-gradient(circle at top, #1a0505 0%, #0d0d0d 100%); }
-    .cinema-dashboard-card {
-        background: rgba(18, 18, 18, 0.85);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(220, 53, 69, 0.2);
-        border-radius: 16px;
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6);
-    }
-    .movie-row-card {
-        background: #0a0a0a;
-        border: 1px solid #222;
-        border-radius: 12px;
-        transition: all 0.3s ease;
-    }
-    .movie-row-card:hover {
-        border-color: #dc3545;
-        box-shadow: 0 0 12px rgba(220, 53, 69, 0.3);
-    }
-    .poster-img {
-        width: 100px;
-        height: 145px;
-        object-fit: cover;
-        border-radius: 6px;
-        border: 1px solid #333;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.7);
-    }
+    .cinema-dashboard-card { background: rgba(18, 18, 18, 0.85); backdrop-filter: blur(10px); border: 1px solid rgba(220, 53, 69, 0.2); border-radius: 16px; }
+    .movie-row-card { background: #0a0a0a; border: 1px solid #222; border-radius: 12px; }
+    .poster-img { width: 100px; height: 145px; object-fit: cover; border-radius: 6px; }
+    .search-result-item { background: #141414; border: 1px solid #222; cursor: pointer; }
 </style>
 
 <div class="container text-white mt-5 pb-5">
     <div class="d-flex justify-content-between align-items-center mb-4 border-bottom border-secondary pb-3">
-        <div><h2 class="text-danger fw-bold m-0 tracking-wide">🍿 PANEL DE ADMINISTRACIÓN</h2></div>
-        <div class="d-flex align-items-center gap-2">
-            <a href="/admin/funciones/nueva" class="btn btn-danger fw-bold rounded-pill px-4 shadow-sm">➕ Programar Función</a>
-            <button onclick="cerrarSesion()" class="btn btn-outline-light btn-sm rounded-pill px-3">Salir</button>
-        </div>
+        <div><h2 class="text-danger fw-bold m-0">🍿 PANEL DE ADMINISTRACIÓN</h2></div>
+        <div><button onclick="cerrarSesion()" class="btn btn-outline-light btn-sm rounded-pill px-3">Salir</button></div>
     </div>
 
-    <div class="row">
-        <div class="col-12">
-            <div class="card cinema-dashboard-card p-4">
-                <h4 class="text-white fw-bold mb-4">🎬 Listado de Funciones en Pantalla</h4>
-                <div id="contenedorCartelera" class="row row-cols-1 row-cols-md-2 g-4"></div>
+    <div class="card cinema-dashboard-card p-4 mb-4">
+        <h4 class="text-white fw-bold mb-3">🔍 Buscar y Agregar Películas (TMDb API)</h4>
+        <div class="input-group mb-3">
+            <input type="text" id="inputBuscarAPI" class="form-control bg-dark text-white border-secondary" placeholder="Escribí el título de la película...">
+            <button class="btn btn-danger fw-bold" onclick="buscarEnAPI()">Buscar</button>
+        </div>
+        <div id="resultadosAPI" class="row row-cols-1 row-cols-md-3 g-3 mt-1"></div>
+    </div>
+
+    <div class="card cinema-dashboard-card p-4">
+        <h4 class="text-white fw-bold mb-4">🎬 Listado de Funciones Habilitadas</h4>
+        <div id="contenedorCartelera" class="row row-cols-1 row-cols-md-2 g-4"></div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalFuncion" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-white border-secondary">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title fw-bold text-danger" id="modalTitulo">Configurar Función</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formFuncion">
+                    <input type="hidden" id="formIdFuncion">
+                    <input type="hidden" id="formTitulo">
+                    <input type="hidden" id="formGenero">
+                    <input type="hidden" id="formImagenUrl">
+                    <input type="hidden" id="formSinopsis">
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-muted small">PELÍCULA</label>
+                        <p id="txtPeliculaSeleccionada" class="fs-5 fw-bold m-0 text-white"></p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Sala Destinada</label>
+                        <select id="formSala" class="form-select bg-dark text-white border-secondary" required>
+                            <option value="1">Sala 1</option>
+                            <option value="2">Sala 2</option>
+                            <option value="3">Sala 3</option>
+                            <option value="4">Sala 4</option>
+                            <option value="5">Sala 5</option>
+                            <option value="6">Sala 6</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Idioma / Audio</label>
+                        <select id="formIdioma" class="form-select bg-dark text-white border-secondary">
+                            <option value="Doblada">Doblada al Español</option>
+                            <option value="Subtitulada">Subtitulada</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Horario (HH:MM)</label>
+                        <input type="time" id="formHora" class="form-control bg-dark text-white border-secondary" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Fecha</label>
+                        <input type="date" id="formFecha" class="form-control bg-dark text-white border-secondary" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Estado</label>
+                        <select id="formEstado" class="form-select bg-dark text-white border-secondary">
+                            <option value="activa">Activa</option>
+                            <option value="proximamente">Próximamente</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-danger w-100 fw-bold mt-2 py-2">Guardar Datos</button>
+                </form>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-if (sessionStorage.getItem('tipoUsuario') !== 'Administrador') { window.location.href = '/login'; }
-function cerrarSesion() { sessionStorage.clear(); window.location.href = '/login'; }
+function cerrarSesion() { sessionStorage.clear(); localStorage.clear(); window.location.replace('/login'); }
+let modalBootstrap = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+    modalBootstrap = new bootstrap.Modal(document.getElementById('modalFuncion'));
+    renderizarCarteleraCompleta();
+    document.getElementById('formFuncion').addEventListener('submit', guardarDatosFuncion);
+    
+    const campoFecha = document.getElementById('formFecha');
+    const hoyString = new Date().toLocaleDateString('sv-SE'); 
+    campoFecha.min = hoyString;
+});
 
 async function renderizarCarteleraCompleta() {
     try {
-        const res = await fetch('/api/funciones');
+        const res = await fetch('/api/funciones/lista');
         const funciones = await res.json();
         const contenedor = document.getElementById('contenedorCartelera');
         contenedor.innerHTML = '';
 
-        if (funciones.length === 0) {
-            contenedor.innerHTML = '<div class="col-12 text-center py-5 text-muted"><p class="fs-5">No hay funciones programadas en este momento.</p></div>';
+        if (!funciones || funciones.length === 0) {
+            contenedor.innerHTML = '<p class="text-muted text-center w-100 py-4">No hay funciones guardadas.</p>';
             return;
         }
 
         funciones.forEach(f => {
-            const imagenPoster = f.imagen_url ? f.imagen_url : "https://placehold.co/100x145/1a1a1a/ffffff?text=Sin+Foto";
-
+            const img = f.imagen_url ? f.imagen_url : "https://placehold.co/100x145/1a1a1a/ffffff?text=Cine";
+            const JSONString = JSON.stringify(f).replace(/"/g, '&quot;');
+            const idiomaMostrado = f.idioma ? f.idioma.toUpperCase() : 'DOBLADA';
+            
             contenedor.innerHTML += `
                 <div class="col">
-                    <div class="card movie-row-card p-3 d-flex flex-row gap-3 h-100 align-items-center">
-                        <div>
-                            <img src="${imagenPoster}" class="poster-img" onerror="this.src='https://placehold.co/100x145/1a1a1a/ffffff?text=Error+Img'">
-                        </div>
-                        <div class="d-flex flex-column justify-content-between flex-grow-1" style="min-width: 0;">
-                            <div>
-                                <h4 class="text-white fw-bold mb-1 text-truncate">${f.titulo}</h4>
-                                <p class="text-danger small mb-2 fw-semibold">${f.genero}</p>
-                                <div class="d-flex gap-2 mb-3">
-                                    <span class="badge bg-dark border border-secondary text-white-50">Sala ${f.num_sala}</span>
-                                    <span class="badge bg-success bg-opacity-10 text-success border border-success">${f.estado}</span>
-                                </div>
-                            </div>
-                            <div class="border-top border-secondary pt-2 d-flex justify-content-between align-items-center">
-                                <div>
-                                    <div class="text-white small fw-bold">🕒 ${f.hora.substring(0,5)} HS</div>
-                                    <div class="text-muted" style="font-size: 11px;">📅 ${f.fecha}</div>
-                                </div>
-                                <div class="d-flex gap-2">
-                                    <a href="/admin/funciones/nueva?edit=${f.idFuncion}" class="btn btn-sm btn-outline-warning rounded-pill px-3">✏️ Editar</a>
-                                    <button onclick="eliminarFuncionInmediata(${f.idFuncion})" class="btn btn-sm btn-outline-danger rounded-pill px-3">🗑️ Borrar</button>
-                                </div>
+                    <div class="card movie-row-card p-3 d-flex flex-row gap-3 align-items-center">
+                        <img src="${img}" class="poster-img">
+                        <div class="flex-grow-1" style="min-width:0;">
+                            <h5 class="text-white fw-bold mb-1 text-truncate">${f.titulo}</h5>
+                            <p class="text-danger small mb-2">${f.genero} <span class="text-muted">|</span> <span class="text-warning">${idiomaMostrado}</span></p>
+                            <span class="badge bg-dark border border-secondary mb-2">Sala ${f.num_sala}</span>
+                            <div class="text-white-50 small mb-2">🕒 ${f.hora.substring(0,5)} HS | 📅 ${f.fecha}</div>
+                            <div class="d-flex gap-2">
+                                <button onclick="abrirModalEditar(${JSONString})" class="btn btn-sm btn-outline-warning rounded-pill px-3">✏️ Editar</button>
+                                <button onclick="eliminarFuncionInmediata(${f.idFuncion})" class="btn btn-sm btn-outline-danger rounded-pill px-3">🗑️ Borrar</button>
                             </div>
                         </div>
                     </div>
@@ -101,14 +144,102 @@ async function renderizarCarteleraCompleta() {
     } catch (err) { console.error(err); }
 }
 
-async function eliminarFuncionInmediata(id) {
-    if (!confirm("¿Deseas dar de baja este registro?")) return;
+async function buscarEnAPI() {
+    const query = document.getElementById('inputBuscarAPI').value.trim();
+    if(!query) return;
     try {
-        const res = await fetch(`/api/funciones/${id}`, { method: 'DELETE' });
-        if (res.ok) renderizarCarteleraCompleta();
-    } catch (err) { alert("Error de red."); }
+        const res = await fetch(`/api/tmdb/buscar?query=${encodeURIComponent(query)}`);
+        const peliculas = await res.json();
+        const contenedor = document.getElementById('resultadosAPI');
+        contenedor.innerHTML = '';
+        
+        peliculas.forEach(p => {
+            const tituloEscapado = p.titulo.replace(/'/g, "\\'");
+            const sinopsisEscapada = p.sinopsis.replace(/'/g, "\\'").replace(/"/g, '\\"');
+            contenedor.innerHTML += `
+                <div class="col">
+                    <div class="card search-result-item p-2 d-flex flex-row gap-2 align-items-center rounded" onclick="abrirModalAgregar('${tituloEscapado}', '${p.genero}', '${p.imagen_url}', '${sinopsisEscapada}')">
+                        <img src="${p.imagen_url}" style="width: 40px; height: 60px; object-fit: cover;">
+                        <div style="min-width: 0;">
+                            <h6 class="text-white fw-bold m-0 text-truncate">${p.titulo}</h6>
+                            <small class="text-muted">${p.genero}</small>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+    } catch(err) { console.error(err); }
 }
 
-renderizarCarteleraCompleta();
+function abrirModalAgregar(titulo, genero, imagenUrl, sinopsis) {
+    document.getElementById('formIdFuncion').value = '';
+    document.getElementById('formTitulo').value = titulo;
+    document.getElementById('formGenero').value = genero;
+    document.getElementById('formImagenUrl').value = imagenUrl;
+    document.getElementById('formSinopsis').value = sinopsis;
+    document.getElementById('txtPeliculaSeleccionada').innerText = titulo;
+    document.getElementById('modalTitulo').innerText = "Programar Nueva Función";
+    document.getElementById('formHora').value = "20:00";
+    document.getElementById('formIdioma').value = "Doblada";
+    document.getElementById('formFecha').value = new Date().toLocaleDateString('sv-SE');
+    modalBootstrap.show();
+}
+
+function abrirModalEditar(f) {
+    document.getElementById('formIdFuncion').value = f.idFuncion;
+    document.getElementById('formTitulo').value = f.titulo;
+    document.getElementById('formGenero').value = f.genero;
+    document.getElementById('formImagenUrl').value = f.imagen_url;
+    document.getElementById('txtPeliculaSeleccionada').innerText = f.titulo;
+    document.getElementById('modalTitulo').innerText = "Modificar Parámetros de la Función";
+    document.getElementById('formSala').value = f.num_sala;
+    document.getElementById('formIdioma').value = f.idioma ? f.idioma : "Doblada";
+    document.getElementById('formHora').value = f.hora.substring(0,5);
+    document.getElementById('formFecha').value = f.fecha;
+    document.getElementById('formEstado').value = f.estado;
+    modalBootstrap.show();
+}
+
+async function guardarDatosFuncion(e) {
+    e.preventDefault();
+    const idFuncion = document.getElementById('formIdFuncion').value;
+    const data = {
+        titulo: document.getElementById('formTitulo').value,
+        genero: document.getElementById('formGenero').value,
+        imagen_url: document.getElementById('formImagenUrl').value,
+        sinopsis: document.getElementById('formSinopsis').value,
+        num_sala: document.getElementById('formSala').value,
+        idioma: document.getElementById('formIdioma').value,
+        hora: document.getElementById('formHora').value,
+        fecha: document.getElementById('formFecha').value,
+        estado: document.getElementById('formEstado').value
+    };
+    
+    const url = idFuncion ? `/api/funciones/editar/${idFuncion}` : '/api/funciones/guardar';
+    const method = idFuncion ? 'PUT' : 'POST';
+    
+    try {
+        const res = await fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        if (res.ok) {
+            modalBootstrap.hide();
+            renderizarCarteleraCompleta();
+        } else {
+            const errData = await res.json();
+            alert(errData.error || "Error al procesar la función.");
+        }
+    } catch (err) { console.error(err); }
+}
+
+async function eliminarFuncionInmediata(id) {
+    if (!confirm("¿Eliminar por completo de la cartelera?")) return;
+    try {
+        const res = await fetch(`/api/funciones/eliminar/${id}`, { method: 'DELETE' });
+        if (res.ok) renderizarCarteleraCompleta();
+    } catch (err) { console.error(err); }
+}
 </script>
 {% endblock %}
