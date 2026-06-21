@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container my-5 pt-4">
+    <div class="row g-4 text-white p-4 rounded-4" style="background: #141417; border: 1px solid #27272a;">
+        
+        <div class="col-12 col-md-4 col-lg-3 text-center text-md-start border-end border-dark pe-md-4">
+            <img src="{{ url_for('static', filename='img/' + funcion.imagen_url) if funcion.imagen_url else 'https://placehold.co/400x600/141417/ffffff?text=Cine' }}" 
+                 class="img-fluid rounded-3 shadow mb-3" style="max-width: 220px;" alt="{{ funcion.titulo }}">
+            <h1 class="h4 fw-bold text-uppercase mb-2">{{ funcion.titulo }}</h1>
+            <p class="text-danger small fw-bold mb-1">SALA {{ funcion.num_sala }}</p>
+            <p class="text-muted small">📅 {{ funcion.fecha }} — ⏰ {{ funcion.hora }} HS</p>
+            <p class="text-muted extra-small" style="font-size: 0.75rem;">Idioma: {{ funcion.idioma }}</p>
+        </div>
+
+        <div class="col-12 col-md-8 col-lg-9">
+            <div class="border-bottom border-dark pb-3 mb-4">
+                <h2 class="h4 fw-bold m-0">💺 SELECCIONÁ TUS BUTACAS</h2>
+            </div>
+
+            <div class="w-100 text-center mb-5 mt-3">
+                <div class="mx-auto" style="width: 80%; height: 6px; background: linear-gradient(90deg, transparent, #dc3545, transparent); border-radius: 50%; box-shadow: 0 4px 20px #dc3545;"></div>
+                <p class="text-uppercase text-muted mt-2 small" style="letter-spacing: 2px; font-size: 0.7rem;">PANTALLA</p>
+            </div>
+
+            <div class="d-flex flex-column align-items-center gap-2 overflow-auto py-4 mb-4" style="background: #1e1e24; border: 1px solid #27272a; border-radius: 1rem;">
+                {% for fila in ['A', 'B', 'C', 'D', 'E'] %}
+                <div class="d-flex align-items-center gap-2 px-3">
+                    <span class="fw-bold text-muted me-2 small" style="width: 15px;">{{ fila }}</span>
+                    {% for num in range(1, 9) %}
+                    <button class="btn btn-seat d-flex align-items-center justify-content-center" 
+                            style="width: 36px; height: 36px; border-radius: 6px; font-size: 0.75rem; background: #141417; border: 1px solid #3f3f46; color: #fff; transition: all 0.2s;"
+                            data-asiento="{{ fila }}{{ num }}">
+                        {{ num }}
+                    </button>
+                    {% endfor %}
+                    <span class="fw-bold text-muted ms-2 small" style="width: 15px;">{{ fila }}</span>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="d-flex justify-content-center flex-wrap gap-4 small mb-4 text-muted">
+                <div class="d-flex align-items-center gap-2">
+                    <div style="width: 16px; height: 16px; background: #141417; border: 1px solid #3f3f46; border-radius: 4px;"></div>
+                    <span>Disponible</span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <div style="width: 16px; height: 16px; background: #dc3545; border: 1px solid #dc3545; border-radius: 4px;"></div>
+                    <span>Seleccionada</span>
+                </div>
+            </div>
+
+            <form id="formReserva" action="{{ url_for('seleccionar_butacas', id_funcion=funcion.idFuncion) }}" method="POST">
+                <input type="hidden" id="asientosInput" name="asientos" value="">
+                <div class="text-center text-md-end pt-3 border-top border-dark">
+                    <button type="submit" id="btnContinuarReserva" class="btn btn-light fw-bold py-2 px-4 rounded-3" style="background: #ffffff; color: #09090b;" disabled>
+                        CONTINUAR RESERVA
+                    </button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+</div>
+
+<style>
+    .btn-seat:hover {
+        border-color: #dc3545 !important;
+        background-color: rgba(220, 53, 69, 0.2) !important;
+    }
+    .btn-seat.selected {
+        background-color: #dc3545 !important;
+        border-color: #dc3545 !important;
+        color: #fff !important;
+    }
+</style>
+
+<script>
+    const asientosSeleccionados = new Set();
+    const btnContinuar = document.getElementById('btnContinuarReserva');
+    const asientosInput = document.getElementById('asientosInput');
+
+    document.querySelectorAll('.btn-seat').forEach(seat => {
+        seat.addEventListener('click', () => {
+            const idAsiento = seat.getAttribute('data-asiento');
+            if (asientosSeleccionados.has(idAsiento)) {
+                asientosSeleccionados.delete(idAsiento);
+                seat.classList.remove('selected');
+            } else {
+                asientosSeleccionados.add(idAsiento);
+                seat.classList.add('selected');
+            }
+            
+            // Habilitar/deshabilitar botón y guardar los asientos en el input oculto
+            btnContinuar.disabled = asientosSeleccionados.size === 0;
+            asientosInput.value = Array.from(asientosSeleccionados).join(',');
+        });
+    });
+</script>
+{% endblock %}

@@ -22,11 +22,11 @@ CREATE TABLE IF NOT EXISTS Pelicula (
     imagen_url VARCHAR(255)
 );
 
--- 3. Tabla Sala
+-- 3. Tabla Sala (Se agrega capacidad por defecto)
 CREATE TABLE IF NOT EXISTS Sala (
     idSala INT AUTO_INCREMENT PRIMARY KEY,
     numero INT NOT NULL,
-    capacidad INT NOT NULL
+    capacidad INT NOT NULL DEFAULT 50 -- <- Todas tendrán 50 por defecto si no se especifica
 );
 
 -- 4. Tabla Asiento
@@ -105,11 +105,11 @@ INSERT IGNORE INTO Pelicula (idPelicula, titulo, sinopsis, duracion, genero, ima
 (2, 'Interstellar', 'Un grupo de científicos viaja al espacio exterior para salvar a la humanidad.', 169, 'Drama / Sci-Fi', 'interstellar.jpg'),
 (3, 'El Padrino', 'La vida de una organización criminal y su transición generacional.', 175, 'Crimen / Drama', 'padrino.jpg');
 
--- CORRECCIÓN: Definición estricta de las 6 salas del sistema con sus capacidades respectivas
+-- CORRECCIÓN: Todas las salas ahora se insertan con capacidad 50
 INSERT IGNORE INTO Sala (idSala, numero, capacidad) VALUES 
-(1, 1, 48),
-(2, 2, 64),
-(3, 3, 32),
+(1, 1, 50),
+(2, 2, 50),
+(3, 3, 50),
 (4, 4, 50),
 (5, 5, 50),
-(6, 6, 40);
+(6, 6, 50);
