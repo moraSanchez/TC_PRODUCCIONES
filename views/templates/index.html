@@ -1,5 +1,3 @@
-#index.html
-
 {% extends 'base.html' %}
 
 {% block content %}
@@ -93,11 +91,10 @@ function crearCardPelicula(f) {
     const img = f.imagen_url ? f.imagen_url : "https://placehold.co/400x600/141417/ffffff?text=TC+Cine";
     const generoBadge = f.genero ? f.genero.split(' ')[0] : 'Cine';
     
-    // Captura del ID de la película para armar la URL dinámica hacia tus horarios
+    // CORRECCIÓN EXACTA AQUÍ: Ya no se rompe el botón "Comprar Entradas"
     const idAsignado = f.Pelicula_idPelicula || f.idPelicula || f.idFuncion;
     const urlDestino = idAsignado ? `/pelicula/${idAsignado}/funciones` : '#';
 
-    // Retorna la tarjeta LIMPIA: Solo póster, título y botón. Sin salas, horas ni fechas.
     return `
         <div class="movie-card-premium">
             <div class="poster-wrapper">
@@ -107,7 +104,6 @@ function crearCardPelicula(f) {
             </div>
             <div class="movie-details">
                 <h3 class="movie-title-premium text-truncate" title="${f.titulo}">${f.titulo}</h3>
-                
                 <a href="${urlDestino}" class="btn-premium-cta text-center w-100 mt-2">COMPRAR ENTRADAS</a>
             </div>
         </div>
