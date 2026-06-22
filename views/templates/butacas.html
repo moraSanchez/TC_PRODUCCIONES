@@ -78,8 +78,8 @@
                 </div>
             </div>
 
-            <form id="formReserva" action="{{ url_for('seleccionar_butacas', id_funcion=funcion.idFuncion) }}" method="POST" class="mt-4">
-                <input type="hidden" id="asientosInput" name="asientos" value="">
+        <form id="formReserva" action="{{ url_for('cine.seleccionar_butacas', id_funcion=funcion.idFuncion) }}" method="POST" class="mt-4">
+                    <input type="hidden" id="asientosInput" name="asientos" value="">
                 <button type="submit" id="btnContinuarReserva" class="btn btn-light fw-bold py-2 w-100 rounded-3" style="background: #ffffff; color: #09090b;" disabled>
                     CONTINUAR RESERVA
                 </button>
