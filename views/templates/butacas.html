@@ -5,7 +5,7 @@
     <div class="row g-4 text-white p-4 rounded-4" style="background: #141417; border: 1px solid #27272a;">
         
         <div class="col-12 col-md-4 col-lg-3 text-center text-md-start border-end border-dark pe-md-4">
-            <img src="{{ url_for('static', filename='img/' + funcion.imagen_url) if funcion.imagen_url else 'https://placehold.co/400x600/141417/ffffff?text=Cine' }}" 
+            <img src="{{ funcion.imagen_url if funcion.imagen_url else 'https://placehold.co/400x600/141417/ffffff?text=Cine' }}" 
                  class="img-fluid rounded-3 shadow mb-3" style="max-width: 220px;" alt="{{ funcion.titulo }}">
             <h1 class="h4 fw-bold text-uppercase mb-2">{{ funcion.titulo }}</h1>
             <p class="text-danger small fw-bold mb-1">SALA {{ funcion.num_sala }}</p>
@@ -13,7 +13,7 @@
             <p class="text-muted extra-small" style="font-size: 0.75rem;">Idioma: {{ funcion.idioma }}</p>
         </div>
 
-        <div class="col-12 col-md-8 col-lg-9">
+        <div class="col-12 col-md-5 col-lg-6">
             <div class="border-bottom border-dark pb-3 mb-4">
                 <h2 class="h4 fw-bold m-0">💺 SELECCIONÁ TUS BUTACAS</h2>
             </div>
@@ -27,9 +27,9 @@
                 {% for fila in ['A', 'B', 'C', 'D', 'E'] %}
                 <div class="d-flex align-items-center gap-2 px-3">
                     <span class="fw-bold text-muted me-2 small" style="width: 15px;">{{ fila }}</span>
-                    {% for num in range(1, 9) %}
+                    {% for num in range(1, 11) %}
                     <button class="btn btn-seat d-flex align-items-center justify-content-center" 
-                            style="width: 36px; height: 36px; border-radius: 6px; font-size: 0.75rem; background: #141417; border: 1px solid #3f3f46; color: #fff; transition: all 0.2s;"
+                            style="width: 34px; height: 34px; border-radius: 6px; font-size: 0.75rem; background: #141417; border: 1px solid #3f3f46; color: #fff; transition: all 0.2s;"
                             data-asiento="{{ fila }}{{ num }}">
                         {{ num }}
                     </button>
@@ -49,14 +49,40 @@
                     <span>Seleccionada</span>
                 </div>
             </div>
+        </div>
 
-            <form id="formReserva" action="{{ url_for('seleccionar_butacas', id_funcion=funcion.idFuncion) }}" method="POST">
-                <input type="hidden" id="asientosInput" name="asientos" value="">
-                <div class="text-center text-md-end pt-3 border-top border-dark">
-                    <button type="submit" id="btnContinuarReserva" class="btn btn-light fw-bold py-2 px-4 rounded-3" style="background: #ffffff; color: #09090b;" disabled>
-                        CONTINUAR RESERVA
-                    </button>
+        <div class="col-12 col-md-3 border-start border-dark ps-md-4 d-flex flex-column justify-content-between">
+            <div>
+                <div class="border-bottom border-dark pb-3 mb-4">
+                    <h2 class="h4 fw-bold m-0">💰 RESUMEN</h2>
                 </div>
+                
+                <div class="mb-3 d-flex justify-content-between align-items-center">
+                    <span class="text-muted small">Precio Unitario:</span>
+                    <span class="fw-bold text-success">$4500.00</span>
+                </div>
+
+                <div class="mb-3 d-flex justify-content-between align-items-center">
+                    <span class="text-muted small">Butacas elegidas:</span>
+                    <span id="txtCantidad" class="fw-bold text-white">0</span>
+                </div>
+
+                <div class="mb-4 p-3 rounded-3" style="background: #1e1e24; border: 1px solid #27272a;">
+                    <span class="text-muted d-block small mb-1">Asientos:</span>
+                    <span id="txtAsientosLista" class="text-danger small fw-bold">—</span>
+                </div>
+
+                <div class="border-top border-dark pt-3 d-flex justify-content-between align-items-center">
+                    <span class="text-white fw-bold">TOTAL:</span>
+                    <span id="txtTotal" class="h4 m-0 fw-bold text-danger">$0.00</span>
+                </div>
+            </div>
+
+            <form id="formReserva" action="{{ url_for('seleccionar_butacas', id_funcion=funcion.idFuncion) }}" method="POST" class="mt-4">
+                <input type="hidden" id="asientosInput" name="asientos" value="">
+                <button type="submit" id="btnContinuarReserva" class="btn btn-light fw-bold py-2 w-100 rounded-3" style="background: #ffffff; color: #09090b;" disabled>
+                    CONTINUAR RESERVA
+                </button>
             </form>
         </div>
 
@@ -77,8 +103,13 @@
 
 <script>
     const asientosSeleccionados = new Set();
+    const PRECIO_UNITARIO = 4500;
+    
     const btnContinuar = document.getElementById('btnContinuarReserva');
     const asientosInput = document.getElementById('asientosInput');
+    const txtCantidad = document.getElementById('txtCantidad');
+    const txtAsientosLista = document.getElementById('txtAsientosLista');
+    const txtTotal = document.getElementById('txtTotal');
 
     document.querySelectorAll('.btn-seat').forEach(seat => {
         seat.addEventListener('click', () => {
@@ -91,8 +122,20 @@
                 seat.classList.add('selected');
             }
             
-            // Habilitar/deshabilitar botón y guardar los asientos en el input oculto
-            btnContinuar.disabled = asientosSeleccionados.size === 0;
+            // Controlador del frontend en tiempo real
+            const cantidad = asientosSeleccionados.size;
+            txtCantidad.innerText = cantidad;
+            
+            if(cantidad > 0) {
+                txtAsientosLista.innerText = Array.from(asientosSeleccionados).join(', ');
+                txtTotal.innerText = `$${(cantidad * PRECIO_UNITARIO).toFixed(2)}`;
+                btnContinuar.disabled = false;
+            } else {
+                txtAsientosLista.innerText = '—';
+                txtTotal.innerText = '$0.00';
+                btnContinuar.disabled = true;
+            }
+            
             asientosInput.value = Array.from(asientosSeleccionados).join(',');
         });
     });
