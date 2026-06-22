@@ -1,3 +1,5 @@
+/*admin_dashboard.html*/
+
 {% extends 'base.html' %}
 
 {% block content %}
@@ -44,23 +46,24 @@
     .btn-agregar-horario:hover { border-color: #9ca3af; background-color: rgba(255, 255, 255, 0.03); }
     .mf-btn-guardar { width: 100%; background-color: #ef4444; color: #ffffff; border: none; padding: 14px; border-radius: 10px; font-weight: 600; font-size: 1rem; cursor: pointer; transition: background-color 0.2s; }
     .mf-btn-guardar:hover { background-color: #dc2626; }
+
+    /* Estilos del Toast Personalizado Oscuro */
+    .toast-container-custom { position: fixed; bottom: 24px; right: 24px; z-index: 1090; }
+    .toast-dark { background: #1c1c21 !important; border: 1px solid rgba(255, 255, 255, 0.08) !important; border-left: 4px solid #ef4444 !important; border-radius: 10px !important; color: #fff !important; }
+    .toast-dark .btn-close { filter: invert(1) grayscale(100%) brightness(200%); opacity: 0.6; }
 </style>
 
 <div class="container text-white mt-5 pb-5">
     <div class="d-flex justify-content-between align-items-center mb-5 border-bottom border-secondary pb-3">
         <div>
             <h2 class="dashboard-title text-danger m-0 d-flex align-items-center gap-2">
-                🍿 PANEL DE CONTROL <span class="fs-6 text-muted fw-normal">| Administración de Cartelera</span>
+                🍿 PANEL DE CONTROL <span class="fs-6 text-muted fw-normal"> | Administración de Cartelera</span>
             </h2>
-        </div>
-        <div>
-            <button onclick="cerrarSesion()" class="btn btn-outline-light btn-sm rounded-pill px-4">Cerrar Sesión</button>
         </div>
     </div>
 
     <div class="card glass-panel glass-panel-accent p-4 mb-5">
-        <h5 class="text-white fw-bold mb-1">🔍 Importar Película</h5>
-        <p class="text-muted small mb-4">Buscá títulos en tiempo real mediante la infraestructura de TMDb API para darlos de alta con su respectiva categoría.</p>
+        <h5 class="text-white fw-bold mb-1">Importar Película</h5>
         <div class="input-group search-input-group mb-2">
             <input type="text" id="inputBuscarAPI" class="form-control" placeholder="Escribí el nombre de la película a buscar...">
             <button class="btn btn-search text-white fw-bold" onclick="buscarEnAPI()">Buscar</button>
@@ -71,11 +74,21 @@
     <div class="card glass-panel p-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <h5 class="text-white fw-bold m-0">🎬 Funciones Activas en Cartelera</h5>
+                <h5 class="text-white fw-bold m-0">Funciones Activas en Cartelera</h5>
                 <p class="text-muted small m-0">Grilla completa de proyecciones distribuidas por salas y horarios.</p>
             </div>
         </div>
         <div id="contenedorCartelera" class="dashboard-grid"></div>
+    </div>
+</div>
+
+<div class="toast-container-custom">
+    <div id="toastNotificacion" class="toast toast-dark hide" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="4000">
+        <div class="d-flex align-items-center p-3">
+            <div class="toast-body flex-grow-1" id="toastMensajeTexto">
+                </div>
+            <button type="button" class="btn-close ms-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
     </div>
 </div>
 
@@ -161,13 +174,31 @@
     }
 
     let modalBootstrap = null;
+    let toastBootstrap = null;
     let editFuncionId = null;
 
     document.addEventListener('DOMContentLoaded', () => {
         modalBootstrap = new bootstrap.Modal(document.getElementById('modalFuncion'));
+        toastBootstrap = new bootstrap.Toast(document.getElementById('toastNotificacion'));
         renderizarCarteleraCompleta();
         document.getElementById('formFuncion').addEventListener('submit', guardarDatosFuncion);
     });
+
+    // Función auxiliar para disparar notificaciones en pantalla sin usar alerts
+    function mostrarNotificacion(mensaje, esError = false) {
+        const toastElement = document.getElementById('toastNotificacion');
+        const mensajeElement = document.getElementById('toastMensajeTexto');
+        
+        mensajeElement.innerText = mensaje;
+        
+        if (esError) {
+            toastElement.style.borderLeft = "4px solid #f87171";
+        } else {
+            toastElement.style.borderLeft = "4px solid #22c55e"; // Verde éxito
+        }
+        
+        toastBootstrap.show();
+    }
 
     function actualizarContadorHorarios() {
         const filas = document.querySelectorAll('.horario-row');
@@ -175,7 +206,6 @@
         document.getElementById('lblContadorHorarios').innerText = texto;
     }
 
-    // ACÁ SE AGREGÓ ÚNICAMENTE EL SELECTOR DE FORMATO
     function agregarFilaHorario(fecha = '', hora = '', formato = '2D') {
         const container = document.getElementById('listaHorarios');
         const row = document.createElement('div');
@@ -216,7 +246,7 @@
 
     async function buscarEnAPI() {
         const q = document.getElementById('inputBuscarAPI').value.trim();
-        if (!q) return alert("Ingresá un término para buscar.");
+        if (!q) return mostrarNotificacion("Ingresá un término para buscar.", true);
         
         try {
             const res = await fetch(`/api/tmdb/buscar?query=${encodeURIComponent(q)}`);
@@ -334,7 +364,6 @@
         
         if (funcionData.horarios_completos && funcionData.horarios_completos.length > 0) {
             funcionData.horarios_completos.forEach(h => {
-                // ACÁ SE PASA EL FORMATO AL EDITAR
                 agregarFilaHorario(h.fecha, h.hora.substring(0,5), h.formato || '2D');
             });
         } else {
@@ -349,7 +378,7 @@
 
         const filas = document.querySelectorAll('.horario-row');
         if(filas.length === 0) {
-            return alert("Tenés que programar al menos un horario para la función.");
+            return mostrarNotificacion("Tenés que programar al menos un horario para la función.", true);
         }
 
         let arrayFechasHoras = [];
@@ -357,10 +386,10 @@
         for (let fila of filas) {
             const fValue = fila.querySelector('.input-fecha').value;
             let hValue = fila.querySelector('.input-hora').value;
-            let formatoValue = fila.querySelector('.select-formato').value; // ACÁ RECOPILAMOS EL FORMATO
+            let formatoValue = fila.querySelector('.select-formato').value;
             
             if (!fValue || !hValue) {
-                return alert("Asegurate de completar fecha y hora en todos los recuadros.");
+                return mostrarNotificacion("Asegurate de completar fecha y hora en todos los recuadros.", true);
             }
 
             arrayFechasHoras.push({
@@ -398,15 +427,16 @@
             
             const data = await res.json();
             if (data.status === "success") {
-                alert("¡Funciones procesadas y guardadas correctamente!");
+                // CAMBIO CLAVE: Reemplazamos el alert molesto por el Toast nativo del Dashboard
+                mostrarNotificacion("¡Funciones procesadas y guardadas correctamente!", false);
                 modalBootstrap.hide();
                 renderizarCarteleraCompleta(); 
             } else {
-                alert("Error del servidor: " + data.error);
+                mostrarNotificacion("Error del servidor: " + data.error, true);
             }
         } catch(err) {
             console.error("Error crítico en la llamada de red:", err);
-            alert("Ocurrió un error inesperado al conectar.");
+            mostrarNotificacion("Ocurrió un error inesperado al conectar.", true);
         }
     }
 
@@ -416,9 +446,10 @@
             const res = await fetch(`/api/funciones/eliminar/${idFuncion}`, { method: 'DELETE' });
             const data = await res.json();
             if (data.status === "success") {
+                mostrarNotificacion("Función eliminada correctamente.", false);
                 renderizarCarteleraCompleta();
             } else {
-                alert("Error: " + data.error);
+                mostrarNotificacion("Error: " + data.error, true);
             }
         } catch(err) {
             console.error(err);

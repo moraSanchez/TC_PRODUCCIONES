@@ -1,0 +1,242 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    body { 
+        background: radial-gradient(circle at 50% 10%, #1c1515 0%, #0c0a0a 60%, #050506 100%) !important; 
+        background-attachment: fixed; 
+    }
+    .glass-panel { 
+        background: linear-gradient(145deg, rgba(22, 22, 26, 0.75) 0%, rgba(14, 14, 17, 0.85) 100%); 
+        border: 1px solid rgba(255, 255, 255, 0.06); 
+        border-radius: 20px; 
+        box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.8); 
+        backdrop-filter: blur(12px); 
+    }
+    .dashboard-title { 
+        font-family: 'Plus Jakarta Sans', sans-serif; 
+        font-weight: 900; 
+        letter-spacing: -1px; 
+        text-shadow: 0 0 20px rgba(220, 38, 38, 0.3); 
+    }
+    .badge-premium {
+        background: rgba(220, 38, 38, 0.15); 
+        color: #f87171; 
+        border: 1px solid rgba(220, 38, 38, 0.25); 
+        font-size: 0.75rem; 
+        padding: 5px 10px; 
+        border-radius: 6px; 
+        font-weight: 700;
+    }
+    .ticket-divider {
+        border-top: 2px dashed rgba(255, 255, 255, 0.1);
+        position: relative;
+        margin: 25px 0;
+    }
+    .ticket-divider::before, .ticket-divider::after {
+        content: '';
+        position: absolute;
+        top: -10px;
+        width: 20px;
+        height: 20px;
+        background: #0c0a0a;
+        border-radius: 50%;
+    }
+    .ticket-divider::before { left: -35px; }
+    .ticket-divider::after { right: -35px; }
+    
+    .poster-summary {
+        width: 85px;
+        height: 125px;
+        object-fit: cover;
+        border-radius: 10px;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+    }
+    .text-muted-light {
+        color: #9ca3af !important;
+        font-size: 0.9rem;
+    }
+</style>
+
+<div class="container my-5 pt-4">
+    <div class="row g-4">
+        
+        <div class="col-lg-7 col-12">
+            <div class="glass-panel p-4 text-white">
+                <div class="d-flex align-items-center gap-3 mb-4">
+                    <div style="width: 4px; height: 28px; background: #dc2626; border-radius: 2px;"></div>
+                    <h3 class="dashboard-title m-0 h4 text-uppercase">Método de Pago</h3>
+                </div>
+                <p class="text-muted-light mb-4">Completá los datos de tu tarjeta de forma 100% segura mediante la pasarela oficial de Mercado Pago.</p>
+                
+                <div id="paymentBrick_container"></div>
+            </div>
+        </div>
+
+        <div class="col-lg-5 col-12">
+            <div class="glass-panel p-4 text-white" style="border-top: 3px solid #dc2626;">
+                <div class="d-flex align-items-center gap-3 mb-4">
+                    <h4 class="fw-bold m-0 h5 text-uppercase" style="letter-spacing: 0.5px;">Resumen del Ticket</h4>
+                </div>
+                
+                <div class="d-flex gap-3 align-items-start mb-3">
+                    <img id="resumen-poster" src="" class="poster-summary" alt="Poster">
+                    <div>
+                        <h5 class="fw-bold mb-2 text-uppercase text-white" id="resumen-titulo" style="font-size: 1.15rem; line-height: 1.2;">Cargando...</h5>
+                        <div class="d-flex flex-wrap gap-2 mt-2">
+                            <span class="badge-premium text-uppercase" id="resumen-sala">SALA --</span>
+                            <span class="badge-premium text-uppercase" id="resumen-formato" style="background: rgba(255,255,255,0.05); color:#e4e4e7; border-color: rgba(255,255,255,0.1)">--</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ticket-divider"></div>
+
+                <div class="d-flex flex-column gap-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted-light">📅 Fecha:</span>
+                        <span class="fw-bold text-white" id="resumen-fecha">--/--/----</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted-light">⏰ Horario:</span>
+                        <span class="fw-bold text-white" id="resumen-hora">--:-- HS</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted-light">🗣️ Idioma:</span>
+                        <span class="fw-bold text-white text-capitalize" id="resumen-idioma">--</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-start">
+                        <span class="text-muted-light">💺 Butacas (<span id="resumen-cantidad">0</span>):</span>
+                        <span class="fw-bold text-danger text-end" id="resumen-asientos" style="max-width: 60%; word-wrap: break-word;">--</span>
+                    </div>
+                </div>
+
+                <div class="ticket-divider"></div>
+
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-muted-light">Precio Unitario:</span>
+                    <span class="fw-semibold text-white" id="resumen-unitario">$0.00</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center pt-2">
+                    <span class="fs-5 fw-bold">TOTAL A PAGAR</span>
+                    <h3 class="text-danger fw-black m-0 font-monospace" id="resumen-total" style="font-weight: 800;">$0.00</h3>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script src="https://sdk.mercadopago.com/js/v2"></script>
+<script>
+document.addEventListener("DOMContentLoaded", async function() {
+    // 1. Levantamos los datos reales guardados en la pantalla de asientos
+    const reserva = JSON.parse(localStorage.getItem('reserva_actual'));
+
+    if (!reserva) {
+        window.location.href = '/';
+        return;
+    }
+
+    // 2. Inyectar dinámicamente el resumen
+    document.getElementById('resumen-poster').src = reserva.imagen_url || '';
+    document.getElementById('resumen-titulo').innerText = reserva.titulo || 'Sin Título';
+    document.getElementById('resumen-sala').innerText = `SALA ${reserva.num_sala || '--'}`;
+    document.getElementById('resumen-formato').innerText = `${reserva.formato || '--'}`;
+    document.getElementById('resumen-fecha').innerText = reserva.fecha || '--/--/----';
+    document.getElementById('resumen-hora').innerText = `${reserva.hora || '--:--'} HS`;
+    document.getElementById('resumen-idioma').innerText = reserva.idioma || '--';
+    document.getElementById('resumen-cantidad').innerText = reserva.cantidad || '0';
+    document.getElementById('resumen-asientos').innerText = reserva.asientos ? reserva.asientos.join(', ') : '--';
+    document.getElementById('resumen-unitario').innerText = `$${(reserva.precio_unitario || 0).toFixed(2)}`;
+    document.getElementById('resumen-total').innerText = `$${(reserva.total || 0).toFixed(2)}`;
+
+    // 3. Comunicarse de forma segura con el backend usando URL absoluta
+    try {
+        const urlAbsoluta = window.location.origin + '/api/crear_preferencia';
+
+        const response = await fetch(urlAbsoluta, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                titulo: reserva.titulo,
+                cantidad: reserva.cantidad,
+                precio_unitario: reserva.precio_unitario,
+                id_funcion: reserva.id_funcion,
+                asientos: reserva.asientos
+            })
+        });
+        
+        if (!response.ok) {
+            const errorTexto = await response.text();
+            console.error(`Error HTTP ${response.status}:`, errorTexto);
+            alert(`Error del Servidor Backend (${response.status}).`);
+            return;
+        }
+        
+        const preference = await response.json();
+
+        if (!preference.id) {
+            console.error("Detalles del error:", preference);
+            alert("Error: El backend no devolvió el ID de Mercado Pago.");
+            return;
+        }
+
+        // 4. Inicializar el SDK de Mercado Pago
+        const mp = new MercadoPago('{{ public_key }}', { locale: 'es-AR' });
+        const bricksBuilder = mp.bricks();
+
+        // 5. Renderizar el Payment Brick forzando el modo oscuro real mediante customVariables
+        window.paymentBrickController = await bricksBuilder.create('payment', 'paymentBrick_container', {
+            initialization: {
+                amount: reserva.total,
+                preferenceId: preference.id,
+            },
+            customization: {
+                visual: { 
+                    theme: 'dark', // Activamos el motor oscuro
+                    style: {
+                        // 🛠️ Mapeamos las variables del iframe para destruir el fondo blanco del bloque
+                        customVariables: {
+                            colorPrimary: '#dc2626',            // Botones principales y foco en rojo cine
+                            colorBackground: '#151518',          // Fondo general del bloque (oscuro profundo)
+                            colorInputBackground: '#1e1e24',     // Fondo interior de los inputs
+                            colorInputBackgroundFocused: '#26262f', // Fondo de input seleccionado
+                            colorText: '#ffffff',                // Textos fijos en blanco
+                            colorInputText: '#ffffff',           // Lo que escribe el usuario en blanco
+                            colorInputTextPlaceholder: '#9ca3af', // Marcas de agua guía en gris claro
+                            borderRadiusMedium: '10px'           // Esquinas redondeadas armónicas
+                        }
+                    }
+                },
+                paymentMethods: {
+                    creditCard: "all",
+                    debitCard: "all",
+                    ticket: "all" 
+                }
+            },
+            callbacks: {
+                onReady: () => {
+                    console.log('Pasarela Mercado Pago integrada y oscurecida con éxito.');
+                },
+                onSubmit: ({ selectedPaymentMethod, formData }) => {
+                    return new Promise((resolve, reject) => {
+                        resolve();
+                    });
+                },
+                onError: (error) => {
+                    console.error("Error crítico en Pasarela MP: ", error);
+                },
+            },
+        });
+
+    } catch (error) {
+        console.error("Error de red/JS:", error);
+        alert("Ocurrió un error inesperado en la red de la aplicación.");
+    }
+});
+</script>
+{% endblock %}
