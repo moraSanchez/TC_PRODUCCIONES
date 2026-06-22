@@ -108,7 +108,7 @@ def seleccionar_funcion(id_pelicula):
 
 
 # ==========================================
-#      NUEVA VISTA: SELECCIÓN DE BUTACAS (CORREGIDA)
+#      VISTA: SELECCIÓN DE BUTACAS (50 ASIENTOS)
 # ==========================================
 @app.route('/reserva/funcion/<int:id_funcion>', methods=['GET', 'POST'])
 def seleccionar_butacas(id_funcion):
@@ -121,24 +121,24 @@ def seleccionar_butacas(id_funcion):
         return "Error al conectar con la base de datos", 500
 
     if request.method == 'POST':
-        # Captura las butacas enviadas desde el formulario (ej: "A1,A2")
         asientos_elegidos = request.form.get('asientos')
         if asientos_elegidos:
             lista_asientos = asientos_elegidos.split(',')
             
-            # Guardamos la selección en la sesión de Flask
+            # Guardamos la selección, la cantidad exacta y el precio total (ej: $4500 por entrada)
             session['reserva_actual'] = {
                 'id_funcion': id_funcion,
-                'asientos': lista_asientos
+                'asientos': lista_asientos,
+                'cantidad': len(lista_asientos),
+                'precio_total': len(lista_asientos) * 4500.00
             }
-            # Redirige al inicio o a tu flujo de confirmación de compra
             return redirect(url_for('inicio'))
 
     try:
         try: cursor.fetchall()
         except Exception: pass
 
-        # Se hace un JOIN con Pelicula para traer los datos reales (titulo, imagen_url) que pide la plantilla
+        # Traemos la información de la función y los datos de la película mediante LEFT JOIN
         query = """
             SELECT f.*, p.titulo, p.imagen_url 
             FROM Funcion f
