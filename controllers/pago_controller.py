@@ -81,7 +81,7 @@ def crear_preferencia():
         return jsonify({"id": preference["id"]}), 200
 
     except Exception as e:
-        print(f"❌ Error en crear_preferencia: {str(e)}")
+        print(f"Error en crear_preferencia: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @pago_bp.route('/process_payment', methods=['POST'])
@@ -124,7 +124,7 @@ def process_payment():
         }), 200
         
     except Exception as e:
-        print(f"❌ Error al procesar pago: {str(e)}")
+        print(f"Error al procesar pago: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @pago_bp.route('/pago/exitoso', methods=['GET'])
@@ -211,11 +211,11 @@ def pago_exitoso():
             cursor.execute(query_ticket, (codigo_ticket, id_reserva))
             
             db.commit()
-            print(f"✅ Compra procesada con éxito completa. Reserva #{id_reserva}, Ticket: {codigo_ticket}")
+            print(f"Compra procesada con éxito completa. Reserva #{id_reserva}, Ticket: {codigo_ticket}")
 
             return render_template('pago_exitoso.html', payment_id=payment_id, codigo_ticket=codigo_ticket)
 
     except Exception as e:
-        print(f"❌ Error crítico en el guardado relacional de la compra: {str(e)}")
+        print(f"Error crítico en el guardado relacional de la compra: {str(e)}")
 
     return render_template('pago_exitoso.html', payment_id=payment_id, codigo_ticket="RESERVADO")
