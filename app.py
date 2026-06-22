@@ -108,6 +108,56 @@ def seleccionar_funcion(id_pelicula):
 
 
 # ==========================================
+#      VISTA: SELECCIÓN DE BUTACAS (50 ASIENTOS)
+# ==========================================
+@app.route('/reserva/funcion/<int:id_funcion>', methods=['GET', 'POST'])
+def seleccionar_butacas(id_funcion):
+    if 'usuario_id' not in session:
+        return redirect(url_for('login'))
+
+    db = DatabaseConnection()
+    cursor = db.get_cursor()
+    if not cursor:
+        return "Error al conectar con la base de datos", 500
+
+    if request.method == 'POST':
+        asientos_elegidos = request.form.get('asientos')
+        if asientos_elegidos:
+            lista_asientos = asientos_elegidos.split(',')
+            
+            # Guardamos la selección, la cantidad exacta y el precio total (ej: $4500 por entrada)
+            session['reserva_actual'] = {
+                'id_funcion': id_funcion,
+                'asientos': lista_asientos,
+                'cantidad': len(lista_asientos),
+                'precio_total': len(lista_asientos) * 4500.00
+            }
+            return redirect(url_for('inicio'))
+
+    try:
+        try: cursor.fetchall()
+        except Exception: pass
+
+        # Traemos la información de la función y los datos de la película mediante LEFT JOIN
+        query = """
+            SELECT f.*, p.titulo, p.imagen_url 
+            FROM Funcion f
+            LEFT JOIN Pelicula p ON f.Pelicula_idPelicula = p.idPelicula
+            WHERE f.idFuncion = %s
+        """
+        cursor.execute(query, (id_funcion,))
+        funcion = cursor.fetchone()
+
+        if not funcion:
+            return redirect(url_for('inicio'))
+
+        return render_template('butacas.html', funcion=funcion)
+    except Exception as e:
+        print(f"Error en seleccionar_butacas: {e}")
+        return redirect(url_for('inicio'))
+
+
+# ==========================================
 #           RUTAS DE AUTENTICACIÓN
 # ==========================================
 
@@ -171,14 +221,13 @@ def api_registro():
         if cursor.fetchone():
             return jsonify({"status": "error", "error": "El correo electrónico ya se encuentra registrado."}), 400
 
-        # Encriptamos la contraseña de manera segura para evitar que rompa el validador del login
+        # Encriptamos la contraseña de manera segura
         pass_encriptada = generate_password_hash(contrasenia)
 
         query = "INSERT INTO Usuario (nombre, apellido, email, contrasenia, tipo) VALUES (%s, %s, %s, %s, %s)"
         cursor.execute(query, (nombre, apellido, email, pass_encriptada, 'Cliente'))
         db.commit()
 
-        # Mandamos la respuesta con "status": "success" para que el JS del HTML la procese correctamente
         return jsonify({"status": "success", "message": "Usuario registrado correctamente."}), 201
     except Exception as e:
         print(f"Fallo crítico en Query de Registro: {e}")
@@ -228,7 +277,6 @@ def api_lista_funciones_db():
         try: cursor.fetchall()
         except Exception: pass
         
-        # Traemos todas las funciones ordenadas para empaquetarlas juntas en Python
         cursor.execute("""
             SELECT idFuncion, titulo, genero, imagen_url, num_sala, fecha, hora, estado, Pelicula_idPelicula, COALESCE(idioma, 'Doblada') as idioma
             FROM Funcion 
@@ -244,21 +292,16 @@ def api_lista_funciones_db():
                 
                 key = f['Pelicula_idPelicula']
                 if key not in agrupadas:
-                    # Primera vez que vemos esta película, le armamos su array de fechas y horas
                     f['horarios_completos'] = [{"fecha": f['fecha'], "hora": f['hora'], "idFuncion": f['idFuncion']}]
                     agrupadas[key] = f
                 else:
-                    # Agregamos los demás horarios al array de la película existente
                     agrupadas[key]['horarios_completos'].append({
                         "fecha": f['fecha'], 
                         "hora": f['hora'], 
                         "idFuncion": f['idFuncion']
                     })
-            
-            # Devuelve exactamente UNA tarjeta por película para que index.html y admin NO se rompan
             return jsonify(list(agrupadas.values())), 200
 
-        # (Lógica de fallback a TMDB en caso de DB vacía se mantiene intacta)
         TMDB_API_KEY = os.getenv("TMDB_API_KEY", "TU_API_KEY_ACA")
         url_now_playing = f"https://api.themoviedb.org/3/movie/now_playing?api_key={TMDB_API_KEY}&language=es-MX&region=AR&page=1"
         url_upcoming = f"https://api.themoviedb.org/3/movie/upcoming?api_key={TMDB_API_KEY}&language=es-MX&region=AR&page=1"
@@ -341,14 +384,14 @@ def api_guardar_funcion():
             query_pelicula = "INSERT INTO Pelicula (titulo, sinopsis, duracion, genero, imagen_url) VALUES (%s, %s, %s, %s, %s)"
             cursor.execute(query_pelicula, (data.get('titulo'), data.get('sinopsis', ''), 120, data.get('genero'), data.get('imagen_url')))
             db.commit()
-            id_pelicula = cursor.lastrowid
+        id_pelicula = cursor.lastrowid
 
         idioma_crudo = data.get('idioma', 'Doblada')
         idioma_final = "Subtitulada" if "sub" in idioma_crudo.lower() else "Doblada"
 
         query_funcion = """INSERT INTO Funcion (titulo, genero, imagen_url, num_sala, fecha, hora, estado, Pelicula_idPelicula, idioma) 
                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"""
-        
+         
         for item in fechas_horarios:
             cursor.execute(query_funcion, (
                 data.get('titulo'), data.get('genero'), data.get('imagen_url'), int(data.get('num_sala', 1)), 
@@ -380,16 +423,14 @@ def api_editar_funcion(id_funcion):
         funcion_actual = cursor.fetchone()
         if not funcion_actual:
             return jsonify({"error": "La función que intenta editar no existe."}), 404
-            
+             
         id_pelicula = funcion_actual['Pelicula_idPelicula']
 
-        # Actualizar datos visuales de la película
         query_update_pelicula = """UPDATE Pelicula SET titulo=%s, genero=%s, sinopsis=%s, duracion=%s, imagen_url=%s WHERE idPelicula=%s"""
         cursor.execute(query_update_pelicula, (data.get('titulo'), data.get('genero'), data.get('sinopsis'), 120, data.get('imagen_url'), id_pelicula))
 
-        # Borrar todos los horarios asociados previamente para insertar el bloque nuevo del formulario
         cursor.execute("DELETE FROM Funcion WHERE Pelicula_idPelicula = %s", (id_pelicula,))
-        
+         
         idioma_crudo = data.get('idioma', 'Doblada')
         idioma_final = "Subtitulada" if "sub" in idioma_crudo.lower() else "Doblada"
         
@@ -415,13 +456,13 @@ def api_eliminar_funcion(id_funcion):
     cursor = db.get_cursor()
     if not cursor: return jsonify({"error": "Base de datos caída."}), 500
     try:
-        # Buscamos de qué película se trata y borramos TODOS sus horarios
         cursor.execute("SELECT Pelicula_idPelicula FROM Funcion WHERE idFuncion = %s", (id_funcion,))
         f = cursor.fetchone()
         if f:
             cursor.execute("DELETE FROM Funcion WHERE Pelicula_idPelicula = %s", (f['Pelicula_idPelicula'],))
         else:
             cursor.execute("DELETE FROM Funcion WHERE idFuncion = %s", (id_funcion,))
+    
         db.commit()
         return jsonify({"status": "success"}), 200
     except Exception as e: 
