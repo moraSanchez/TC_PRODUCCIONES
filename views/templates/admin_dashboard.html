@@ -130,9 +130,9 @@
                     <div class="mf-section">
                         <div class="mf-section-header">
                             <label class="mf-label m-0">Horarios y fechas de función</label>
-                            <span class="mf-contador" id="lblContadorHorarios">1 horario</span>
+                            <span class="mf-contador" id="lblContadorHorarios">0 horarios</span>
                         </div>
-                        <div id="listaHorarios"></div>
+                        <div id="listaHorarios"></div> 
                         <button type="button" class="btn-agregar-horario" onclick="agregarFilaHorario()">
                             + Agregar horario
                         </button>
@@ -175,7 +175,8 @@
         document.getElementById('lblContadorHorarios').innerText = texto;
     }
 
-    function agregarFilaHorario(fecha = '', hora = '') {
+    // ACÁ SE AGREGÓ ÚNICAMENTE EL SELECTOR DE FORMATO
+    function agregarFilaHorario(fecha = '', hora = '', formato = '2D') {
         const container = document.getElementById('listaHorarios');
         const row = document.createElement('div');
         row.className = 'horario-row';
@@ -189,6 +190,14 @@
             </div>
             <div class="input-wrapper">
                 <input type="time" class="mf-field input-hora" value="${hora}" required>
+            </div>
+            <div class="input-wrapper" style="max-width: 90px;">
+                <select class="mf-field select-formato" required>
+                    <option value="2D" ${formato === '2D' ? 'selected' : ''}>2D</option>
+                    <option value="3D" ${formato === '3D' ? 'selected' : ''}>3D</option>
+                    <option value="4D" ${formato === '4D' ? 'selected' : ''}>4D</option>
+                    <option value="XD" ${formato === 'XD' ? 'selected' : ''}>XD</option>
+                </select>
             </div>
             <button type="button" class="btn-delete-horario" onclick="eliminarFilaHorario(this)">
                 <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -304,7 +313,6 @@
         }
     }
 
-    // ACA OCURRE LA MAGIA. Ahora recibe la lista completa y por cada una te crea una fila
     function prepararEdicionModal(funcionData) {
         editFuncionId = funcionData.idFuncion;
         document.getElementById('modalTitulo').innerText = "Modificar Parámetros de Función";
@@ -324,13 +332,13 @@
         
         document.getElementById('listaHorarios').innerHTML = '';
         
-        // Dibuja en la modal todos los horarios combinados para esta pelicula
         if (funcionData.horarios_completos && funcionData.horarios_completos.length > 0) {
             funcionData.horarios_completos.forEach(h => {
-                agregarFilaHorario(h.fecha, h.hora.substring(0,5));
+                // ACÁ SE PASA EL FORMATO AL EDITAR
+                agregarFilaHorario(h.fecha, h.hora.substring(0,5), h.formato || '2D');
             });
         } else {
-            agregarFilaHorario(funcionData.fecha, funcionData.hora.substring(0,5));
+            agregarFilaHorario(funcionData.fecha, funcionData.hora.substring(0,5), funcionData.formato || '2D');
         }
 
         modalBootstrap.show();
@@ -346,10 +354,10 @@
 
         let arrayFechasHoras = [];
 
-        // Ahora cada fila conserva SU fecha y SU hora sin mezclar
         for (let fila of filas) {
             const fValue = fila.querySelector('.input-fecha').value;
             let hValue = fila.querySelector('.input-hora').value;
+            let formatoValue = fila.querySelector('.select-formato').value; // ACÁ RECOPILAMOS EL FORMATO
             
             if (!fValue || !hValue) {
                 return alert("Asegurate de completar fecha y hora en todos los recuadros.");
@@ -357,7 +365,8 @@
 
             arrayFechasHoras.push({
                 fecha: fValue,
-                hora: hValue.includes(':') && hValue.split(':').length === 2 ? hValue + ':00' : hValue
+                hora: hValue.includes(':') && hValue.split(':').length === 2 ? hValue + ':00' : hValue,
+                formato: formatoValue
             });
         }
 

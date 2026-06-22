@@ -344,3 +344,33 @@ body::before {
 .filter-bar-premium .form-select {
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important;
 }
+
+/* --- AGREGAR ESTO EN EL <style> DE SELECCIONAR_FUNCION.HTML --- */
+
+/* 1. Forzar a que la fecha, hora, idioma y formato resalten en blanco brillante */
+.container .text-white-50, 
+.container p.text-muted,
+.container span.text-muted {
+    color: #f3f4f6 !important; /* Un blanco/gris extremadamente claro de alto contraste */
+}
+
+/* 2. Resaltar las letras de las filas (A, B, C, D, E...) para que no se pierdan */
+.row-label, .seat-row-label, .fila-letra, .text-danger.fw-bold {
+    color: #f87171 !important; /* El color coral/rojo claro que usás en tus badges */
+    font-size: 1.15rem !important;
+    font-weight: 800 !important;
+    text-shadow: 0 0 10px rgba(239, 68, 68, 0.3); /* Sombra difuminada para que despegue */
+}
+
+/* 3. Hacer totalmente legibles las etiquetas de "Precio Unitario", "Butacas" y "Asientos" */
+.lead, .small.text-white-50, label {
+    color: #cbd5e1 !important; /* Un gris claro limpio */
+    font-weight: 600;
+}
+
+/* 4. Resaltar los valores numéricos grandes y los asientos elegidos (ej: $4500.00) */
+h3.text-danger, .precio-grande, #total-precio {
+    color: #ffffff !important; /* Blanco puro */
+    font-weight: 800 !important;
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+}

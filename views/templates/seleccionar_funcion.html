@@ -1,4 +1,4 @@
-#seleccionar_funcion.html
+/*seleccionar_funcion.html*/
 
 {% extends 'base.html' %}
 
@@ -50,10 +50,13 @@
                                 <div class="row row-cols-2 row-cols-sm-3 row-cols-md-2 row-cols-lg-4 g-3 mt-1">
                                     {% for f in lista_funciones %}
                                         <div class="col">
-                                            <a href="/reserva/funcion/{{ f.idFuncion }}" 
+                                            <a href="{{ url_for('cine.seleccionar_butacas', id_funcion=f.idFuncion) }}" 
                                                class="btn btn-outline-light w-100 p-2 text-center d-flex flex-column align-items-center justify-content-center transition-all h-100"
                                                style="border-radius: 0.5rem; border-color: #3f3f46; background: #141417;">
-                                                <span class="fw-bold text-white fs-5 m-0">{{ f.hora[:5] }}</span>
+                                                <div class="d-flex align-items-center justify-content-center gap-2 w-100">
+                                                    <span class="fw-bold text-white fs-5 m-0">{{ f.hora[:5] }}</span>
+                                                    <span class="badge bg-secondary text-white">{{ f.formato }}</span> 
+                                                </div>
                                                 <span class="text-muted extra-small mt-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">SALA {{ f.num_sala }}</span>
                                             </a>
                                         </div>
@@ -70,16 +73,11 @@
                 </div>
             {% endif %}
         </div>
-
     </div>
 </div>
 
 <style>
     .transition-all { transition: all 0.2s ease-in-out; }
-    .transition-all:hover {
-        background-color: #dc3545 !important;
-        border-color: #dc3545 !important;
-        transform: translateY(-2px);
-    }
+    .transition-all:hover { background-color: #dc3545 !important; border-color: #dc3545 !important; transform: translateY(-2px); }
 </style>
 {% endblock %}

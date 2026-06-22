@@ -1,3 +1,5 @@
+/*nueva_funcion.html*/
+
 <form id="formNuevaFuncion" class="needs-validation" novalidate>
     <div class="row">
         <div class="col-md-7">
@@ -9,14 +11,11 @@
                 </div>
                 <div id="listaResultadosTMDB" class="list-group position-absolute w-100 mt-1 shadow" style="z-index: 1050; max-height: 200px; overflow-y: auto; display: none;"></div>
             </div>
-
             <input type="hidden" id="in-img-actual" name="imagen_url">
-            
             <div class="mb-3">
                 <label class="form-label small fw-bold text-muted">TÍTULO DE LA PELÍCULA</label>
                 <input type="text" id="in-titulo" name="titulo" class="form-control cinema-input py-2" required>
             </div>
-
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label class="form-label small fw-bold text-muted">GÉNERO</label>
@@ -27,7 +26,6 @@
                     <input type="number" id="in-duracion" name="duracion" class="form-control cinema-input py-2" required min="1">
                 </div>
             </div>
-
             <div class="mb-3">
                 <label class="form-label small fw-bold text-muted">SINOPSIS</label>
                 <textarea id="in-sinopsis" name="sinopsis" class="form-control cinema-input" rows="3" required></textarea>
@@ -47,40 +45,47 @@
                 <div class="col-md-6 mb-3">
                     <label class="form-label small fw-bold text-muted">SALA</label>
                     <select name="idSala" id="selectSala" class="form-select cinema-input py-2" required>
-                        <option value="1">Sala 1 (Tradicional)</option>
-                        <option value="2">Sala 2 (3D Premium)</option>
-                        <option value="3">Sala 3 (VIP)</option>
+                        <option value="1">Sala 1</option>
+                        <option value="2">Sala 2</option>
+                        <option value="3">Sala 3</option>
                     </select>
                 </div>
                 <div class="col-md-6 mb-3">
-                    <label class="form-label small fw-bold text-muted">IDIOMA / FORMATO</label>
+                    <label class="form-label small fw-bold text-muted">IDIOMA</label>
                     <select name="idioma" id="selectIdioma" class="form-select cinema-input py-2" required>
-                        <option value="Español (Doblada)">Español (Doblada)</option>
+                        <option value="Español (Doblada)">Doblada</option>
                         <option value="Subtitulada">Subtitulada</option>
                     </select>
                 </div>
             </div>
-
+            
             <div class="mb-3">
                 <label class="form-label small fw-bold text-muted">FECHA DE FUNCIÓN</label>
                 <input type="date" name="fecha" id="in-fecha" class="form-control cinema-input py-2" required>
             </div>
-
+            
             <div class="mb-3">
-                <label class="form-label small fw-bold text-muted">HORARIOS DE LA FUNCIÓN</label>
+                <label class="form-label small fw-bold text-muted">AÑADIR HORARIOS Y FORMATO</label>
                 <div id="contenedor-horarios" class="d-flex flex-wrap gap-2 mb-2 p-2 border border-secondary rounded mini-scrollbar" style="min-height: 45px; background: #111;">
                     <span class="text-muted small em-vacio">No hay horarios agregados</span>
                 </div>
                 <div class="d-flex gap-2">
-                    <input type="time" id="inputHoraTemporal" class="form-control cinema-input py-2">
+                    <input type="time" id="inputHoraTemporal" class="form-control cinema-input py-2" style="max-width: 130px;">
+                    <select id="selectFormatoTemporal" class="form-select cinema-input py-2">
+                        <option value="2D">2D</option>
+                        <option value="3D">3D</option>
+                        <option value="4D">4D</option>
+                        <option value="XD">XD</option>
+                    </select>
                     <button type="button" class="btn btn-danger px-3" id="btnAgregarHora">
                         <i class="fas fa-plus"></i>
                     </button>
                 </div>
             </div>
+
         </div>
     </div>
-
+    
     <div class="text-end mt-4 pt-3 border-top border-secondary">
         <button type="button" class="btn btn-outline-secondary px-4 me-2" data-bs-dismiss="modal">Cancelar</button>
         <button type="submit" class="btn btn-danger px-4" id="btnGuardarFuncion">Guardar Funciones</button>
@@ -88,117 +93,95 @@
 </form>
 
 <script>
-// Lista global de control para almacenar los horarios
-let listaHorarios = [];
-let editFuncionId = null; // Cambiar dinámicamente si se abre en modo edición
+    // Ahora guardamos la hora Y el formato elegidos juntos
+    let listaHorarios = [];
+    let editFuncionId = null;
 
-// Evento para añadir horas a la lista temporal
-document.getElementById('btnAgregarHora').addEventListener('click', function() {
-    const inputHora = document.getElementById('inputHoraTemporal');
-    const horaValor = inputHora.value;
-    
-    if (!horaValor) {
-        alert("Por favor, selecciona una hora válida.");
-        return;
-    }
-    if (listaHorarios.includes(horaValor)) {
-        alert("Este horario ya fue agregado para este día.");
-        return;
-    }
-    
-    listaHorarios.push(horaValor);
-    listaHorarios.sort(); // Mantiene ordenados los horarios cronológicamente
-    actualizarBadgesHorarios();
-    inputHora.value = ""; // Limpiar el input temporal
-});
+    document.getElementById('btnAgregarHora').addEventListener('click', function() {
+        const inputHora = document.getElementById('inputHoraTemporal');
+        const selectFormato = document.getElementById('selectFormatoTemporal');
+        
+        const horaValor = inputHora.value;
+        const formatoValor = selectFormato.value;
 
-// Actualiza los elementos gráficos en la interfaz
-function actualizarBadgesHorarios() {
-    const contenedor = document.getElementById('contenedor-horarios');
-    if (listaHorarios.length === 0) {
-        contenedor.innerHTML = '<span class="text-muted small em-vacio">No hay horarios agregados</span>';
-        return;
-    }
-    
-    contenedor.innerHTML = "";
-    listaHorarios.forEach((hora, index) => {
-        contenedor.innerHTML += `
-            <span class="badge bg-danger text-white d-flex align-items-center gap-2 px-2 py-2 fs-6 rounded border border-light border-opacity-25">
-                <i class="far fa-clock"></i> ${hora.substring(0, 5)}
-                <button type="button" class="btn-close btn-close-white" style="font-size: 10px;" onclick="eliminarHora(${index})"></button>
-            </span>
-        `;
+        if (!horaValor) { alert("Por favor, selecciona una hora válida."); return; }
+        
+        // Evitamos duplicar la misma hora y formato
+        const existe = listaHorarios.find(h => h.hora === horaValor && h.formato === formatoValor);
+        if (existe) { alert("Este horario con ese formato ya fue agregado."); return; }
+        
+        listaHorarios.push({ hora: horaValor, formato: formatoValor });
+        listaHorarios.sort((a, b) => a.hora.localeCompare(b.hora));
+        
+        actualizarBadgesHorarios();
+        inputHora.value = "";
     });
-}
 
-// Elimina un horario del array
-function eliminarHora(index) {
-    listaHorarios.splice(index, 1);
-    actualizarBadgesHorarios();
-}
-
-// Interceptamos el envío del Formulario hacia las APIs
-document.getElementById('formNuevaFuncion').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    if (listaHorarios.length === 0) {
-        alert("Error: Debes agregar por lo menos un horario antes de guardar la función.");
-        return;
-    }
-    
-    const formData = new FormData(this);
-    
-    // Armamos la estructura estructurada como JSON estructurado
-    const payload = {
-        titulo: formData.get('titulo'),
-        genero: formData.get('genero'),
-        sinopsis: formData.get('sinopsis'),
-        duracion: formData.get('duracion'),
-        imagen_url: document.getElementById('in-img-actual').value || "",
-        num_sala: formData.get('idSala'),
-        fecha: formData.get('fecha'),
-        idioma: formData.get('idioma'),
-        estado: 'activa',
-        horarios: listaHorarios  // Envió de la lista completa
-    };
-    
-    try {
-        const url = editFuncionId ? `/api/funciones/editar/${editFuncionId}` : '/api/funciones/guardar';
-        const metodo = editFuncionId ? 'PUT' : 'POST';
-        
-        const res = await fetch(url, {
-            method: metodo,
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-        
-        const data = await res.json();
-        if (data.status === "success") {
-            alert("¡Funciones procesadas y guardadas correctamente!");
-            window.location.reload(); // Recarga el panel para actualizar tablas
-        } else {
-            alert("Error del servidor: " + data.error);
+    function actualizarBadgesHorarios() {
+        const contenedor = document.getElementById('contenedor-horarios');
+        if (listaHorarios.length === 0) {
+            contenedor.innerHTML = '<span class="text-muted small em-vacio">No hay horarios agregados</span>';
+            return;
         }
-    } catch(err) {
-        console.error("Error crítico en la llamada de red:", err);
-        alert("Ocurrió un error inesperado al conectar.");
+        contenedor.innerHTML = "";
+        listaHorarios.forEach((item, index) => {
+            // Mostramos el badge con la Hora y un mini-badge al lado con el Formato
+            contenedor.innerHTML += `
+                <span class="badge bg-danger text-white d-flex align-items-center gap-2 px-2 py-2 fs-6 rounded border border-light border-opacity-25">
+                    <i class="far fa-clock"></i> ${item.hora.substring(0, 5)} 
+                    <span class="badge bg-dark border border-secondary" style="font-size: 0.65rem;">${item.formato}</span>
+                    <button type="button" class="btn-close btn-close-white ms-1" style="font-size: 10px;" onclick="eliminarHora(${index})"></button>
+                </span>
+            `;
+        });
     }
-});
 
-// Función auxiliar para cuando abras la ventana modal para EDITAR desde tu dashboard:
-function prepararEdicionModal(funcionData, arrayDeHorasExistentes = []) {
-    editFuncionId = funcionData.idFuncion;
-    document.getElementById('in-titulo').value = funcionData.titulo;
-    document.getElementById('in-genero').value = funcionData.genero;
-    document.getElementById('in-duracion').value = funcionData.duracion;
-    document.getElementById('in-sinopsis').value = funcionData.sinopsis;
-    document.getElementById('in-fecha').value = funcionData.fecha;
-    document.getElementById('selectSala').value = funcionData.num_sala;
-    document.getElementById('selectIdioma').value = funcionData.idioma;
-    document.getElementById('in-img-actual').value = funcionData.imagen_url;
-    
-    // Asignar los horarios ya registrados en la BDD para cargarlos al editar
-    listaHorarios = [...arrayDeHorasExistentes];
-    actualizarBadgesHorarios();
-}
+    function eliminarHora(index) {
+        listaHorarios.splice(index, 1);
+        actualizarBadgesHorarios();
+    }
+
+    document.getElementById('formNuevaFuncion').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        if (listaHorarios.length === 0) { alert("Error: Debes agregar por lo menos un horario antes de guardar."); return; }
+        
+        const formData = new FormData(this);
+        
+        // Armamos el JSON enviando el formato específico para cada horario
+        const payload = {
+            titulo: formData.get('titulo'),
+            genero: formData.get('genero'),
+            sinopsis: formData.get('sinopsis'),
+            duracion: formData.get('duracion'),
+            imagen_url: document.getElementById('in-img-actual').value || "",
+            num_sala: formData.get('idSala'),
+            idioma: formData.get('idioma'),
+            estado: "activa",
+            fechas_horarios: listaHorarios.map(h => ({
+                fecha: formData.get('fecha'),
+                hora: h.hora + ":00",
+                formato: h.formato // <- Enviamos el formato individual
+            }))
+        };
+
+        const url = editFuncionId ? `/api/funciones/editar/${editFuncionId}` : '/api/funciones/guardar';
+        const method = editFuncionId ? 'PUT' : 'POST';
+
+        try {
+            const res = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if(data.status === 'success') {
+                window.location.reload(); 
+            } else {
+                alert("Error: " + data.error);
+            }
+        } catch (error) {
+            console.error(error);
+            alert("Ocurrió un error al intentar guardar.");
+        }
+    });
 </script>
