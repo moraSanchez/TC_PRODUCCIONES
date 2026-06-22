@@ -184,7 +184,6 @@
         document.getElementById('formFuncion').addEventListener('submit', guardarDatosFuncion);
     });
 
-    // Función auxiliar para disparar notificaciones en pantalla sin usar alerts
     function mostrarNotificacion(mensaje, esError = false) {
         const toastElement = document.getElementById('toastNotificacion');
         const mensajeElement = document.getElementById('toastMensajeTexto');
@@ -194,7 +193,7 @@
         if (esError) {
             toastElement.style.borderLeft = "4px solid #f87171";
         } else {
-            toastElement.style.borderLeft = "4px solid #22c55e"; // Verde éxito
+            toastElement.style.borderLeft = "4px solid #22c55e";
         }
         
         toastBootstrap.show();
@@ -206,7 +205,7 @@
         document.getElementById('lblContadorHorarios').innerText = texto;
     }
 
-    function agregarFilaHorario(fecha = '', hora = '', formato = '2D') {
+    function agregarFilaHorario(fecha = '', hora = '', formato = 'Normal') {
         const container = document.getElementById('listaHorarios');
         const row = document.createElement('div');
         row.className = 'horario-row';
@@ -223,7 +222,7 @@
             </div>
             <div class="input-wrapper" style="max-width: 90px;">
                 <select class="mf-field select-formato" required>
-                    <option value="2D" ${formato === '2D' ? 'selected' : ''}>2D</option>
+                    <option value="Normal" ${formato === 'Normal' ? 'selected' : ''}>Normal</option>
                     <option value="3D" ${formato === '3D' ? 'selected' : ''}>3D</option>
                     <option value="4D" ${formato === '4D' ? 'selected' : ''}>4D</option>
                     <option value="XD" ${formato === 'XD' ? 'selected' : ''}>XD</option>
@@ -364,10 +363,10 @@
         
         if (funcionData.horarios_completos && funcionData.horarios_completos.length > 0) {
             funcionData.horarios_completos.forEach(h => {
-                agregarFilaHorario(h.fecha, h.hora.substring(0,5), h.formato || '2D');
+                agregarFilaHorario(h.fecha, h.hora.substring(0,5), h.formato || 'Normal');
             });
         } else {
-            agregarFilaHorario(funcionData.fecha, funcionData.hora.substring(0,5), funcionData.formato || '2D');
+            agregarFilaHorario(funcionData.fecha, funcionData.hora.substring(0,5), funcionData.formato || 'Normal');
         }
 
         modalBootstrap.show();
@@ -427,7 +426,6 @@
             
             const data = await res.json();
             if (data.status === "success") {
-                // CAMBIO CLAVE: Reemplazamos el alert molesto por el Toast nativo del Dashboard
                 mostrarNotificacion("¡Funciones procesadas y guardadas correctamente!", false);
                 modalBootstrap.hide();
                 renderizarCarteleraCompleta(); 
