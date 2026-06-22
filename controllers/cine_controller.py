@@ -25,7 +25,7 @@ def seleccionar_funcion(id_pelicula):
             return redirect(url_for('cine.inicio'))
 
         cursor.execute("""
-            SELECT idFuncion, fecha, hora, num_sala, estado, COALESCE(idioma, 'Doblada') as idioma, COALESCE(formato, '2D') as formato
+            SELECT idFuncion, fecha, hora, num_sala, estado, COALESCE(idioma, 'Doblada') as idioma, COALESCE(formato, 'Normal') as formato
             FROM Funcion 
             WHERE Pelicula_idPelicula = %s AND LOWER(estado) = 'activa'
             ORDER BY fecha ASC, hora ASC
