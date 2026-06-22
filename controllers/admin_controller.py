@@ -50,7 +50,7 @@ def api_lista_funciones_db():
         except Exception: pass
         
         cursor.execute("""
-            SELECT idFuncion, titulo, genero, imagen_url, num_sala, fecha, hora, estado, Pelicula_idPelicula, COALESCE(idioma, 'Doblada') as idioma
+            SELECT idFuncion, titulo, genero, imagen_url, num_sala, fecha, hora, estado, Pelicula_idPelicula, COALESCE(idioma, 'Doblada') as idioma, COALESCE(formato, '2D') as formato
             FROM Funcion ORDER BY fecha ASC, hora ASC
         """)
         funciones = cursor.fetchall()
@@ -70,7 +70,6 @@ def api_lista_funciones_db():
                     })
             return jsonify(list(agrupadas.values())), 200
 
-        # Bloque de carga automatica de TMDB por defecto si la bd está vacía (tu código intacto)
         TMDB_API_KEY = os.getenv("TMDB_API_KEY", "TU_API_KEY_ACA")
         url_now_playing = f"https://api.themoviedb.org/3/movie/now_playing?api_key={TMDB_API_KEY}&language=es-MX&region=AR&page=1"
         url_upcoming = f"https://api.themoviedb.org/3/movie/upcoming?api_key={TMDB_API_KEY}&language=es-MX&region=AR&page=1"
@@ -110,14 +109,14 @@ def api_lista_funciones_db():
             estado_final = item["estado"]
             fecha_final = item["fecha"]
             
-            query_funcion = "INSERT INTO Funcion (titulo, genero, imagen_url, num_sala, fecha, hora, estado, Pelicula_idPelicula, idioma) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
-            cursor.execute(query_funcion, (titulo, genero, img_url, num_sala, fecha_final, hora, estado_final, id_pelicula, "Doblada"))
+            query_funcion = "INSERT INTO Funcion (titulo, genero, imagen_url, num_sala, fecha, hora, estado, Pelicula_idPelicula, idioma, formato) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+            cursor.execute(query_funcion, (titulo, genero, img_url, num_sala, fecha_final, hora, estado_final, id_pelicula, "Doblada", "2D"))
             db.commit()
             
             funciones_retorno.append({
                 "idFuncion": cursor.lastrowid, "titulo": titulo, "genero": genero, "imagen_url": img_url,
                 "num_sala": num_sala, "fecha": str(fecha_final), "hora": str(hora),
-                "estado": estado_final, "Pelicula_idPelicula": id_pelicula, "idioma": "Doblada"
+                "estado": estado_final, "Pelicula_idPelicula": id_pelicula, "idioma": "Doblada", "formato": "2D"
             })
         return jsonify(funciones_retorno), 200
     except Exception as e: return jsonify([]), 200
@@ -146,10 +145,11 @@ def api_guardar_funcion():
 
         idioma_crudo = data.get('idioma', 'Doblada')
         idioma_final = "Subtitulada" if "sub" in idioma_crudo.lower() else "Doblada"
-        query_funcion = "INSERT INTO Funcion (titulo, genero, imagen_url, num_sala, fecha, hora, estado, Pelicula_idPelicula, idioma) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
+
+        query_funcion = "INSERT INTO Funcion (titulo, genero, imagen_url, num_sala, fecha, hora, estado, Pelicula_idPelicula, idioma, formato) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
          
         for item in fechas_horarios:
-            cursor.execute(query_funcion, (data.get('titulo'), data.get('genero'), data.get('imagen_url'), int(data.get('num_sala', 1)), item['fecha'], item['hora'], data.get('estado', 'activa'), id_pelicula, idioma_final))
+            cursor.execute(query_funcion, (data.get('titulo'), data.get('genero'), data.get('imagen_url'), int(data.get('num_sala', 1)), item['fecha'], item['hora'], data.get('estado', 'activa'), id_pelicula, idioma_final, item.get('formato', '2D')))
         db.commit()
         return jsonify({"status": "success"}), 201
     except Exception as e:
@@ -178,10 +178,11 @@ def api_editar_funcion(id_funcion):
          
         idioma_crudo = data.get('idioma', 'Doblada')
         idioma_final = "Subtitulada" if "sub" in idioma_crudo.lower() else "Doblada"
-        query_reinsertar = "INSERT INTO Funcion (titulo, genero, imagen_url, num_sala, fecha, hora, estado, Pelicula_idPelicula, idioma) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
+        
+        query_reinsertar = "INSERT INTO Funcion (titulo, genero, imagen_url, num_sala, fecha, hora, estado, Pelicula_idPelicula, idioma, formato) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
                            
         for item in fechas_horarios:
-            cursor.execute(query_reinsertar, (data.get('titulo'), data.get('genero'), data.get('imagen_url'), int(data.get('num_sala', 1)), item['fecha'], item['hora'], data.get('estado', 'activa'), id_pelicula, idioma_final))
+            cursor.execute(query_reinsertar, (data.get('titulo'), data.get('genero'), data.get('imagen_url'), int(data.get('num_sala', 1)), item['fecha'], item['hora'], data.get('estado', 'activa'), id_pelicula, idioma_final, item.get('formato', '2D')))
         db.commit()
         return jsonify({"status": "success"}), 200
     except Exception as e:

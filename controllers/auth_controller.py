@@ -1,3 +1,5 @@
+#/*auth_controller.py*/
+
 from flask import Blueprint, render_template, request, jsonify, session, redirect, url_for
 from werkzeug.security import generate_password_hash, check_password_hash
 from config.database import DatabaseConnection

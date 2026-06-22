@@ -25,7 +25,7 @@ def seleccionar_funcion(id_pelicula):
             return redirect(url_for('cine.inicio'))
 
         cursor.execute("""
-            SELECT idFuncion, fecha, hora, num_sala, estado, COALESCE(idioma, 'Doblada') as idioma 
+            SELECT idFuncion, fecha, hora, num_sala, estado, COALESCE(idioma, 'Doblada') as idioma, COALESCE(formato, '2D') as formato
             FROM Funcion 
             WHERE Pelicula_idPelicula = %s AND LOWER(estado) = 'activa'
             ORDER BY fecha ASC, hora ASC
@@ -53,7 +53,8 @@ def seleccionar_funcion(id_pelicula):
             funciones_agrupadas[fecha_formateada][idioma_str].append({
                 "idFuncion": f['idFuncion'],
                 "hora": hora_str,
-                "num_sala": f['num_sala']
+                "num_sala": f['num_sala'],
+                "formato": f['formato']
             })
 
         return render_template('seleccionar_funcion.html', pelicula=pelicula, funciones_agrupadas=funciones_agrupadas)
