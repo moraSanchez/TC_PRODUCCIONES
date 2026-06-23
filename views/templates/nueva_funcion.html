@@ -72,7 +72,7 @@
                 <div class="d-flex gap-2">
                     <input type="time" id="inputHoraTemporal" class="form-control cinema-input py-2" style="max-width: 130px;">
                     <select id="selectFormatoTemporal" class="form-select cinema-input py-2">
-                        <option value="Normal">Normal</option>
+                        <option value="2D">2D</option>
                         <option value="3D">3D</option>
                         <option value="4D">4D</option>
                         <option value="XD">XD</option>
@@ -93,6 +93,7 @@
 </form>
 
 <script>
+    // Ahora guardamos la hora Y el formato elegidos juntos
     let listaHorarios = [];
     let editFuncionId = null;
 
@@ -105,6 +106,7 @@
 
         if (!horaValor) { alert("Por favor, selecciona una hora válida."); return; }
         
+        // Evitamos duplicar la misma hora y formato
         const existe = listaHorarios.find(h => h.hora === horaValor && h.formato === formatoValor);
         if (existe) { alert("Este horario con ese formato ya fue agregado."); return; }
         
@@ -123,6 +125,7 @@
         }
         contenedor.innerHTML = "";
         listaHorarios.forEach((item, index) => {
+            // Mostramos el badge con la Hora y un mini-badge al lado con el Formato
             contenedor.innerHTML += `
                 <span class="badge bg-danger text-white d-flex align-items-center gap-2 px-2 py-2 fs-6 rounded border border-light border-opacity-25">
                     <i class="far fa-clock"></i> ${item.hora.substring(0, 5)} 
@@ -144,6 +147,7 @@
         
         const formData = new FormData(this);
         
+        // Armamos el JSON enviando el formato específico para cada horario
         const payload = {
             titulo: formData.get('titulo'),
             genero: formData.get('genero'),
@@ -156,7 +160,7 @@
             fechas_horarios: listaHorarios.map(h => ({
                 fecha: formData.get('fecha'),
                 hora: h.hora + ":00",
-                formato: h.formato 
+                formato: h.formato // <- Enviamos el formato individual
             }))
         };
 

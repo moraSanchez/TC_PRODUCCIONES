@@ -1,5 +1,3 @@
-/*admin_dashboard.html*/
-
 {% extends 'base.html' %}
 
 {% block content %}
@@ -85,8 +83,7 @@
 <div class="toast-container-custom">
     <div id="toastNotificacion" class="toast toast-dark hide" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="4000">
         <div class="d-flex align-items-center p-3">
-            <div class="toast-body flex-grow-1" id="toastMensajeTexto">
-                </div>
+            <div class="toast-body flex-grow-1" id="toastMensajeTexto"></div>
             <button type="button" class="btn-close ms-auto" data-bs-dismiss="toast" aria-label="Close"></button>
         </div>
     </div>
@@ -166,6 +163,24 @@
     </div>
 </div>
 
+<div class="modal fade modal-custom-dark" id="modalEliminar" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">⚠️ Confirmar acción</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <p class="text-white mb-4">¿Estás seguro de que querés remover esta función de la cartelera activa?</p>
+                <div class="d-flex justify-content-center gap-3">
+                    <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger px-4" id="btnConfirmarEliminar">Sí, eliminar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     function cerrarSesion() {
         sessionStorage.clear();
@@ -175,13 +190,18 @@
 
     let modalBootstrap = null;
     let toastBootstrap = null;
+    let modalEliminarBootstrap = null;
     let editFuncionId = null;
+    let idFuncionAEliminar = null;
 
     document.addEventListener('DOMContentLoaded', () => {
         modalBootstrap = new bootstrap.Modal(document.getElementById('modalFuncion'));
         toastBootstrap = new bootstrap.Toast(document.getElementById('toastNotificacion'));
+        modalEliminarBootstrap = new bootstrap.Modal(document.getElementById('modalEliminar'));
+        
         renderizarCarteleraCompleta();
         document.getElementById('formFuncion').addEventListener('submit', guardarDatosFuncion);
+        document.getElementById('btnConfirmarEliminar').addEventListener('click', ejecutarEliminacion);
     });
 
     function mostrarNotificacion(mensaje, esError = false) {
@@ -205,7 +225,7 @@
         document.getElementById('lblContadorHorarios').innerText = texto;
     }
 
-    function agregarFilaHorario(fecha = '', hora = '', formato = 'Normal') {
+    function agregarFilaHorario(fecha = '', hora = '', formato = '2D') {
         const container = document.getElementById('listaHorarios');
         const row = document.createElement('div');
         row.className = 'horario-row';
@@ -222,7 +242,7 @@
             </div>
             <div class="input-wrapper" style="max-width: 90px;">
                 <select class="mf-field select-formato" required>
-                    <option value="Normal" ${formato === 'Normal' ? 'selected' : ''}>Normal</option>
+                    <option value="2D" ${formato === '2D' ? 'selected' : ''}>2D</option>
                     <option value="3D" ${formato === '3D' ? 'selected' : ''}>3D</option>
                     <option value="4D" ${formato === '4D' ? 'selected' : ''}>4D</option>
                     <option value="XD" ${formato === 'XD' ? 'selected' : ''}>XD</option>
@@ -363,10 +383,10 @@
         
         if (funcionData.horarios_completos && funcionData.horarios_completos.length > 0) {
             funcionData.horarios_completos.forEach(h => {
-                agregarFilaHorario(h.fecha, h.hora.substring(0,5), h.formato || 'Normal');
+                agregarFilaHorario(h.fecha, h.hora.substring(0,5), h.formato || '2D');
             });
         } else {
-            agregarFilaHorario(funcionData.fecha, funcionData.hora.substring(0,5), funcionData.formato || 'Normal');
+            agregarFilaHorario(funcionData.fecha, funcionData.hora.substring(0,5), funcionData.formato || '2D');
         }
 
         modalBootstrap.show();
@@ -438,10 +458,15 @@
         }
     }
 
-    async function eliminarFuncion(idFuncion) {
-        if (!confirm("¿Estás seguro de que querés remover esta función de la cartelera activa?")) return;
+    function eliminarFuncion(idFuncion) {
+        idFuncionAEliminar = idFuncion;
+        modalEliminarBootstrap.show();
+    }
+
+    async function ejecutarEliminacion() {
+        if (!idFuncionAEliminar) return;
         try {
-            const res = await fetch(`/api/funciones/eliminar/${idFuncion}`, { method: 'DELETE' });
+            const res = await fetch(`/api/funciones/eliminar/${idFuncionAEliminar}`, { method: 'DELETE' });
             const data = await res.json();
             if (data.status === "success") {
                 mostrarNotificacion("Función eliminada correctamente.", false);
@@ -451,6 +476,10 @@
             }
         } catch(err) {
             console.error(err);
+            mostrarNotificacion("Ocurrió un error inesperado al intentar eliminar.", true);
+        } finally {
+            modalEliminarBootstrap.hide();
+            idFuncionAEliminar = null;
         }
     }
 </script>
