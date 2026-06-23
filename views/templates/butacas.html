@@ -36,7 +36,7 @@
 <div class="container my-5 pt-4">
     <div class="row g-4 text-white p-4 rounded-4" style="background: #141417; border: 1px solid #27272a;">
 
-        {{/* Info película */}}
+        {# Info película #}
         <div class="col-12 col-md-4 col-lg-3 text-center text-md-start border-end border-dark pe-md-4">
             <img src="{{ funcion.imagen_url if funcion.imagen_url else 'https://placehold.co/400x600/141417/ffffff?text=Cine' }}"
                  class="img-fluid rounded-3 shadow mb-3" style="max-width: 220px;" alt="{{ funcion.titulo }}">
@@ -46,7 +46,7 @@
             <p class="text-muted extra-small" style="font-size: 0.75rem;">Idioma: {{ funcion.idioma }} | Formato: {{ funcion.formato }}</p>
         </div>
 
-        {{/* Grilla de butacas */}}
+        {# Grilla de butacas #}
         <div class="col-12 col-md-5 col-lg-6">
             <div class="border-bottom border-dark pb-3 mb-4">
                 <h2 class="h4 fw-bold m-0">💺 SELECCIONÁ TUS BUTACAS</h2>
@@ -92,7 +92,7 @@
             </div>
         </div>
 
-        {{/* Resumen y botón */}}
+        {# Resumen y botón #}
         <div class="col-12 col-md-3 border-start border-dark ps-md-4 d-flex flex-column justify-content-between">
             <div>
                 <div class="border-bottom border-dark pb-3 mb-4">

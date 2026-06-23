@@ -86,10 +86,30 @@ def api_registro():
         pass_encriptada = generate_password_hash(contrasenia)
         query = "INSERT INTO Usuario (nombre, apellido, email, contrasenia, tipo) VALUES (%s, %s, %s, %s, %s)"
         cursor.execute(query, (nombre, apellido, email, pass_encriptada, 'Cliente'))
+
+        # NUEVO: obtenemos el id del usuario recién creado (antes del commit, por seguridad)
+        id_nuevo_usuario = cursor.lastrowid
         db.commit()
         cursor.close()
 
-        return jsonify({"status": "success", "message": "Usuario registrado correctamente."}), 201
+        # ============================================================
+        # CAMBIO CLAVE: iniciamos sesión automáticamente, igual que
+        # hace api_login(), para que registrarse cuente como un login.
+        # ============================================================
+        session['usuario_id'] = id_nuevo_usuario
+        session['user_id'] = id_nuevo_usuario
+        session['usuario_tipo'] = 'Cliente'
+        session['usuario_nombre'] = nombre
+
+        return jsonify({
+            "status": "success",
+            "message": "Usuario registrado correctamente.",
+            "usuario": {
+                "idUsuario": id_nuevo_usuario,
+                "nombre": nombre,
+                "tipo": "Cliente"
+            }
+        }), 201
     except Exception as e:
         if cursor: cursor.close()
         return jsonify({"status": "error", "error": f"Error interno en la base de datos: {str(e)}"}), 500
