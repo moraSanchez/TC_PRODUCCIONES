@@ -94,7 +94,7 @@ def api_lista_funciones_db():
             
             if not id_pelicula:
                 cursor.execute("INSERT INTO Pelicula (titulo, sinopsis, duracion, genero, imagen_url) VALUES (%s, %s, %s, %s, %s)", (titulo, sinopsis, 120, genero, img_url))
-                db.commit(cursor)
+                db.commit()
                 id_pelicula = cursor.lastrowid
             
             num_sala = (item["index"] % 4) + 1
@@ -104,7 +104,7 @@ def api_lista_funciones_db():
                 INSERT INTO Funcion (Sala_idSala, fecha, hora, estado, Pelicula_idPelicula, idioma, formato) 
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
             """, (num_sala, item["fecha"], hora, item["estado"], id_pelicula, "Doblada", "2D"))
-            db.commit(cursor)
+            db.commit()
             
             funciones_retorno.append({"idFuncion": cursor.lastrowid, "titulo": titulo, "genero": genero, "imagen_url": img_url, "num_sala": num_sala, "fecha": str(item["fecha"]), "hora": str(hora)[:5], "estado": item["estado"], "Pelicula_idPelicula": id_pelicula, "idioma": "Doblada", "formato": "2D"})
         
@@ -130,12 +130,10 @@ def api_guardar_funcion():
         
         if not id_pelicula:
             cursor.execute("INSERT INTO Pelicula (titulo, sinopsis, duracion, genero, imagen_url) VALUES (%s, %s, %s, %s, %s)", (data.get('titulo'), data.get('sinopsis', ''), 120, data.get('genero'), data.get('imagen_url')))
-            db.commit(cursor)
+            db.commit()
             id_pelicula = cursor.lastrowid
 
         idioma_final = "Subtitulada" if "sub" in data.get('idioma', '').lower() else "Doblada"
-        
-        # 🌟 Forzamos el estado 'activa' para que la consulta de cine_controller lo reconozca
         estado_funcion = data.get('estado', 'activa').strip().lower()
 
         for item in fechas_horarios:
@@ -144,7 +142,7 @@ def api_guardar_funcion():
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
             """, (int(data.get('num_sala', 1)), item['fecha'], item['hora'], estado_funcion, id_pelicula, idioma_final, str(item.get('formato', '2D')).upper()))
         
-        db.commit(cursor)
+        db.commit()
         cursor.close()
         return jsonify({"status": "success"}), 201
     except Exception as e:
@@ -177,7 +175,7 @@ def api_editar_funcion(id_funcion):
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
             """, (int(data.get('num_sala', 1)), item['fecha'], item['hora'], estado_funcion, id_pelicula, idioma_final, str(item.get('formato', '2D')).upper()))
         
-        db.commit(cursor)
+        db.commit()
         cursor.close()
         return jsonify({"status": "success"}), 200
     except Exception as e:
@@ -190,7 +188,7 @@ def api_eliminar_funcion(id_funcion):
     cursor = db.get_cursor()
     try:
         cursor.execute("DELETE FROM Funcion WHERE idFuncion = %s", (id_funcion,))
-        db.commit(cursor)
+        db.commit()
         cursor.close()
         return jsonify({"status": "success"}), 200
     except Exception as e: 
