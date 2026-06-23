@@ -32,3 +32,4 @@ class Asiento:
             "numero":    self.numero,
             "idSala":    self.id_sala
         }
+
