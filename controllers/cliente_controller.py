@@ -9,8 +9,7 @@ def _get_usuario_id():
     return session.get('usuario_id') or session.get('user_id')
 
 
-# ─────────────────────────────────────────────────────────────
-# GET /api/cliente/perfil
+
 # Devuelve los datos del usuario autenticado (sin contraseña).
 # ─────────────────────────────────────────────────────────────
 @cliente_bp.route('/api/cliente/perfil', methods=['GET'])
