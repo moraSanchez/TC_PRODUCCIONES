@@ -262,32 +262,42 @@
 </head>
 <body>
 
-    <nav class="navbar navbar-expand-lg">
+    <nav class="navbar navbar-expand-lg sticky-top">
         <div class="container">
-            <a class="navbar-brand" href="/">🎬 TC_PRODUCCIONES</a>
-            <button class="navbar-toggler navbar-dark" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+                <i class="fa-solid fa-clapperboard"></i>
+                <span>TC<span class="text-accent">_PRODUCCIONES</span></span>
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Abrir menú">
                 <span class="navbar-toggler-icon"></span>
             </button>
+
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-4">
+                <ul class="navbar-nav me-auto mb-3 mb-lg-0 ms-lg-4">
                     <li class="nav-item">
-                        <a class="nav-link active" href="/">PELÍCULAS</a>
+                        <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="/">
+                            <i class="fa-solid fa-film me-2 d-lg-none"></i>PELÍCULAS
+                        </a>
                     </li>
                     <li class="nav-item {% if session.get('usuario_tipo') != 'Administrador' %}d-none{% endif %}" id="navLinkAdmin">
-                        <a class="nav-link text-warning fw-bold" href="/admin/dashboard">PANEL ADMIN</a>
+                        <a class="nav-link text-warning fw-bold {% if request.path.startswith('/admin') %}active{% endif %}" href="/admin/dashboard">
+                            <i class="fa-solid fa-screwdriver-wrench me-2 d-lg-none"></i>PANEL ADMIN
+                        </a>
                     </li>
                 </ul>
-                <div class="navbar-nav ms-auto align-items-center">
+
+                <div class="navbar-nav ms-lg-auto align-items-stretch align-items-lg-center gap-2 gap-lg-3">
 
                     {# Invitado: no hay sesión #}
-                    <div id="navInvitado" class="d-flex align-items-center {% if session.get('usuario_nombre') %}d-none{% endif %}">
-                        <a href="/registro" class="nav-link">REGISTRARSE</a>
-                        <a href="/login" class="btn btn-danger btn-sm rounded-pill px-4 ms-lg-2 fw-bold">INGRESAR</a>
+                    <div id="navInvitado" class="d-flex flex-column flex-lg-row align-items-stretch align-items-lg-center gap-2 gap-lg-3 {% if session.get('usuario_nombre') %}d-none{% endif %}">
+                        <a href="/registro" class="nav-link text-center text-lg-start">REGISTRARSE</a>
+                        <a href="/login" class="btn btn-danger btn-sm rounded-pill px-4 fw-bold text-center">INGRESAR</a>
                     </div>
 
                     {# Usuario logueado #}
-                    <div id="navUsuario" class="d-flex align-items-center {% if not session.get('usuario_nombre') %}d-none{% endif %} gap-3">
-                        <span class="text-white small">Hola, <strong class="text-danger fw-bold" id="lblNombreUsuario">{{ session.get('usuario_nombre', '...') }}</strong></span>
+                    <div id="navUsuario" class="d-flex flex-column flex-lg-row align-items-center gap-3 {% if not session.get('usuario_nombre') %}d-none{% endif %}">
+                        <span class="text-white small text-center">Hola, <strong class="text-danger fw-bold" id="lblNombreUsuario">{{ session.get('usuario_nombre', '...') }}</strong></span>
 
                         {# Ícono perfil — solo si NO es administrador #}
                         {% if session.get('usuario_tipo') != 'Administrador' %}
@@ -301,7 +311,9 @@
                         </button>
                         {% endif %}
 
-                        <a href="/logout" class="btn btn-outline-light btn-sm rounded-pill px-3 fw-bold">SALIR</a>
+                        <a href="/logout" class="btn btn-outline-light btn-sm rounded-pill px-3 fw-bold text-center">
+                            <i class="fa-solid fa-right-from-bracket me-1"></i> SALIR
+                        </a>
                     </div>
 
                 </div>
@@ -379,9 +391,60 @@
         {% block content %}{% endblock %}
     </main>
 
-    <footer>
-        <div class="container text-center py-4">
-            <p class="m-0 text-muted small">&copy; 2026 TC_PRODUCCIONES. Todos los derechos reservados.</p>
+    <footer class="site-footer">
+        <div class="container py-5">
+            <div class="row gy-4">
+
+                <div class="col-12 col-lg-4">
+                    <a href="/" class="footer-brand d-flex align-items-center gap-2 mb-3">
+                        <i class="fa-solid fa-clapperboard"></i>
+                        <span>TC<span class="text-accent">_PRODUCCIONES</span></span>
+                    </a>
+                    <p class="footer-text">
+                        Viví el cine como nunca antes: la mejor cartelera, butacas premium
+                        y la experiencia sonora más inmersiva de la ciudad.
+                    </p>
+                    <div class="d-flex gap-2 mt-3">
+                        <a href="#" class="footer-social" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+                        <a href="#" class="footer-social" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+                        <a href="#" class="footer-social" aria-label="X / Twitter"><i class="fa-brands fa-x-twitter"></i></a>
+                    </div>
+                </div>
+
+                <div class="col-6 col-lg-2">
+                    <h6 class="footer-heading">Navegación</h6>
+                    <ul class="footer-links">
+                        <li><a href="/">Cartelera</a></li>
+                        <li><a href="/login">Ingresar</a></li>
+                        <li><a href="/registro">Crear cuenta</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-6 col-lg-3">
+                    <h6 class="footer-heading">Ayuda</h6>
+                    <ul class="footer-links">
+                        <li><a href="#">Preguntas frecuentes</a></li>
+                        <li><a href="#">Medios de pago</a></li>
+                        <li><a href="#">Términos y condiciones</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-12 col-lg-3">
+                    <h6 class="footer-heading">Contacto</h6>
+                    <ul class="footer-links">
+                        <li><i class="fa-solid fa-location-dot me-2"></i>Buenos Aires, Argentina</li>
+                        <li><i class="fa-solid fa-envelope me-2"></i>contacto@tcproducciones.com</li>
+                    </ul>
+                </div>
+
+            </div>
+
+            <hr class="footer-divider">
+
+            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2 text-center text-sm-start">
+                <p class="m-0 footer-copy">&copy; 2026 TC_PRODUCCIONES. Todos los derechos reservados.</p>
+                <p class="m-0 footer-copy">Hecho con <i class="fa-solid fa-heart text-danger"></i> para los amantes del cine.</p>
+            </div>
         </div>
     </footer>
 

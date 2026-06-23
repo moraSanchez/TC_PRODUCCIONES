@@ -92,10 +92,6 @@ def api_registro():
         db.commit()
         cursor.close()
 
-        # ============================================================
-        # CAMBIO CLAVE: iniciamos sesión automáticamente, igual que
-        # hace api_login(), para que registrarse cuente como un login.
-        # ============================================================
         session['usuario_id'] = id_nuevo_usuario
         session['user_id'] = id_nuevo_usuario
         session['usuario_tipo'] = 'Cliente'
