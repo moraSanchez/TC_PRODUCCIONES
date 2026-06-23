@@ -12,26 +12,31 @@ class DatabaseConnection:
         if cls._instance is None:
             cls._instance = super(DatabaseConnection, cls).__new__(cls)
             try:
-                # Se añade 'port' leyendo desde las variables de entorno (por defecto 3306)
+                # Mantiene la conexión única como propiedad global del Singleton
                 cls._instance.connection = mysql.connector.connect(
                     host=os.getenv("DB_HOST", "localhost"),
                     user=os.getenv("DB_USER", "root"),
                     password=os.getenv("DB_PASSWORD", ""),
                     database=os.getenv("DB_NAME", "tc_producciones"),
-                    port=int(os.getenv("DB_PORT", 3306)),  # <-- CORREGIDO: Ahora usa el puerto del .env
+                    port=int(os.getenv("DB_PORT", 3306)),
                     buffered=True  
                 )
-                cls._instance.cursor = cls._instance.connection.cursor(dictionary=True)
                 print("Conexión Singleton a MySQL establecida con éxito.")
             except mysql.connector.Error as err:
                 print(f"Error crítico de conexión a la Base de Datos: {err}")
                 cls._instance.connection = None
-                cls._instance.cursor = None
         return cls._instance
 
     def get_cursor(self):
-        if self.connection and self.connection.is_connected():
-            return self.cursor
+        """
+        Genera un cursor limpio por cada petición web para evitar que los hilos
+        y bucles de inserción concurrentes colisionen entre sí.
+        """
+        try:
+            if self.connection and self.connection.is_connected():
+                return self.connection.cursor(dictionary=True)
+        except Exception as e:
+            print(f"❌ Error al generar cursor dinámico: {e}")
         return None
 
     def commit(self):

@@ -1,5 +1,3 @@
-#/*auth_controller.py*/
-
 from flask import Blueprint, render_template, request, jsonify, session, redirect, url_for
 from werkzeug.security import generate_password_hash, check_password_hash
 from config.database import DatabaseConnection
@@ -22,12 +20,10 @@ def api_login():
     
     db = DatabaseConnection()
     cursor = db.get_cursor()
-    if not cursor: return jsonify({"error": "Base de datos desconectada."}), 500
+    if not cursor: 
+        return jsonify({"error": "Base de datos desconectada."}), 500
         
     try:
-        try: cursor.fetchall()
-        except Exception: pass
-            
         cursor.execute("SELECT * FROM Usuario WHERE LOWER(email) = LOWER(%s)", (email,))
         usuario = cursor.fetchone()
         
@@ -37,16 +33,33 @@ def api_login():
             
             es_valida = (email.lower() == 'admin@cine.com' and input_pass == 'admin123') or (db_pass == input_pass)
             if not es_valida and db_pass.startswith(('scrypt:', 'pbkdf2:', 'bcrypt:')):
-                try: es_valida = check_password_hash(db_pass, input_pass)
-                except Exception: es_valida = False
+                try: 
+                    es_valida = check_password_hash(db_pass, input_pass)
+                except Exception: 
+                    es_valida = False
                 
             if es_valida:
+                # Seteamos ambas llaves en sesión para evitar fallas entre Blueprints
                 session['usuario_id'] = usuario.get('idUsuario')
+                session['user_id'] = usuario.get('idUsuario')
                 session['usuario_tipo'] = usuario.get('tipo', 'Cliente')
                 session['usuario_nombre'] = usuario.get('nombre', 'Admin')
-                return jsonify({"status": "success", "usuario": {"idUsuario": usuario.get('idUsuario'), "nombre": usuario.get('nombre'), "tipo": usuario.get('tipo')}}), 200
+                
+                cursor.close()
+                return jsonify({
+                    "status": "success", 
+                    "usuario": {
+                        "idUsuario": usuario.get('idUsuario'), 
+                        "nombre": usuario.get('nombre'), 
+                        "tipo": usuario.get('tipo')
+                    }
+                }), 200
+                
+        if cursor: cursor.close()
         return jsonify({"error": "Credenciales incorrectas."}), 401
-    except Exception as e: return jsonify({"error": str(e)}), 500
+    except Exception as e: 
+        if cursor: cursor.close()
+        return jsonify({"error": str(e)}), 500
 
 @auth_bp.route('/api/auth/registro', methods=['POST'])
 def api_registro():
@@ -65,20 +78,20 @@ def api_registro():
         return jsonify({"status": "error", "error": "Base de datos desconectada del sistema."}), 500
 
     try:
-        try: cursor.fetchall()
-        except Exception: pass
-
         cursor.execute("SELECT idUsuario FROM Usuario WHERE LOWER(email) = LOWER(%s)", (email,))
         if cursor.fetchone():
+            cursor.close()
             return jsonify({"status": "error", "error": "El correo electrónico ya se encuentra registrado."}), 400
 
         pass_encriptada = generate_password_hash(contrasenia)
         query = "INSERT INTO Usuario (nombre, apellido, email, contrasenia, tipo) VALUES (%s, %s, %s, %s, %s)"
         cursor.execute(query, (nombre, apellido, email, pass_encriptada, 'Cliente'))
         db.commit()
+        cursor.close()
 
         return jsonify({"status": "success", "message": "Usuario registrado correctamente."}), 201
     except Exception as e:
+        if cursor: cursor.close()
         return jsonify({"status": "error", "error": f"Error interno en la base de datos: {str(e)}"}), 500
 
 @auth_bp.route('/logout')
