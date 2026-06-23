@@ -1,5 +1,3 @@
-/* #base.html */
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -7,7 +5,260 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TC_PRODUCCIONES | Cinema</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+
+    <style>
+        /* ── OFFCANVAS PERFIL ──────────────────────────────────────── */
+        #offcanvasPerfil {
+            width: 400px !important;
+            background: #0f0f12;
+            border-left: 1px solid #27272a;
+        }
+
+        .perfil-avatar {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, #dc2626 0%, #7f1d1d 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            font-weight: 900;
+            color: #fff;
+            letter-spacing: -1px;
+            flex-shrink: 0;
+        }
+
+        .perfil-nombre {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: -0.3px;
+        }
+
+        .perfil-email {
+            font-size: 0.78rem;
+            color: #71717a;
+        }
+
+        /* Tabs del panel */
+        .perfil-tabs {
+            display: flex;
+            gap: 4px;
+            background: #141417;
+            border-radius: 10px;
+            padding: 4px;
+            border: 1px solid #27272a;
+        }
+
+        .perfil-tab-btn {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #71717a;
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 8px 4px;
+            border-radius: 7px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .perfil-tab-btn.activo {
+            background: #dc2626;
+            color: #ffffff;
+        }
+
+        .perfil-tab-btn:hover:not(.activo) {
+            background: #1e1e24;
+            color: #d4d4d8;
+        }
+
+        /* Inputs de edición */
+        .perfil-input {
+            background: #18181b !important;
+            border: 1px solid #27272a !important;
+            color: #ffffff !important;
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 0.9rem;
+            transition: border-color 0.2s;
+            width: 100%;
+        }
+
+        .perfil-input:focus {
+            outline: none;
+            border-color: #dc2626 !important;
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15);
+        }
+
+        .perfil-input::placeholder { color: #52525b; }
+
+        .perfil-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #71717a;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .perfil-btn-guardar {
+            background: #ffffff;
+            color: #09090b;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-weight: 800;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+        }
+
+        .perfil-btn-guardar:hover {
+            background: #e4e4e7;
+            transform: translateY(-1px);
+        }
+
+        /* Tarjetas de reserva */
+        .reserva-card {
+            background: #141417;
+            border: 1px solid #27272a;
+            border-radius: 12px;
+            padding: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .reserva-card:hover { border-color: #3f3f46; }
+
+        .reserva-card.cancelada {
+            opacity: 0.5;
+            border-style: dashed;
+        }
+
+        .reserva-poster {
+            width: 44px;
+            height: 62px;
+            object-fit: cover;
+            border-radius: 6px;
+            flex-shrink: 0;
+        }
+
+        .reserva-titulo {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #ffffff;
+            text-transform: uppercase;
+            letter-spacing: -0.2px;
+            line-height: 1.2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .reserva-meta {
+            font-size: 0.72rem;
+            color: #71717a;
+        }
+
+        .reserva-badge {
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 3px 8px;
+            border-radius: 5px;
+        }
+
+        .badge-aprobado  { background: rgba(34,197,94,0.15);  color: #4ade80; border: 1px solid rgba(34,197,94,0.2); }
+        .badge-pendiente { background: rgba(234,179,8,0.15);  color: #facc15; border: 1px solid rgba(234,179,8,0.2); }
+        .badge-cancelado { background: rgba(113,113,122,0.15); color: #71717a; border: 1px solid rgba(113,113,122,0.2); }
+
+        .btn-cancelar-reserva {
+            background: transparent;
+            border: 1px solid rgba(220, 38, 38, 0.3);
+            color: #f87171;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 4px 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn-cancelar-reserva:hover {
+            background: rgba(220, 38, 38, 0.1);
+            border-color: #dc2626;
+        }
+
+        /* Alerta inline del panel */
+        .perfil-alerta {
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            display: none;
+            margin-bottom: 12px;
+        }
+
+        .perfil-alerta.exito  { background: rgba(34,197,94,0.12); color: #4ade80; border: 1px solid rgba(34,197,94,0.2); }
+        .perfil-alerta.error  { background: rgba(220,38,38,0.12);  color: #f87171; border: 1px solid rgba(220,38,38,0.2); }
+
+        /* Scrollbar custom para el offcanvas */
+        #offcanvasPerfil .offcanvas-body::-webkit-scrollbar { width: 4px; }
+        #offcanvasPerfil .offcanvas-body::-webkit-scrollbar-track { background: transparent; }
+        #offcanvasPerfil .offcanvas-body::-webkit-scrollbar-thumb { background: #27272a; border-radius: 2px; }
+
+        /* Botón perfil en navbar */
+        .btn-perfil-nav {
+            background: transparent;
+            border: 1px solid #27272a;
+            color: #a1a1aa;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+        }
+
+        .btn-perfil-nav:hover {
+            border-color: #dc2626;
+            color: #dc2626;
+            background: rgba(220,38,38,0.08);
+        }
+
+        /* Estado vacío */
+        .perfil-empty {
+            text-align: center;
+            padding: 32px 16px;
+            color: #52525b;
+        }
+
+        .perfil-empty i { font-size: 2rem; margin-bottom: 10px; display: block; }
+        .perfil-empty p { font-size: 0.82rem; margin: 0; }
+
+        /* Spinner de carga */
+        .perfil-spinner {
+            display: flex;
+            justify-content: center;
+            padding: 32px;
+        }
+    </style>
 </head>
 <body>
 
@@ -27,14 +278,29 @@
                     </li>
                 </ul>
                 <div class="navbar-nav ms-auto align-items-center">
-                    
+
+                    {# Invitado: no hay sesión #}
                     <div id="navInvitado" class="d-flex align-items-center {% if session.get('usuario_nombre') %}d-none{% endif %}">
                         <a href="/registro" class="nav-link">REGISTRARSE</a>
                         <a href="/login" class="btn btn-danger btn-sm rounded-pill px-4 ms-lg-2 fw-bold">INGRESAR</a>
                     </div>
-                    
+
+                    {# Usuario logueado #}
                     <div id="navUsuario" class="d-flex align-items-center {% if not session.get('usuario_nombre') %}d-none{% endif %} gap-3">
                         <span class="text-white small">Hola, <strong class="text-danger fw-bold" id="lblNombreUsuario">{{ session.get('usuario_nombre', '...') }}</strong></span>
+
+                        {# Ícono perfil — solo si NO es administrador #}
+                        {% if session.get('usuario_tipo') != 'Administrador' %}
+                        <button class="btn-perfil-nav"
+                                data-bs-toggle="offcanvas"
+                                data-bs-target="#offcanvasPerfil"
+                                aria-controls="offcanvasPerfil"
+                                title="Mi perfil"
+                                id="btnAbrirPerfil">
+                            <i class="fa-solid fa-user"></i>
+                        </button>
+                        {% endif %}
+
                         <a href="/logout" class="btn btn-outline-light btn-sm rounded-pill px-3 fw-bold">SALIR</a>
                     </div>
 
@@ -42,6 +308,72 @@
             </div>
         </div>
     </nav>
+
+    <!-- ══════════════════════════════════════════════
+         OFFCANVAS: Panel de perfil del cliente
+    ═══════════════════════════════════════════════ -->
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasPerfil" aria-labelledby="offcanvasPerfilLabel">
+
+        <div class="offcanvas-header border-bottom border-dark pb-3">
+            <div class="d-flex align-items-center gap-3 w-100">
+                <div class="perfil-avatar" id="perfilAvatar">?</div>
+                <div class="overflow-hidden flex-grow-1">
+                    <div class="perfil-nombre" id="perfilNombreHeader">Cargando...</div>
+                    <div class="perfil-email" id="perfilEmailHeader">—</div>
+                </div>
+                <button type="button" class="btn-close btn-close-white opacity-50 flex-shrink-0" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            </div>
+        </div>
+
+        <div class="offcanvas-body px-3 pt-3" style="overflow-y: auto;">
+
+            {# Tabs: Mis Datos / Mis Reservas #}
+            <div class="perfil-tabs mb-4">
+                <button class="perfil-tab-btn activo" id="tabDatos" onclick="cambiarTab('datos')">
+                    <i class="fa-solid fa-user-pen me-1"></i> Mis Datos
+                </button>
+                <button class="perfil-tab-btn" id="tabReservas" onclick="cambiarTab('reservas')">
+                    <i class="fa-solid fa-ticket me-1"></i> Mis Reservas
+                </button>
+            </div>
+
+            <!-- ── TAB: MIS DATOS ─────────────────────────── -->
+            <div id="panelDatos">
+                <div class="perfil-alerta" id="alertaDatos"></div>
+
+                <div class="mb-3">
+                    <label class="perfil-label">Nombre</label>
+                    <input type="text" id="inputNombre" class="perfil-input" placeholder="Tu nombre">
+                </div>
+                <div class="mb-4">
+                    <label class="perfil-label">Apellido</label>
+                    <input type="text" id="inputApellido" class="perfil-input" placeholder="Tu apellido">
+                </div>
+
+                <div class="mb-3" style="background: #141417; border: 1px solid #27272a; border-radius: 8px; padding: 12px 14px;">
+                    <label class="perfil-label mb-1">Correo electrónico</label>
+                    <p class="m-0 text-white" id="perfilEmailTexto" style="font-size: 0.88rem;">—</p>
+                    <p class="m-0 mt-1" style="font-size: 0.7rem; color: #52525b;">El email no puede modificarse.</p>
+                </div>
+
+                <button class="perfil-btn-guardar" id="btnGuardarPerfil" onclick="guardarPerfil()">
+                    <i class="fa-solid fa-floppy-disk me-2"></i> GUARDAR CAMBIOS
+                </button>
+            </div>
+
+            <!-- ── TAB: MIS RESERVAS ──────────────────────── -->
+            <div id="panelReservas" class="d-none">
+                <div class="perfil-alerta" id="alertaReservas"></div>
+                <div id="contenedorReservas">
+                    <div class="perfil-spinner">
+                        <div class="spinner-border spinner-border-sm text-danger" role="status"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <!-- ── Fin Offcanvas ─────────────────────────────────────────── -->
 
     <main>
         {% block content %}{% endblock %}
@@ -54,6 +386,220 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+    // ═══════════════════════════════════════════════════════
+    //  LÓGICA DEL PANEL DE PERFIL
+    // ═══════════════════════════════════════════════════════
+
+    let tabActual = 'datos';
+    let reservasCargadas = false;
+
+    // ── Cambio de tab ──────────────────────────────────────
+    function cambiarTab(tab) {
+        tabActual = tab;
+
+        document.getElementById('tabDatos').classList.toggle('activo', tab === 'datos');
+        document.getElementById('tabReservas').classList.toggle('activo', tab === 'reservas');
+        document.getElementById('panelDatos').classList.toggle('d-none', tab !== 'datos');
+        document.getElementById('panelReservas').classList.toggle('d-none', tab !== 'reservas');
+
+        if (tab === 'reservas' && !reservasCargadas) {
+            cargarReservas();
+        }
+    }
+
+    // ── Mostrar alerta dentro del panel ────────────────────
+    function mostrarAlertaPerfil(id, mensaje, tipo) {
+        const el = document.getElementById(id);
+        el.className = `perfil-alerta ${tipo}`;
+        el.textContent = mensaje;
+        el.style.display = 'block';
+        setTimeout(() => { el.style.display = 'none'; }, 3500);
+    }
+
+    // ── Cargar datos del perfil al abrir el offcanvas ──────
+    document.getElementById('offcanvasPerfil').addEventListener('show.bs.offcanvas', function () {
+        cargarPerfil();
+        reservasCargadas = false; // Refrescar reservas cada vez que se abre
+    });
+
+    async function cargarPerfil() {
+        try {
+            const res = await fetch('/api/cliente/perfil');
+            if (!res.ok) return;
+            const data = await res.json();
+
+            // Header
+            const iniciales = ((data.nombre || '?')[0] + (data.apellido || '')[0]).toUpperCase();
+            document.getElementById('perfilAvatar').textContent = iniciales || '?';
+            document.getElementById('perfilNombreHeader').textContent = `${data.nombre || ''} ${data.apellido || ''}`.trim();
+            document.getElementById('perfilEmailHeader').textContent = data.email || '—';
+
+            // Inputs
+            document.getElementById('inputNombre').value = data.nombre || '';
+            document.getElementById('inputApellido').value = data.apellido || '';
+            document.getElementById('perfilEmailTexto').textContent = data.email || '—';
+
+            // Nombre en navbar (actualización inmediata)
+            const lblNavbar = document.getElementById('lblNombreUsuario');
+            if (lblNavbar) lblNavbar.textContent = data.nombre || '...';
+
+        } catch (err) {
+            console.error('Error al cargar perfil:', err);
+        }
+    }
+
+    // ── Guardar cambios de nombre/apellido ─────────────────
+    async function guardarPerfil() {
+        const nombre = document.getElementById('inputNombre').value.trim();
+        const apellido = document.getElementById('inputApellido').value.trim();
+
+        if (!nombre) {
+            mostrarAlertaPerfil('alertaDatos', 'El nombre no puede estar vacío.', 'error');
+            return;
+        }
+
+        const btn = document.getElementById('btnGuardarPerfil');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> GUARDANDO...';
+
+        try {
+            const res = await fetch('/api/cliente/perfil', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nombre, apellido })
+            });
+            const data = await res.json();
+
+            if (res.ok) {
+                // Actualizar header del panel
+                const iniciales = ((nombre)[0] + (apellido || '')[0] || '').toUpperCase();
+                document.getElementById('perfilAvatar').textContent = iniciales || nombre[0].toUpperCase();
+                document.getElementById('perfilNombreHeader').textContent = `${nombre} ${apellido}`.trim();
+
+                // Actualizar nombre en el navbar sin recargar
+                const lblNavbar = document.getElementById('lblNombreUsuario');
+                if (lblNavbar) lblNavbar.textContent = data.nombre || nombre;
+
+                mostrarAlertaPerfil('alertaDatos', '✓ ' + data.message, 'exito');
+            } else {
+                mostrarAlertaPerfil('alertaDatos', data.error || 'Error al guardar.', 'error');
+            }
+        } catch (err) {
+            mostrarAlertaPerfil('alertaDatos', 'No se pudo conectar con el servidor.', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-floppy-disk me-2"></i> GUARDAR CAMBIOS';
+        }
+    }
+
+    // ── Cargar historial de reservas ───────────────────────
+    async function cargarReservas() {
+        const contenedor = document.getElementById('contenedorReservas');
+        contenedor.innerHTML = `
+            <div class="perfil-spinner">
+                <div class="spinner-border spinner-border-sm text-danger" role="status"></div>
+            </div>`;
+
+        try {
+            const res = await fetch('/api/cliente/reservas');
+            if (!res.ok) throw new Error('No autorizado');
+            const reservas = await res.json();
+            reservasCargadas = true;
+            renderizarReservas(reservas);
+        } catch (err) {
+            contenedor.innerHTML = `
+                <div class="perfil-empty">
+                    <i class="fa-solid fa-triangle-exclamation text-danger"></i>
+                    <p>No se pudieron cargar las reservas.</p>
+                </div>`;
+        }
+    }
+
+    function renderizarReservas(reservas) {
+        const contenedor = document.getElementById('contenedorReservas');
+
+        if (!reservas || reservas.length === 0) {
+            contenedor.innerHTML = `
+                <div class="perfil-empty">
+                    <i class="fa-solid fa-ticket"></i>
+                    <p>Todavía no tenés reservas.<br>¡Comprá tus entradas y disfrutá el cine!</p>
+                </div>`;
+            return;
+        }
+
+        contenedor.innerHTML = reservas.map(r => {
+            const badgeClass = r.estado_pago === 'aprobado'  ? 'badge-aprobado'
+                             : r.estado_pago === 'cancelado' ? 'badge-cancelado'
+                             : 'badge-pendiente';
+
+            const estadoLabel = r.estado_pago === 'aprobado'  ? 'Confirmada'
+                              : r.estado_pago === 'cancelado' ? 'Cancelada'
+                              : 'Pendiente';
+
+            const cancelada = r.estado_pago === 'cancelado';
+
+            const botonCancelar = !cancelada ? `
+                <button class="btn-cancelar-reserva mt-2" onclick="cancelarReserva(${r.idReserva}, this)">
+                    <i class="fa-solid fa-xmark me-1"></i> Cancelar
+                </button>` : '';
+
+            const poster = r.pelicula_imagen
+                ? `<img src="${r.pelicula_imagen}" class="reserva-poster" alt="poster" onerror="this.style.display='none'">`
+                : `<div class="reserva-poster d-flex align-items-center justify-content-center" style="background:#1e1e24; color:#52525b; font-size:1.2rem;"><i class="fa-solid fa-film"></i></div>`;
+
+            return `
+            <div class="reserva-card mb-3 ${cancelada ? 'cancelada' : ''}" id="reserva-card-${r.idReserva}">
+                <div class="d-flex gap-3">
+                    ${poster}
+                    <div class="flex-grow-1 overflow-hidden">
+                        <div class="reserva-titulo mb-1">${r.pelicula_titulo || 'Sin título'}</div>
+                        <div class="reserva-meta mb-2">
+                            📅 ${r.funcion_fecha || '—'} &nbsp;⏰ ${r.funcion_hora || '—'} HS<br>
+                            🏛️ SALA ${r.num_sala || '—'} &nbsp;·&nbsp; ${r.funcion_formato || ''} ${r.funcion_idioma || ''}
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                            <div>
+                                <span class="reserva-badge ${badgeClass}">${estadoLabel}</span>
+                                <span class="reserva-meta ms-2">$${Number(r.total || 0).toFixed(2)}</span>
+                            </div>
+                            ${botonCancelar}
+                        </div>
+                        ${r.asientos ? `<div class="reserva-meta mt-2">💺 ${r.asientos}</div>` : ''}
+                    </div>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    // ── Cancelar una reserva ───────────────────────────────
+    async function cancelarReserva(idReserva, btnEl) {
+        if (!confirm('¿Estás seguro de que querés cancelar esta reserva?')) return;
+
+        btnEl.disabled = true;
+        btnEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Cancelando...';
+
+        try {
+            const res = await fetch(`/api/cliente/reservas/${idReserva}`, { method: 'DELETE' });
+            const data = await res.json();
+
+            if (res.ok) {
+                mostrarAlertaPerfil('alertaReservas', '✓ Reserva cancelada correctamente.', 'exito');
+                // Recargar la lista actualizada
+                cargarReservas();
+            } else {
+                mostrarAlertaPerfil('alertaReservas', data.error || 'No se pudo cancelar.', 'error');
+                btnEl.disabled = false;
+                btnEl.innerHTML = '<i class="fa-solid fa-xmark me-1"></i> Cancelar';
+            }
+        } catch (err) {
+            mostrarAlertaPerfil('alertaReservas', 'Error de conexión.', 'error');
+            btnEl.disabled = false;
+            btnEl.innerHTML = '<i class="fa-solid fa-xmark me-1"></i> Cancelar';
+        }
+    }
+    </script>
+
 </body>
 </html>
-
