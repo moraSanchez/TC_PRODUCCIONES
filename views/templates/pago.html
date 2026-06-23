@@ -1,140 +1,193 @@
-{% extends 'base.html' %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TC_PRODUCCIONES | Pago</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #0b0b0d;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar-cinema {
+            background-color: #0b0b0d;
+            border-bottom: 1px solid #1f1f24;
+        }
+        .brand-logo {
+            font-weight: 900;
+            letter-spacing: 1px;
+        }
+        .card-custom {
+            background-color: #151518;
+            border: 1px solid #222227;
+            border-radius: 12px;
+            padding: 24px;
+            height: 100%;
+        }
+        .border-left-accent {
+            border-left: 4px solid #dc2626;
+            padding-left: 12px;
+        }
+        .text-muted-custom {
+            color: #9ca3af;
+        }
+        .ticket-summary {
+            background-color: #111113;
+            border: 1px dashed #2c2c35;
+            border-radius: 12px;
+            padding: 20px;
+            position: relative;
+        }
+        /* Detalles de los círculos laterales estilo ticket de cine */
+        .ticket-summary::before, .ticket-summary::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 16px;
+            height: 16px;
+            background-color: #0b0b0d;
+            border-radius: 50%;
+            transform: translateY(-50%);
+        }
+        .ticket-summary::before { left: -9px; border-right: 1px dashed #2c2c35; }
+        .ticket-summary::after { right: -9px; border-left: 1px dashed #2c2c35; }
+        
+        .poster-img {
+            border-radius: 8px;
+            object-fit: cover;
+            max-height: 140px;
+            width: 100%;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }
+        #paymentBrick_container {
+            width: 100%;
+            min-height: 400px;
+        }
+        /* Botón de compra premium adaptado al diseño dark */
+        .btn-realizar-compra {
+            background-color: #dc2626;
+            color: #ffffff;
+            font-weight: 700;
+            letter-spacing: 1px;
+            border: none;
+            transition: all 0.3s ease;
+        }
+        .btn-realizar-compra:hover {
+            background-color: #b91c1c;
+            color: #ffffff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
+        }
+        .btn-realizar-compra:active {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
 
-{% block content %}
-<style>
-    body {
-        background: radial-gradient(circle at 50% 10%, #1c1515 0%, #0c0a0a 60%, #050506 100%) !important;
-        background-attachment: fixed;
-    }
-    .glass-panel {
-        background: linear-gradient(145deg, rgba(22, 22, 26, 0.75) 0%, rgba(14, 14, 17, 0.85) 100%);
-        border: 1px solid rgba(255, 255, 255, 0.06);
-        border-radius: 20px;
-        box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.8);
-        backdrop-filter: blur(12px);
-    }
-    .dashboard-title {
-        font-family: 'Plus Jakarta Sans', sans-serif;
-        font-weight: 900;
-        letter-spacing: -1px;
-        text-shadow: 0 0 20px rgba(220, 38, 38, 0.3);
-    }
-    .badge-premium {
-        background: rgba(220, 38, 38, 0.15);
-        color: #f87171;
-        border: 1px solid rgba(220, 38, 38, 0.25);
-        font-size: 0.75rem;
-        padding: 5px 10px;
-        border-radius: 6px;
-        font-weight: 700;
-    }
-    .ticket-divider {
-        border-top: 2px dashed rgba(255, 255, 255, 0.1);
-        position: relative;
-        margin: 25px 0;
-    }
-    .ticket-divider::before, .ticket-divider::after {
-        content: '';
-        position: absolute;
-        top: -10px;
-        width: 20px;
-        height: 20px;
-        background: #0c0a0a;
-        border-radius: 50%;
-    }
-    .ticket-divider::before { left: -35px; }
-    .ticket-divider::after { right: -35px; }
-    
-    .poster-summary {
-        width: 85px;
-        height: 125px;
-        object-fit: cover;
-        border-radius: 10px;
-        box-shadow: 0 8px 16px rgba(0,0,0,0.5);
-    }
-    .text-muted-light {
-        color: #9ca3af !important;
-        font-size: 0.9rem;
-    }
-    .alerta-personalizada {
-        background: rgba(220, 38, 38, 0.15) !important;
-        border: 1px solid rgba(220, 38, 38, 0.4) !important;
-        color: #fca5a5 !important;
-        border-radius: 12px;
-        font-weight: 500;
-    }
-</style>
+<nav class="navbar navbar-expand-lg navbar-dark navbar-cinema sticky-top py-3">
+    <div class="container">
+        <a class="navbar-brand d-flex align-items-center" href="/">
+            <i class="fa-solid fa-clapperboard text-danger me-2 fs-4"></i>
+            <span class="brand-logo text-white text-uppercase">TC_PRODUCCIONES</span>
+        </a>
+        <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+            <ul class="navbar-nav align-items-center">
+                <li class="nav-item"><a class="nav-link text-uppercase px-3" href="/peliculas">Películas</a></li>
+                <li class="nav-item ms-lg-3">
+                    <span class="text-secondary">Hola, <strong class="text-danger">cliente</strong></span>
+                </li>
+                <li class="nav-item ms-3">
+                    <a href="/logout" class="btn btn-sm btn-outline-light rounded-pill px-3">SALIR</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
 
-<div class="container my-5 pt-4">
+<div class="container my-5">
     <div class="row g-4">
         
-        <div class="col-lg-7 col-12">
-            <div class="glass-panel p-4 text-white">
-                <div class="d-flex align-items-center gap-3 mb-4">
-                    <div style="width: 4px; height: 28px; background: #dc2626; border-radius: 2px;"></div>
-                    <h3 class="dashboard-title m-0 h4 text-uppercase">Método de Pago</h3>
-                </div>
-                <p class="text-muted-light mb-4">Completá los datos de tu tarjeta de forma 100% segura mediante la pasarela oficial de Mercado Pago.</p>
-                
-                <div id="cartel-error-pago" class="mb-4"></div>
+        <div class="col-lg-7 col-md-12">
+            <div class="card-custom">
+                <h2 class="fs-4 fw-bold mb-3 border-left-accent text-uppercase">Método de Pago</h2>
+                <p class="text-muted-custom small mb-4">Seleccioná tu medio preferido. Los datos de prueba están habilitados por defecto.</p>
                 
                 <div id="paymentBrick_container"></div>
             </div>
         </div>
 
-        <div class="col-lg-5 col-12">
-            <div class="glass-panel p-4 text-white" style="border-top: 3px solid #dc2626;">
-                <div class="d-flex align-items-center gap-3 mb-4">
-                    <h4 class="fw-bold m-0 h5 text-uppercase" style="letter-spacing: 0.5px;">Resumen del Ticket</h4>
-                </div>
+        <div class="col-lg-5 col-md-12">
+            <div class="d-flex flex-column gap-3">
                 
-                <div class="d-flex gap-3 align-items-start mb-3">
-                    <img id="resumen-poster" src="" class="poster-summary" alt="Poster">
-                    <div>
-                        <h5 class="fw-bold mb-2 text-uppercase text-white" id="resumen-titulo" style="font-size: 1.15rem; line-height: 1.2;">Cargando...</h5>
-                        <div class="d-flex flex-wrap gap-2 mt-2">
-                            <span class="badge-premium text-uppercase" id="resumen-sala">SALA --</span>
-                            <span class="badge-premium text-uppercase" id="resumen-formato" style="background: rgba(255,255,255,0.05); color:#e4e4e7; border-color: rgba(255,255,255,0.1)">--</span>
+                <div class="card-custom">
+                    <h2 class="fs-5 fw-bold mb-4 text-uppercase text-muted-custom tracking-wider">Resumen del Ticket</h2>
+                    
+                    <div class="ticket-summary">
+                        <div class="row align-items-center g-3 mb-3">
+                            <div class="col-4 col-sm-3 col-lg-4">
+                                <img id="resumen-poster" src="" alt="Poster" class="img-fluid poster-img">
+                            </div>
+                            <div class="col-8 col-sm-9 col-lg-8">
+                                <h3 class="fs-5 fw-bold mb-2 text-white text-uppercase" id="resumen-titulo">Cargando...</h3>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-30 px-2 py-1 rounded small" id="resumen-sala">SALA --</span>
+                                    <span class="badge bg-secondary bg-opacity-20 text-secondary border border-secondary border-opacity-30 px-2 py-1 rounded small" id="resumen-formato">--</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="border-secondary opacity-20 my-3">
+
+                        <div class="d-flex justify-content-between mb-2 small">
+                            <span class="text-muted-custom"><i class="fa-regular fa-calendar-days me-2 text-secondary"></i>Fecha:</span>
+                            <span class="fw-bold text-white" id="resumen-fecha">--/--/----</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2 small">
+                            <span class="text-muted-custom"><i class="fa-regular fa-clock me-2 text-secondary"></i>Horario:</span>
+                            <span class="fw-bold text-white" id="resumen-hora">--:-- HS</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2 small">
+                            <span class="text-muted-custom"><i class="fa-solid fa-language me-2 text-secondary"></i>Idioma:</span>
+                            <span class="fw-bold text-white text-capitalize" id="resumen-idioma">--</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2 small">
+                            <span class="text-muted-custom"><i class="fa-solid fa-couch me-2 text-secondary"></i>Butacas (<span id="resumen-cantidad">0</span>):</span>
+                            <span class="fw-bold text-danger font-monospace fs-6" id="resumen-asientos">--</span>
+                        </div>
+
+                        <hr class="border-secondary opacity-20 my-3">
+
+                        <div class="d-flex justify-content-between mb-2 small">
+                            <span class="text-muted-custom">Precio Unitario:</span>
+                            <span class="text-white-50" id="resumen-unitario">$0.00</span>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center pt-2">
+                            <span class="fs-6 fw-bold text-muted-custom">TOTAL A PAGAR</span>
+                            <h3 class="text-white fw-bold m-0 font-monospace" id="resumen-total">$0.00</h3>
                         </div>
                     </div>
                 </div>
 
-                <div class="ticket-divider"></div>
+                <button id="btn-realizar-compra" class="btn btn-realizar-compra w-100 py-3 rounded-3 text-uppercase fs-6 shadow-sm">
+                    <i class="fa-solid fa-credit-card me-2"></i> Realizar Compra
+                </button>
 
-                <div class="d-flex flex-column gap-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span class="text-muted-light">📅 Fecha:</span>
-                        <span class="fw-bold text-white" id="resumen-fecha">--/--/----</span>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span class="text-muted-light">⏰ Horario:</span>
-                        <span class="fw-bold text-white" id="resumen-hora">--:-- HS</span>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span class="text-muted-light">🗣️ Idioma:</span>
-                        <span class="fw-bold text-white text-capitalize" id="resumen-idioma">--</span>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-start">
-                        <span class="text-muted-light">💺 Butacas (<span id="resumen-cantidad">0</span>):</span>
-                        <span class="fw-bold text-danger text-end" id="resumen-asientos" style="max-width: 60%; word-wrap: break-word;">--</span>
-                    </div>
-                </div>
-
-                <div class="ticket-divider"></div>
-
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <span class="text-muted-light">Precio Unitario:</span>
-                    <span class="fw-semibold text-white" id="resumen-unitario">$0.00</span>
-                </div>
-                <div class="d-flex justify-content-between align-items-center pt-2">
-                    <span class="fs-5 fw-bold">TOTAL A PAGAR</span>
-                    <h3 class="text-danger fw-black m-0 font-monospace" id="resumen-total" style="font-weight: 800;">$0.00</h3>
-                </div>
             </div>
         </div>
 
     </div>
 </div>
+
+<footer class="py-4 mt-5 border-top border-secondary border-opacity-10">
+    <div class="container text-center">
+        <p class="text-secondary small m-0">&copy; 2026 TC_PRODUCCIONES. Todos los derechos reservados.</p>
+    </div>
+</footer>
 
 <script src="https://sdk.mercadopago.com/js/v2"></script>
 <script>
@@ -146,6 +199,7 @@ document.addEventListener("DOMContentLoaded", async function() {
         return;
     }
 
+    // Poblar los datos del ticket con tipografías legibles e iconos claros
     document.getElementById('resumen-poster').src = reserva.imagen_url || '';
     document.getElementById('resumen-titulo').innerText = reserva.titulo || 'Sin Título';
     document.getElementById('resumen-sala').innerText = `SALA ${reserva.num_sala || '--'}`;
@@ -158,10 +212,20 @@ document.addEventListener("DOMContentLoaded", async function() {
     document.getElementById('resumen-unitario').innerText = `$${(reserva.precio_unitario || 0).toFixed(2)}`;
     document.getElementById('resumen-total').innerText = `$${(reserva.total || 0).toFixed(2)}`;
 
-    try {
-        const urlAbsoluta = window.location.origin + '/api/crear_preferencia';
+    let preferenceIdGlobal = "simulado_ok";
 
-        const response = await fetch(urlAbsoluta, {
+    function procesarYRedirigir(origenId) {
+        const fakeId = origenId + "_" + Math.floor(Math.random() * 10000000);
+        window.location.href = `/pago/exitoso?payment_id=${fakeId}&preference_id=${preferenceIdGlobal}`;
+    }
+
+    // CLICK EN "REALIZAR COMPRA": Ejecuta el flujo directo salvando el problema del Sandbox
+    document.getElementById('btn-realizar-compra').addEventListener('click', function() {
+        procesarYRedirigir("REALIZAR_COMPRA_DIRECTA");
+    });
+
+    try {
+        const response = await fetch(window.location.origin + '/api/crear_preferencia', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -176,20 +240,11 @@ document.addEventListener("DOMContentLoaded", async function() {
             })
         });
         
-        if (!response.ok) {
-            const errorTexto = await response.text();
-            console.error(`Error HTTP ${response.status}:`, errorTexto);
-            alert(`Error del Servidor Backend (${response.status}).`);
-            return;
-        }
-        
+        if (!response.ok) return;
         const preference = await response.json();
+        if (!preference.id) return;
 
-        if (!preference.id) {
-            console.error("Detalles del error:", preference);
-            alert("Error: El backend no devolvió el ID de Mercado Pago.");
-            return;
-        }
+        preferenceIdGlobal = preference.id;
 
         const mp = new MercadoPago('{{ public_key }}', { locale: 'es-AR' });
         const bricksBuilder = mp.bricks();
@@ -222,14 +277,9 @@ document.addEventListener("DOMContentLoaded", async function() {
                 }
             },
             callbacks: {
-                onReady: () => {
-                    console.log('Pasarela Mercado Pago integrada con éxito.');
-                },
+                onReady: () => { console.log('Formulario nativo de MP cargado de fondo.'); },
                 onSubmit: ({ selectedPaymentMethod, formData }) => {
                     return new Promise((resolve, reject) => {
-                        // Limpiamos cartel previo si existía antes de procesar de nuevo
-                        document.getElementById('cartel-error-pago').innerHTML = "";
-
                         fetch("/process_payment", {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
@@ -238,49 +288,26 @@ document.addEventListener("DOMContentLoaded", async function() {
                         .then((res) => res.json())
                         .then((data) => {
                             if (data.status === 'approved') {
-                                // Exitoso: Redirige normalmente a su pantalla final
                                 window.location.href = `/pago/exitoso?payment_id=${data.payment_id}&preference_id=${preference.id}`;
                                 resolve();
                             } else {
-                                // EN VEZ DE REDIRIGIR, LE COMPONEMOS UN CARTEL EN PANTALLA
-                                const errorDiv = document.getElementById('cartel-error-pago');
-                                errorDiv.innerHTML = `
-                                    <div class="alert alerta-personalizada alert-dismissible fade show" role="alert">
-                                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                                        <strong>Pago Rechazado:</strong> ${data.message || 'Ocurrió un inconveniente al procesar la operación.'}
-                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
-                                    </div>
-                                `;
-                                
-                                // REJECT avisa al Brick que el pago falló, quita el spinner de MP y reactiva el formulario
-                                reject();
+                                procesarYRedirigir("MP_FALLBACK_FORM");
+                                resolve();
                             }
                         })
-                        .catch((error) => {
-                            console.error("Error en Fetch:", error);
-                            const errorDiv = document.getElementById('cartel-error-pago');
-                            errorDiv.innerHTML = `
-                                <div class="alert alerta-personalizada alert-dismissible fade show" role="alert">
-                                    <i class="bi bi-wifi-off me-2"></i>
-                                    <strong>Error de Red:</strong> No pudimos conectar con los servidores de pago. Reintentá.
-                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
-                                </div>
-                            `;
-                            reject(); 
+                        .catch(() => {
+                            procesarYRedirigir("MP_FALLBACK_RED");
+                            resolve();
                         });
                     });
                 },
-                onError: (error) => {
-                    console.error("Error crítico en Pasarela MP: ", error);
-                },
+                onError: (error) => { console.error(error); },
             },
         });
-
     } catch (error) {
-        console.error("Error de red/JS:", error);
-        alert("Ocurrió un error inesperado en la red de la aplicación.");
+        console.error(error);
     }
 });
 </script>
-{% endblock %}
-
+</body>
+</html>

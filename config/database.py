@@ -12,18 +12,38 @@ class DatabaseConnection:
         if cls._instance is None:
             cls._instance = super(DatabaseConnection, cls).__new__(cls)
             try:
+                # Extraemos y limpiamos variables eliminando espacios ocultos
+                db_host = os.getenv("DB_HOST", "localhost").strip()
+                db_user = os.getenv("DB_USER", "root").strip()
+                db_password = os.getenv("DB_PASSWORD", "").strip()
+                db_name = os.getenv("DB_NAME", "tc_producciones").strip()
+                
+                # CORRECCIÓN DE PROTOCOLO: Si es localhost en Windows, se fuerza resolución TCP limpia
+                if db_host == "localhost":
+                    db_host = "127.0.0.1"
+
+                try:
+                    db_port = int(str(os.getenv("DB_PORT", "3306")).strip())
+                except ValueError:
+                    db_port = 3306
+
                 # Mantiene la conexión única como propiedad global del Singleton
                 cls._instance.connection = mysql.connector.connect(
-                    host=os.getenv("DB_HOST", "localhost"),
-                    user=os.getenv("DB_USER", "root"),
-                    password=os.getenv("DB_PASSWORD", ""),
-                    database=os.getenv("DB_NAME", "tc_producciones"),
-                    port=int(os.getenv("DB_PORT", 3306)),
-                    buffered=True  
+                    host=db_host,
+                    user=db_user,
+                    password=db_password,
+                    database=db_name,
+                    port=db_port,
+                    buffered=True,
+                    connection_timeout=10 # Evita que la app web quede colgada si MySQL tarda
                 )
-                print("Conexión Singleton a MySQL establecida con éxito.")
+                print("==================================================")
+                print("✅ Conexión Singleton a MySQL establecida con éxito.")
+                print("==================================================")
             except mysql.connector.Error as err:
-                print(f"Error crítico de conexión a la Base de Datos: {err}")
+                print("==================================================")
+                print(f"❌ Error crítico de conexión a la Base de Datos: {err}")
+                print("==================================================")
                 cls._instance.connection = None
         return cls._instance
 

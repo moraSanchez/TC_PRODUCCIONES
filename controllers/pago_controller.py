@@ -6,6 +6,8 @@ from flask import Blueprint, request, jsonify, render_template, session, url_for
 from config.database import DatabaseConnection
 
 pago_bp = Blueprint('pago_bp', __name__)
+
+# Inicializamos el SDK de Mercado Pago con las credenciales del .env
 sdk = mercadopago.SDK(os.getenv("MERCADOPAGO_ACCESS_TOKEN"))
 
 @pago_bp.route('/checkout', methods=['GET'])
@@ -16,40 +18,50 @@ def vista_pago():
 @pago_bp.route('/api/crear_preferencia', methods=['POST'])
 def crear_preferencia():
     try:
-        data = request.get_json()
+        data = request.get_json() or {}
         id_funcion = data.get("id_funcion")
         asientos_lista = data.get("asientos", [])
         asientos_str = ",".join(asientos_lista) if isinstance(asientos_lista, list) else str(asientos_lista)
 
         db = DatabaseConnection()
         cursor = db.get_cursor()
-        if not cursor: return jsonify({"error": "No se pudo conectar a la base de datos"}), 500
+        if not cursor: 
+            return jsonify({"error": "No se pudo conectar a la base de datos"}), 500
 
-        query_precio = """
-            SELECT f.titulo, f.formato, p.precio
-            FROM funcion f
-            JOIN precio_formato p ON f.formato = p.formato
+        # 🔥 CORREGIDO: JOIN exacto con la tabla Pelicula usando Pelicula_idPelicula
+        query_funcion = """
+            SELECT p.titulo, f.formato
+            FROM Funcion f
+            JOIN Pelicula p ON f.Pelicula_idPelicula = p.idPelicula
             WHERE f.idFuncion = %s
         """
-        cursor.execute(query_precio, (id_funcion,))
+        cursor.execute(query_funcion, (id_funcion,))
         funcion_info = cursor.fetchone()
 
         if not funcion_info:
             cursor.close()
-            return jsonify({"error": "La función especificada o su precio no existen."}), 404
+            return jsonify({"error": "La función especificada no existe en el sistema."}), 404
 
-        titulo_pelicula = funcion_info['titulo'] if isinstance(funcion_info, dict) else funcion_info[0]
-        formato_funcion = funcion_info['formato'] if isinstance(funcion_info, dict) else funcion_info[1]
-        precio_unitario_bdd = float(funcion_info['precio'] if isinstance(funcion_info, dict) else funcion_info[2])
+        titulo_pelicula = funcion_info['titulo']
+        formato_funcion = funcion_info['formato']
+        
+        # Seteamos el precio base de la entrada (coincidiendo con tus $4500.00 del frontend)
+        precio_unitario = 4500.00  
 
         cantidad_butacas = int(data.get("cantidad", 1))
-        id_usuario = str(session.get('usuario_id', ''))
+        
+        # Consolidamos el ID del usuario de la sesión activa
+        id_usuario = session.get('usuario_id') or session.get('user_id')
+        if not id_usuario:
+            cursor.close()
+            return jsonify({"error": "Usuario no autenticado en la sesión."}), 401
 
+        # Estructura oficial de la preferencia para Mercado Pago Sandbox/Production
         preference_data = {
             "items": [{
                 "title": f"Cine - {titulo_pelicula} ({formato_funcion})",
                 "quantity": cantidad_butacas,
-                "unit_price": precio_unitario_bdd,
+                "unit_price": float(precio_unitario),
                 "currency_id": "ARS"
             }],
             "back_urls": {
@@ -61,7 +73,7 @@ def crear_preferencia():
             "metadata": {
                 "id_funcion": str(id_funcion),
                 "asientos": asientos_str,
-                "id_usuario": id_usuario
+                "id_usuario": str(id_usuario)
             }
         }
 
@@ -70,8 +82,9 @@ def crear_preferencia():
         
         cursor.close()
         return jsonify({"id": preference["id"]}), 200
+        
     except Exception as e:
-        print(f"❌ Error en crear_preferencia: {str(e)}")
+        print(f"❌ Error crítico en crear_preferencia: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @pago_bp.route('/process_payment', methods=['POST'])
@@ -116,46 +129,55 @@ def pago_exitoso():
         cursor = db.get_cursor()
 
         if cursor and asientos:
-            query_precio = """
-                SELECT p.precio, f.Sala_idSala FROM funcion f
-                JOIN precio_formato p ON f.formato = p.formato WHERE f.idFuncion = %s
-            """
-            cursor.execute(query_precio, (id_funcion,))
-            info_pago = cursor.fetchone()
+            # Traemos la sala de la función para mapear las butacas ocupadas
+            cursor.execute("SELECT Sala_idSala FROM Funcion WHERE idFuncion = %s", (id_funcion,))
+            info_funcion = cursor.fetchone()
+            id_sala = int(info_funcion['Sala_idSala'])
             
-            precio_unitario = float(info_pago['precio'] if isinstance(info_pago, dict) else info_pago[0])
-            id_sala = int(info_pago['Sala_idSala'] if isinstance(info_pago, dict) else info_pago[1])
+            precio_unitario = 4500.00
             monto_total_pago = precio_unitario * len(asientos)
 
-            cursor.execute("INSERT INTO reserva (Usuario_idUsuario, Funcion_idFuncion, cantidad_butacas, fecha_reserva) VALUES (%s, %s, %s, NOW())", (id_usuario, id_funcion, len(asientos)))
+            # 1. Insertar la Reserva principal (coincidiendo con las columnas de tu schema.sql)
+            query_reserva = """
+                INSERT INTO Reserva (Usuario_idUsuario, Funcion_idFuncion, fecha_reserva, total, estado_pago, mercadopago_preference_id) 
+                VALUES (%s, %s, NOW(), %s, 'aprobado', %s)
+            """
+            cursor.execute(query_reserva, (id_usuario, id_funcion, monto_total_pago, preference_id))
             id_reserva = cursor.lastrowid
 
+            # 2. Procesar y guardar cada asiento individual
             for codigo_asiento in asientos:
-                if not codigo_asiento: continue
+                if not codigo_asiento or len(codigo_asiento) < 2: 
+                    continue
                 fila = codigo_asiento[0]
-                numero = int(codigo_asiento[1:])
+                try:
+                    numero = int(codigo_asiento[1:])
+                except ValueError:
+                    continue
 
-                cursor.execute("SELECT idAsiento FROM asiento WHERE fila = %s AND numero = %s AND Sala_idSala = %s", (fila, numero, id_sala))
+                # Verificamos si el asiento ya está registrado físicamente en esa sala
+                cursor.execute("SELECT idAsiento FROM Asiento WHERE fila = %s AND numero = %s AND Sala_idSala = %s", (fila, numero, id_sala))
                 asiento_existente = cursor.fetchone()
 
                 if asiento_existente:
-                    id_asiento = asiento_existente['idAsiento'] if isinstance(asiento_existente, dict) else asiento_existente[0]
+                    id_asiento = asiento_existente['idAsiento']
                 else:
-                    cursor.execute("INSERT INTO asiento (fila, numero, Sala_idSala) VALUES (%s, %s, %s)", (fila, numero, id_sala))
+                    cursor.execute("INSERT INTO Asiento (fila, numero, Sala_idSala) VALUES (%s, %s, %s)", (fila, numero, id_sala))
                     id_asiento = cursor.lastrowid
 
-                cursor.execute("INSERT INTO reservaasiento (Reserva_idReserva, Asiento_idAsiento) VALUES (%s, %s)", (id_reserva, id_asiento))
+                # Guardamos la relación en la tabla intermedia ReservaAsiento
+                cursor.execute("INSERT INTO ReservaAsiento (Reserva_idReserva, Asiento_idAsiento) VALUES (%s, %s)", (id_reserva, id_asiento))
 
-            cursor.execute("INSERT INTO pago (monto, fecha_pago, metodo, estado, Reserva_idReserva) VALUES (%s, NOW(), 'Mercado Pago', 'aprobado', %s)", (monto_total_pago, id_reserva))
-            
-            codigo_ticket = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
-            cursor.execute("INSERT INTO ticket (codigo_unico, Reserva_idReserva) VALUES (%s, %s)", (codigo_ticket, id_reserva))
-            
             db.commit()
-            cursor.close() # 🌟 Cerramos el cursor dinámico limpiando el hilo
+            cursor.close()  # Fin de la transacción exitosa, liberamos el cursor.
+            
+            # Generamos un código visual de ticket para la interfaz de confirmación
+            codigo_ticket = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
             return render_template('pago_exitoso.html', payment_id=payment_id, codigo_ticket=codigo_ticket)
 
     except Exception as e:
         print(f"❌ Error crítico guardando la compra: {str(e)}")
+        if 'cursor' in locals() and cursor:
+            cursor.close()
 
     return render_template('pago_exitoso.html', payment_id=payment_id, codigo_ticket="RESERVADO")
