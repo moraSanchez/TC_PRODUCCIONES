@@ -77,15 +77,9 @@ def seleccionar_funcion(id_pelicula):
 
 @cine_bp.route('/reserva/funcion/<int:id_funcion>', methods=['GET'])
 def seleccionar_butacas(id_funcion):
-    print("=" * 60)
-    print(f"[DEBUG] /reserva/funcion/{id_funcion} — HIT")
-    print(f"[DEBUG] session completa: {dict(session)}")
-
     id_usuario = session.get('usuario_id') or session.get('user_id')
-    print(f"[DEBUG] id_usuario resuelto: {id_usuario}")
 
     if not id_usuario:
-        print("[DEBUG] ❌ Sin sesión → redirigiendo a login")
         return redirect(url_for('auth.login'))
 
     session['usuario_id'] = id_usuario
@@ -94,11 +88,9 @@ def seleccionar_butacas(id_funcion):
     db     = DatabaseConnection()
     cursor = db.get_cursor()
     if not cursor:
-        print("[DEBUG] ❌ Sin cursor de BD")
         return "Error al conectar con la base de datos", 500
 
     try:
-        print(f"[DEBUG] Buscando funcion id={id_funcion}")
         cursor.execute("""
             SELECT f.*, p.titulo, p.imagen_url
             FROM Funcion f
@@ -106,11 +98,9 @@ def seleccionar_butacas(id_funcion):
             WHERE f.idFuncion = %s
         """, (id_funcion,))
         funcion = cursor.fetchone()
-        print(f"[DEBUG] funcion encontrada: {funcion is not None}")
 
         if not funcion:
             cursor.close()
-            print("[DEBUG] ❌ funcion no encontrada → redirigiendo a inicio")
             return redirect(url_for('cine.inicio'))
 
         funcion = dict(funcion)
@@ -139,19 +129,15 @@ def seleccionar_butacas(id_funcion):
             f"{str(row['fila']).upper()}{row['numero']}"
             for row in ocupados_raw
         ]
-        print(f"[DEBUG] asientos_ocupados: {asientos_ocupados}")
 
         cursor.close()
-        print("[DEBUG] ✅ Renderizando butacas.html")
         return render_template('butacas.html',
                                funcion=funcion,
                                asientos_ocupados=asientos_ocupados)
 
     except Exception as e:
         if cursor: cursor.close()
-        print(f"[DEBUG] ❌ EXCEPCIÓN en seleccionar_butacas: {e}")
-        import traceback
-        traceback.print_exc()
+        print(f"❌ Error en seleccionar_butacas: {e}")
         return redirect(url_for('cine.inicio'))
 
 
