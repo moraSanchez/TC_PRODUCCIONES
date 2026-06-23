@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 23-06-2026 a las 01:59:38
+-- Tiempo de generación: 23-06-2026 a las 02:46:25
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -66,14 +66,13 @@ INSERT INTO `funcion` (`idFuncion`, `titulo`, `genero`, `imagen_url`, `num_sala`
 (6, 'SUPERGIRL', 'Acción', 'https://image.tmdb.org/t/p/w500/diEz9JG1UHEDTN0Yeri5sJZD7PL.jpg', 1, '2026-06-25', '16:30:00', 'proximamente', 'Doblada', 9, NULL, '2D'),
 (7, 'MINIONS & MONSTRUOS', 'Aventura', 'https://image.tmdb.org/t/p/w500/9THY3T4kn5D2rZhwwQ6t7XQtHtv.jpg', 2, '2026-07-02', '17:30:00', 'activa', 'Doblada', 10, NULL, '2D'),
 (8, 'MOANA', 'Acción', 'https://image.tmdb.org/t/p/w500/u1dGuYo8OsNlXJVRRRrKeAQxyKk.jpg', 3, '2026-07-09', '18:30:00', 'proximamente', 'Doblada', 11, NULL, '2D'),
-(9, 'EVIL DEAD: EN LLAMAS', 'Terror', 'https://image.tmdb.org/t/p/w500/ztadKzIIR0ERYqpHteaPFtk7inP.jpg', 4, '2026-07-09', '19:30:00', 'proximamente', 'Doblada', 12, NULL, '2D'),
 (10, 'EL AFINADOR', 'Acción', 'https://image.tmdb.org/t/p/w500/xIRryl8bWHFaMDssKFcPAXhfrRB.jpg', 2, '2026-06-25', '20:30:00', 'proximamente', 'Doblada', 13, NULL, '2D'),
 (21, 'LAS GUERRERAS K-POP', 'Fantasía', 'https://image.tmdb.org/t/p/w500/6EQMqEmdG5HoGe2zT1WwWUMvVhv.jpg', 1, '2026-06-30', '23:23:00', 'activa', 'Subtitulada', 14, NULL, '2D'),
 (24, 'LOS PINGÜINOS DE MADAGASCAR', 'Acción', 'https://image.tmdb.org/t/p/w500/ynGGKSCUIuZNayNu9lJHFEScx10.jpg', 3, '2026-06-29', '22:00:00', 'activa', 'Doblada', 17, NULL, '2D'),
 (25, 'LOS PINGÜINOS DE MADAGASCAR', 'Acción', 'https://image.tmdb.org/t/p/w500/ynGGKSCUIuZNayNu9lJHFEScx10.jpg', 3, '2026-06-29', '20:00:00', 'activa', 'Doblada', 17, NULL, '4D'),
-(26, 'SPIDER-MAN: UN NUEVO DÍA', 'Ciencia ficción', 'https://image.tmdb.org/t/p/w500/riqDLBu3N7UHSi6RFzgtqNC5yws.jpg', 4, '2026-07-03', '08:21:00', 'proximamente', 'Subtitulada', 18, NULL, '3D'),
 (31, 'OBSESIÓN', 'Terror', 'https://image.tmdb.org/t/p/w500/rmCkNtzYR2xTOO3ZXmIqB5zgYdE.jpg', 1, '2026-06-20', '16:30:00', 'activa', 'Doblada', 4, NULL, '2D'),
-(32, 'OBSESIÓN', 'Terror', 'https://image.tmdb.org/t/p/w500/rmCkNtzYR2xTOO3ZXmIqB5zgYdE.jpg', 1, '2026-06-27', '23:58:00', 'activa', 'Doblada', 4, NULL, '3D');
+(32, 'OBSESIÓN', 'Terror', 'https://image.tmdb.org/t/p/w500/rmCkNtzYR2xTOO3ZXmIqB5zgYdE.jpg', 1, '2026-06-27', '23:58:00', 'activa', 'Doblada', 4, NULL, '3D'),
+(33, 'SPIDER-MAN: UN NUEVO DÍA', 'Ciencia ficción', 'https://image.tmdb.org/t/p/w500/riqDLBu3N7UHSi6RFzgtqNC5yws.jpg', 4, '2026-07-03', '00:25:00', 'proximamente', 'Subtitulada', 18, NULL, '2D');
 
 -- --------------------------------------------------------
 
@@ -125,7 +124,7 @@ INSERT INTO `pelicula` (`idPelicula`, `titulo`, `sinopsis`, `duracion`, `genero`
 (15, 'CHICKEN LITTLE', 'Cuando el cielo se está cayendo y la cordura ha volado del nido, Chicken Little debe urdir un plan para salvar al planeta de la invasión alienígena y demostrar que el héroe más grande del mundo es un pollito.', 120, 'Animación', 'https://image.tmdb.org/t/p/w500/AsDUBjrECTVstxCSGvPbwpA0I0M.jpg'),
 (16, 'EL CLUB DE LAS PELEADORAS', 'Los impopulares mejores amigos PJ y Josie inician un club de autodefensa en la escuela secundaria para conocer chicas y perder su virginidad. Pronto se encuentran en una situación complicada cuando los estudiantes más populares comienzan a golpearse entre sí en nombre de la autodefensa.', 120, 'Comedia', 'https://image.tmdb.org/t/p/w500/zAPPIeqB4cjXiS5qPFgeifndunG.jpg'),
 (17, 'LOS PINGÜINOS DE MADAGASCAR', '', 120, 'Acción', 'https://image.tmdb.org/t/p/w500/ynGGKSCUIuZNayNu9lJHFEScx10.jpg'),
-(18, 'SPIDER-MAN: UN NUEVO DÍA', 'A medida qué Spider-Man está en la cima de su carrera protegiendo la ciudad de Nueva York, una serie de crímenes inusuales lo arrastran a una red de misterios más grande de lo que jamás haya enfrentado.', 120, 'Ciencia ficción', 'https://image.tmdb.org/t/p/w500/riqDLBu3N7UHSi6RFzgtqNC5yws.jpg');
+(18, 'SPIDER-MAN: UN NUEVO DÍA', '', 120, 'Ciencia ficción', 'https://image.tmdb.org/t/p/w500/riqDLBu3N7UHSi6RFzgtqNC5yws.jpg');
 
 -- --------------------------------------------------------
 
@@ -237,7 +236,9 @@ CREATE TABLE `usuario` (
 INSERT INTO `usuario` (`idUsuario`, `nombre`, `apellido`, `email`, `contrasenia`, `tipo`, `fecha_registro`) VALUES
 (1, 'Alan', 'Admin', 'admin@cine.com', 'scrypt:32768:8:1$v39rX6H87WpZEnZk$9fa07f877fca99d5f7c320d39e55b1bf8df8bf0600bce4cf4b5fde540f25ceb1ba420d43f01b3b2da22572b918b958c2b53569421df89cba00b740523e43db62', 'Administrador', '2026-06-20 17:11:14'),
 (2, 'mora', 'sanchez', 'mora@gmail.com', 'scrypt:32768:8:1$mT3cd3Rf2dDUoTuj$ee9c4d735c4b491368e1f43075a71936418dd25bf0be6c4f35a3b601edc6e7c01805a76574c61eb0bc497e0384f113ba729ca60baf2bedffe3a454d5d1946b7a', 'Cliente', '2026-06-22 16:49:36'),
-(3, 'calle', 'paco', 'calle@gmail.com', 'scrypt:32768:8:1$zrLSBTW1sooGLBkJ$d2c93bb16a6a7be5d0ddd8b41f5167de6be6ddb7680a29ced94fab9dd29295ae8479ba86a2b1b8b770a93d8e2a34c7f4fff681a3163b1b9fe05105ace138a080', 'Cliente', '2026-06-22 16:51:06');
+(3, 'calle', 'paco', 'calle@gmail.com', 'scrypt:32768:8:1$zrLSBTW1sooGLBkJ$d2c93bb16a6a7be5d0ddd8b41f5167de6be6ddb7680a29ced94fab9dd29295ae8479ba86a2b1b8b770a93d8e2a34c7f4fff681a3163b1b9fe05105ace138a080', 'Cliente', '2026-06-22 16:51:06'),
+(4, 'Agustina', 'Miranda', 'agustina@gmail.com', 'scrypt:32768:8:1$no6jCtpxXcR49rIL$f39d01af771931c899c20cfaf341f742ffa01aafd6e71712ce827858d7c7bafdaefa5b99d957006af692aa00d8f53338186d7a3953670a144140a0d7994b30ca', 'Cliente', '2026-06-23 00:14:28'),
+(5, 'c', 'p', 'cp@gmail.com', 'scrypt:32768:8:1$XFgXb1Z4I8hZayma$45a9790489c16f4ed510cf2d4a7934262746207e38655232124c105df7be4314bd2e86758317b5344f3d65c94f78469334648f7f6499a4d7a5b60f4522b948c7', 'Cliente', '2026-06-23 00:28:31');
 
 --
 -- Índices para tablas volcadas
@@ -330,7 +331,7 @@ ALTER TABLE `asiento`
 -- AUTO_INCREMENT de la tabla `funcion`
 --
 ALTER TABLE `funcion`
-  MODIFY `idFuncion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
+  MODIFY `idFuncion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
 
 --
 -- AUTO_INCREMENT de la tabla `pago`
@@ -378,7 +379,7 @@ ALTER TABLE `ticket`
 -- AUTO_INCREMENT de la tabla `usuario`
 --
 ALTER TABLE `usuario`
-  MODIFY `idUsuario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `idUsuario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- Restricciones para tablas volcadas
