@@ -1,5 +1,3 @@
-#registro.html
-
 {% extends 'base.html' %}
 
 {% block content %}
@@ -15,7 +13,7 @@
         </div>
         
         <div id="alertaError" class="alert alert-danger border-0 text-white small p-3 mb-4 rounded-xl d-none shadow-lg" style="background: rgba(220, 38, 38, 0.2); backdrop-filter: blur(4px);" role="alert"></div>
-        <div id="alertaExito" class="alert alert-success border-0 text-white small p-3 mb-4 rounded-xl d-none shadow-lg" style="background: rgba(16, 185, 129, 0.2); backdrop-filter: blur(4px);" role="alert">¡Registro exitoso! Redirigiendo...</div>
+        <div id="alertaExito" class="alert alert-success border-0 text-white small p-3 mb-4 rounded-xl d-none shadow-lg" style="background: rgba(16, 185, 129, 0.2); backdrop-filter: blur(4px);" role="alert">¡Registro exitoso! Iniciando sesión automáticamente...</div>
 
         <form id="formRegistro" autocomplete="off">
             <div class="row g-3 mb-3">
@@ -76,7 +74,20 @@ document.getElementById('formRegistro').addEventListener('submit', async (e) => 
 
         if (response.ok) {
             divExito.classList.remove('d-none');
-            setTimeout(() => { window.location.href = '/login'; }, 2000);
+            
+            // Si tu backend retorna los datos del usuario recién creado o un estado de sesión:
+            if (result.usuario) {
+                sessionStorage.setItem('usuario_id', result.usuario.idUsuario);
+                sessionStorage.setItem('nombreUsuario', result.usuario.nombre);
+                sessionStorage.setItem('tipoUsuario', result.usuario.tipo || 'Cliente');
+            } else {
+                // Fallback por si la API sólo dice éxito: guardamos parámetros mínimos basados en el form
+                sessionStorage.setItem('usuario_id', 'nuevo'); 
+                sessionStorage.setItem('nombreUsuario', data.nombre);
+                sessionStorage.setItem('tipoUsuario', 'Cliente');
+            }
+
+            setTimeout(() => { window.location.href = '/'; }, 1500);
         } else {
             divError.innerText = result.error || "Ocurrió un error inesperado.";
             divError.classList.remove('d-none');
