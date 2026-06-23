@@ -387,6 +387,28 @@
     </div>
     <!-- ── Fin Offcanvas ─────────────────────────────────────────── -->
 
+    <!-- ══════════════════════════════════════════════
+         MODAL: Confirmar cancelación de reserva
+    ═══════════════════════════════════════════════ -->
+    <div class="modal fade modal-custom-dark" id="modalConfirmarCancelacion" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">⚠️ Confirmar acción</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <p class="text-white mb-4">¿Estás seguro de que querés cancelar esta reserva?</p>
+                    <div class="d-flex justify-content-center gap-3">
+                        <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">No, volver</button>
+                        <button type="button" class="btn btn-danger px-4" id="btnConfirmarCancelacionReserva">Sí, cancelar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- ── Fin Modal de cancelación ──────────────────────────────── -->
+
     <main>
         {% block content %}{% endblock %}
     </main>
@@ -457,6 +479,14 @@
 
     let tabActual = 'datos';
     let reservasCargadas = false;
+
+    // ── Modal de confirmación para cancelar una reserva ────
+    let modalCancelarReservaBootstrap = null;
+    let idReservaPendienteCancelar = null;
+    let btnReservaPendienteCancelar = null;
+
+    modalCancelarReservaBootstrap = new bootstrap.Modal(document.getElementById('modalConfirmarCancelacion'));
+    document.getElementById('btnConfirmarCancelacionReserva').addEventListener('click', ejecutarCancelacionReserva);
 
     // ── Cambio de tab ──────────────────────────────────────
     function cambiarTab(tab) {
@@ -637,11 +667,23 @@
     }
 
     // ── Cancelar una reserva ───────────────────────────────
-    async function cancelarReserva(idReserva, btnEl) {
-        if (!confirm('¿Estás seguro de que querés cancelar esta reserva?')) return;
+    function cancelarReserva(idReserva, btnEl) {
+        idReservaPendienteCancelar = idReserva;
+        btnReservaPendienteCancelar = btnEl;
+        modalCancelarReservaBootstrap.show();
+    }
 
-        btnEl.disabled = true;
-        btnEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Cancelando...';
+    // ── Ejecutar la cancelación recién después de confirmar en el modal ──
+    async function ejecutarCancelacionReserva() {
+        if (!idReservaPendienteCancelar) return;
+
+        const idReserva = idReservaPendienteCancelar;
+        const btnEl = btnReservaPendienteCancelar;
+
+        if (btnEl) {
+            btnEl.disabled = true;
+            btnEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Cancelando...';
+        }
 
         try {
             const res = await fetch(`/api/cliente/reservas/${idReserva}`, { method: 'DELETE' });
@@ -653,13 +695,21 @@
                 cargarReservas();
             } else {
                 mostrarAlertaPerfil('alertaReservas', data.error || 'No se pudo cancelar.', 'error');
-                btnEl.disabled = false;
-                btnEl.innerHTML = '<i class="fa-solid fa-xmark me-1"></i> Cancelar';
+                if (btnEl) {
+                    btnEl.disabled = false;
+                    btnEl.innerHTML = '<i class="fa-solid fa-xmark me-1"></i> Cancelar';
+                }
             }
         } catch (err) {
             mostrarAlertaPerfil('alertaReservas', 'Error de conexión.', 'error');
-            btnEl.disabled = false;
-            btnEl.innerHTML = '<i class="fa-solid fa-xmark me-1"></i> Cancelar';
+            if (btnEl) {
+                btnEl.disabled = false;
+                btnEl.innerHTML = '<i class="fa-solid fa-xmark me-1"></i> Cancelar';
+            }
+        } finally {
+            modalCancelarReservaBootstrap.hide();
+            idReservaPendienteCancelar = null;
+            btnReservaPendienteCancelar = null;
         }
     }
     </script>

@@ -408,6 +408,32 @@ h3.text-danger, .precio-grande, #total-precio {
 }
 
 /* ==========================================================================
+   MODALES OSCUROS (confirmaciones, ej. cancelar reserva / eliminar función)
+   ========================================================================== */
+.modal-custom-dark .modal-content {
+    background-color: #1c1c21 !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75);
+}
+.modal-custom-dark .modal-header {
+    border-bottom: none;
+    padding: 24px 28px 10px;
+}
+.modal-custom-dark .modal-title {
+    color: #f87171;
+    font-weight: 600;
+    font-size: 1.25rem;
+}
+.modal-custom-dark .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+    opacity: 0.6;
+}
+.modal-custom-dark .modal-body {
+    padding: 10px 28px 28px;
+}
+
+/* ==========================================================================
    FOOTER
    ========================================================================== */
 .site-footer {
