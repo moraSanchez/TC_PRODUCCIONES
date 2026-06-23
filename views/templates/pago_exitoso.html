@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 85vh; padding: 2rem 0;">
+    <div class="text-white text-center p-4 p-sm-5" style="width: 100%; max-width: 520px; border-radius: 24px; background: #141417; border: 1px solid rgba(255,255,255,0.06); position: relative;">
+
+        <div style="position: absolute; top: -8%; left: 50%; transform: translateX(-50%); width: 140px; height: 140px; background: #16a34a; filter: blur(80px); opacity: 0.12; pointer-events: none;"></div>
+
+        <div class="mb-4" style="width: 80px; height: 80px; background: rgba(34,197,94,0.12); border: 2px solid rgba(34,197,94,0.25); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+            <i class="fa-solid fa-check" style="font-size: 2rem; color: #4ade80;"></i>
+        </div>
+
+        <span class="text-uppercase small fw-bold" style="letter-spacing: 2px; color: #4ade80;">¡COMPRA EXITOSA!</span>
+        <h2 class="fw-black mt-2 mb-1" style="font-size: 1.9rem; letter-spacing: -0.5px;">TUS ENTRADAS ESTÁN LISTAS</h2>
+        <p class="text-muted small mb-4">Tu reserva fue confirmada y los asientos fueron reservados.</p>
+
+        <div class="mb-4 p-3 rounded-3" style="background: #1e1e24; border: 1px dashed #27272a; position: relative;">
+            <div style="position: absolute; top: 50%; left: -9px; width: 18px; height: 18px; background: #0b0b0d; border-radius: 50%; transform: translateY(-50%);"></div>
+            <div style="position: absolute; top: 50%; right: -9px; width: 18px; height: 18px; background: #0b0b0d; border-radius: 50%; transform: translateY(-50%);"></div>
+
+            <p class="text-muted small text-uppercase fw-bold mb-1" style="letter-spacing: 1px;">Código de reserva</p>
+            <h3 class="fw-black text-danger font-monospace m-0" style="font-size: 1.6rem; letter-spacing: 3px;">{{ codigo_ticket }}</h3>
+        </div>
+
+        <div class="mb-4 text-start" style="background: #1a1a1e; border-radius: 12px; padding: 16px;">
+            <div class="d-flex justify-content-between small mb-2">
+                <span class="text-muted">Película:</span>
+                <span class="fw-bold text-white text-uppercase">{{ pelicula_titulo or '—' }}</span>
+            </div>
+            <div class="d-flex justify-content-between small mb-2">
+                <span class="text-muted">Fecha:</span>
+                <span class="fw-bold text-white">{{ funcion_fecha or '—' }}</span>
+            </div>
+            <div class="d-flex justify-content-between small mb-2">
+                <span class="text-muted">Horario:</span>
+                <span class="fw-bold text-white">{{ funcion_hora or '—' }} HS</span>
+            </div>
+            <div class="d-flex justify-content-between small mb-2">
+                <span class="text-muted">Sala:</span>
+                <span class="fw-bold text-white">SALA {{ num_sala or '—' }}</span>
+            </div>
+            <div class="d-flex justify-content-between small mb-2">
+                <span class="text-muted">Formato:</span>
+                <span class="fw-bold text-white">{{ formato or '—' }}</span>
+            </div>
+            <div class="d-flex justify-content-between small mb-2">
+                <span class="text-muted">Butacas:</span>
+                <span class="fw-bold text-danger">{{ asientos or '—' }}</span>
+            </div>
+            <hr class="border-secondary opacity-25 my-2">
+            <div class="d-flex justify-content-between">
+                <span class="text-muted small">Total pagado:</span>
+                <span class="fw-black text-white">${{ "%.2f"|format(total|float) if total else '0.00' }}</span>
+            </div>
+        </div>
+
+        <div class="d-flex flex-column gap-2">
+            <a href="/" class="btn btn-light fw-bold py-3 rounded-xl" style="color: #09090b;">
+                <i class="fa-solid fa-house me-2"></i> VOLVER AL INICIO
+            </a>
+        </div>
+
+        <p class="text-muted mt-4 mb-0" style="font-size: 0.72rem;">
+            Payment ID: <span class="font-monospace text-secondary">{{ payment_id or '—' }}</span>
+        </p>
+    </div>
+</div>
+{% endblock %}
