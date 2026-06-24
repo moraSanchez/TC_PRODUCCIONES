@@ -18,7 +18,6 @@ class DatabaseConnection:
                 db_password = os.getenv("DB_PASSWORD", "").strip()
                 db_name = os.getenv("DB_NAME", "tc_producciones").strip()
                 
-                # CORRECCIÓN DE PROTOCOLO: Si es localhost en Windows, se fuerza resolución TCP limpia
                 if db_host == "localhost":
                     db_host = "127.0.0.1"
 
@@ -35,15 +34,11 @@ class DatabaseConnection:
                     database=db_name,
                     port=db_port,
                     buffered=True,
-                    connection_timeout=10 # Evita que la app web quede colgada si MySQL tarda
+                    connection_timeout=10 
                 )
-                print("==================================================")
                 print("✅ Conexión Singleton a MySQL establecida con éxito.")
-                print("==================================================")
             except mysql.connector.Error as err:
-                print("==================================================")
                 print(f"❌ Error crítico de conexión a la Base de Datos: {err}")
-                print("==================================================")
                 cls._instance.connection = None
         return cls._instance
 
@@ -56,7 +51,7 @@ class DatabaseConnection:
             if self.connection and self.connection.is_connected():
                 return self.connection.cursor(dictionary=True)
         except Exception as e:
-            print(f"❌ Error al generar cursor dinámico: {e}")
+            print(f"Error al generar cursor dinámico: {e}")
         return None
 
     def commit(self):

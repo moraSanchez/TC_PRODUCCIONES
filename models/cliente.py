@@ -27,9 +27,7 @@ class Cliente(Usuario):
                 cursor.close()
         return False
 
-    # ─────────────────────────────────────────────
-    # RFMC4 (perfil): obtener datos del usuario autenticado
-    # ─────────────────────────────────────────────
+    # obtener datos del usuario autenticado
     @classmethod
     def obtener_perfil(cls, id_usuario):
         """
@@ -52,9 +50,7 @@ class Cliente(Usuario):
                 cursor.close()
         return None
 
-    # ─────────────────────────────────────────────
-    # RFMC4 (edición): actualizar nombre y apellido
-    # ─────────────────────────────────────────────
+    # actualizar nombre y apellido
     @classmethod
     def actualizar_nombre(cls, id_usuario, nombre, apellido):
         """
@@ -80,9 +76,7 @@ class Cliente(Usuario):
                 cursor.close()
         return False, "Error interno al actualizar."
 
-    # ─────────────────────────────────────────────
-    # RFMC11: historial de reservas del usuario
-    # ─────────────────────────────────────────────
+    # historial de reservas del usuario
     @classmethod
     def obtener_historial_reservas(cls, id_usuario):
         """
@@ -125,22 +119,18 @@ class Cliente(Usuario):
                 reservas = cursor.fetchall()
                 cursor.close()
 
-                # Normalizar tipos no serializables para JSON
                 resultado = []
                 for res in reservas:
                     item = dict(res)
-                    # timedelta → string legible
                     if hasattr(item.get('funcion_hora'), 'total_seconds'):
                         seg = item['funcion_hora'].seconds
                         item['funcion_hora'] = f"{seg // 3600:02d}:{(seg % 3600) // 60:02d}"
                     else:
                         item['funcion_hora'] = str(item.get('funcion_hora', ''))[:5]
-                    # date → string
                     if item.get('funcion_fecha'):
                         item['funcion_fecha'] = str(item['funcion_fecha'])
                     if item.get('fecha_reserva'):
                         item['fecha_reserva'] = str(item['fecha_reserva'])
-                    # Decimal → float
                     if item.get('total') is not None:
                         item['total'] = float(item['total'])
                     resultado.append(item)
@@ -151,9 +141,7 @@ class Cliente(Usuario):
                 cursor.close()
         return []
 
-    # ─────────────────────────────────────────────
-    # RFMC9 / RFMC10: cancelar una reserva propia
-    # ─────────────────────────────────────────────
+    #cancelar una reserva propia
     @classmethod
     def cancelar_reserva(cls, id_reserva, id_usuario):
         """

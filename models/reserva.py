@@ -110,5 +110,3 @@ class Reserva:
             """, (id_usuario,))
             return cursor.fetchall()
         return []
-
-#ASd

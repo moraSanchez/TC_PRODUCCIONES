@@ -321,9 +321,7 @@
         </div>
     </nav>
 
-    <!-- ══════════════════════════════════════════════
-         OFFCANVAS: Panel de perfil del cliente
-    ═══════════════════════════════════════════════ -->
+    <!-- Panel de perfil del cliente -->
     <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasPerfil" aria-labelledby="offcanvasPerfilLabel">
 
         <div class="offcanvas-header border-bottom border-dark pb-3">
@@ -349,7 +347,6 @@
                 </button>
             </div>
 
-            <!-- ── TAB: MIS DATOS ─────────────────────────── -->
             <div id="panelDatos">
                 <div class="perfil-alerta" id="alertaDatos"></div>
 
@@ -373,7 +370,6 @@
                 </button>
             </div>
 
-            <!-- ── TAB: MIS RESERVAS ──────────────────────── -->
             <div id="panelReservas" class="d-none">
                 <div class="perfil-alerta" id="alertaReservas"></div>
                 <div id="contenedorReservas">
@@ -385,11 +381,8 @@
 
         </div>
     </div>
-    <!-- ── Fin Offcanvas ─────────────────────────────────────────── -->
 
-    <!-- ══════════════════════════════════════════════
-         MODAL: Confirmar cancelación de reserva
-    ═══════════════════════════════════════════════ -->
+    <!-- MODAL: Confirmar cancelación de reserva -->
     <div class="modal fade modal-custom-dark" id="modalConfirmarCancelacion" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-sm">
             <div class="modal-content">
@@ -407,7 +400,8 @@
             </div>
         </div>
     </div>
-    <!-- ── Fin Modal de cancelación ──────────────────────────────── -->
+
+    <!-- Fin Modal de cancelación  -->
 
     <main>
         {% block content %}{% endblock %}
@@ -473,14 +467,10 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-    // ═══════════════════════════════════════════════════════
-    //  LÓGICA DEL PANEL DE PERFIL
-    // ═══════════════════════════════════════════════════════
 
     let tabActual = 'datos';
     let reservasCargadas = false;
 
-    // ── Modal de confirmación para cancelar una reserva ────
     let modalCancelarReservaBootstrap = null;
     let idReservaPendienteCancelar = null;
     let btnReservaPendienteCancelar = null;
@@ -488,7 +478,6 @@
     modalCancelarReservaBootstrap = new bootstrap.Modal(document.getElementById('modalConfirmarCancelacion'));
     document.getElementById('btnConfirmarCancelacionReserva').addEventListener('click', ejecutarCancelacionReserva);
 
-    // ── Cambio de tab ──────────────────────────────────────
     function cambiarTab(tab) {
         tabActual = tab;
 
@@ -502,7 +491,7 @@
         }
     }
 
-    // ── Mostrar alerta dentro del panel ────────────────────
+    
     function mostrarAlertaPerfil(id, mensaje, tipo) {
         const el = document.getElementById(id);
         el.className = `perfil-alerta ${tipo}`;
@@ -511,7 +500,7 @@
         setTimeout(() => { el.style.display = 'none'; }, 3500);
     }
 
-    // ── Cargar datos del perfil al abrir el offcanvas ──────
+    
     document.getElementById('offcanvasPerfil').addEventListener('show.bs.offcanvas', function () {
         cargarPerfil();
         reservasCargadas = false; // Refrescar reservas cada vez que se abre
@@ -543,7 +532,7 @@
         }
     }
 
-    // ── Guardar cambios de nombre/apellido ─────────────────
+    // ── Guardar cambios de nombre/apellido 
     async function guardarPerfil() {
         const nombre = document.getElementById('inputNombre').value.trim();
         const apellido = document.getElementById('inputApellido').value.trim();
