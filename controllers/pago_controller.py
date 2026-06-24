@@ -10,9 +10,7 @@ pago_bp = Blueprint('pago_bp', __name__)
 sdk = mercadopago.SDK(os.getenv("MERCADOPAGO_ACCESS_TOKEN"))
 
 
-# ─────────────────────────────────────────────────────────────
-# GET /checkout  →  vista del formulario de pago
-# ─────────────────────────────────────────────────────────────
+# vista del formulario de pago
 @pago_bp.route('/checkout', methods=['GET'])
 def vista_pago():
     if 'usuario_id' not in session and 'user_id' not in session:
@@ -21,11 +19,9 @@ def vista_pago():
     return render_template('pago.html', public_key=public_key)
 
 
-# ─────────────────────────────────────────────────────────────
 # POST /api/crear_preferencia
 # Crea la preferencia en MercadoPago y pre-guarda la reserva
 # en estado 'pendiente' para reservar los asientos de inmediato.
-# ─────────────────────────────────────────────────────────────
 @pago_bp.route('/api/crear_preferencia', methods=['POST'])
 def crear_preferencia():
     id_usuario = session.get('usuario_id') or session.get('user_id')
@@ -62,7 +58,7 @@ def crear_preferencia():
         titulo_pelicula = funcion_info['titulo']
         formato_funcion = funcion_info['formato']
 
-        # ── Precio real según el formato (2D, 3D, 4D, XD), tomado de la tabla Entrada ──  ★ NUEVO
+        # ── Precio real según el formato (2D, 3D, 4D, XD), tomado de la tabla Entrada 
         cursor.execute("SELECT precio FROM Entrada WHERE id_entrada = %s", (formato_funcion,))
         entrada_precio  = cursor.fetchone()
         precio_unitario = float(entrada_precio['precio']) if entrada_precio else 4500.00
@@ -137,13 +133,11 @@ def crear_preferencia():
         return jsonify({"id": preference_id, "id_reserva": id_reserva}), 200
 
     except Exception as e:
-        print(f"❌ Error en crear_preferencia: {e}")
+        print(f"Error en crear_preferencia: {e}")
         return jsonify({"error": str(e)}), 500
 
 
-# ─────────────────────────────────────────────────────────────
-# POST /process_payment  →  procesa el pago desde el Brick
-# ─────────────────────────────────────────────────────────────
+# procesa el pago desde el Brick
 @pago_bp.route('/process_payment', methods=['POST'])
 def process_payment():
     try:
@@ -166,7 +160,6 @@ def process_payment():
         mensaje_error = errores_mp.get(status_detail, "El pago fue rechazado.")
 
         if status == 'approved':
-            # Confirmar la reserva asociada al preference
             preference_id = payment_data.get("transaction_amount") and payment.get("order", {}).get("id")
             _confirmar_reserva_por_preferencia(payment.get("external_reference", ""), payment.get("id"))
 
@@ -179,9 +172,7 @@ def process_payment():
         return jsonify({"error": str(e)}), 500
 
 
-# ─────────────────────────────────────────────────────────────
-# GET /pago/exitoso  →  confirma la reserva y muestra resumen
-# ─────────────────────────────────────────────────────────────
+# confirma la reserva y muestra resumen
 @pago_bp.route('/pago/exitoso', methods=['GET'])
 def pago_exitoso():
     payment_id    = request.args.get('payment_id', '')
@@ -226,14 +217,14 @@ def pago_exitoso():
                     id_reserva = row['idReserva']
 
         if id_reserva:
-            # ── Confirmar la reserva (aprobado) ─────────────
+            # ── Confirmar la reserva (aprobado)
             cursor.execute(
                 "UPDATE Reserva SET estado_pago = 'aprobado' WHERE idReserva = %s",
                 (id_reserva,)
             )
             db.commit()
 
-            # ── Traer detalle completo para mostrar en la vista ──
+            # ── Traer detalle completo para mostrar en la vista 
             cursor.execute("""
                 SELECT
                     r.total,
@@ -271,7 +262,7 @@ def pago_exitoso():
         cursor.close()
 
     except Exception as e:
-        print(f"❌ Error en pago_exitoso: {e}")
+        print(f"Error en pago_exitoso: {e}")
         if 'cursor' in locals() and cursor:
             cursor.close()
 
@@ -289,9 +280,6 @@ def pago_exitoso():
     )
 
 
-# ═══════════════════════════════════════════════════════
-#  HELPERS INTERNOS
-# ═══════════════════════════════════════════════════════
 
 def _obtener_asientos_ocupados_bd(cursor, id_funcion):
     """Devuelve un set con los códigos de asientos ya reservados (ej: {'A1','B3'})."""

@@ -19,14 +19,14 @@ STATIC_DIR = os.path.join(BASE_DIR, "views", "templates", "static")
 app = Flask(__name__, template_folder=TEMPLATES_DIR, static_folder=STATIC_DIR)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "super_secret_session_key_cinema_12345")
 
-configurar_google(app)   # ← NUEVO: registra el proveedor de Google al iniciar
+configurar_google(app)   #registra Google al iniciar
 
 # Registramos las rutas de la app
 app.register_blueprint(auth_bp)
 app.register_blueprint(cine_bp)
 app.register_blueprint(admin_bp)
 app.register_blueprint(pago_bp)
-app.register_blueprint(cliente_bp)   # ← NUEVO
+app.register_blueprint(cliente_bp)   
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
