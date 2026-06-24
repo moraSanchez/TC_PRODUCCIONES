@@ -7,8 +7,8 @@ from controllers.auth_controller import auth_bp
 from controllers.cine_controller import cine_bp
 from controllers.admin_controller import admin_bp
 from controllers.pago_controller import pago_bp
-from controllers.cliente_controller import cliente_bp   # ← NUEVO
-from config.oauth import configurar_google               # ← NUEVO
+from controllers.cliente_controller import cliente_bp   
+from config.oauth import configurar_google               
 
 load_dotenv()
 
