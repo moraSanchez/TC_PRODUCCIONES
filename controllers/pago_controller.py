@@ -37,7 +37,6 @@ def crear_preferencia():
         id_funcion      = data.get("id_funcion")
         asientos_lista  = data.get("asientos", [])
         cantidad        = int(data.get("cantidad", len(asientos_lista)))
-        precio_unitario = 4500.00
 
         if not id_funcion or not asientos_lista:
             return jsonify({"error": "Faltan datos de función o asientos."}), 400
@@ -62,6 +61,12 @@ def crear_preferencia():
         id_sala         = int(funcion_info['Sala_idSala'])
         titulo_pelicula = funcion_info['titulo']
         formato_funcion = funcion_info['formato']
+
+        # ── Precio real según el formato (2D, 3D, 4D, XD), tomado de la tabla Entrada ──  ★ NUEVO
+        cursor.execute("SELECT precio FROM Entrada WHERE id_entrada = %s", (formato_funcion,))
+        entrada_precio  = cursor.fetchone()
+        precio_unitario = float(entrada_precio['precio']) if entrada_precio else 4500.00
+
         total           = precio_unitario * cantidad
         asientos_str    = ",".join(asientos_lista)
 

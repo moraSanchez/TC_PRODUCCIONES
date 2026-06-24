@@ -101,7 +101,7 @@
 
                 <div class="mb-3 d-flex justify-content-between align-items-center">
                     <span class="text-muted small">Precio Unitario:</span>
-                    <span class="fw-bold text-success">$4500.00</span>
+                    <span class="fw-bold text-success">${{ "%.2f"|format(funcion.precio_unitario) }}</span>
                 </div>
                 <div class="mb-3 d-flex justify-content-between align-items-center">
                     <span class="text-muted small">Butacas elegidas:</span>
@@ -131,8 +131,7 @@
 
 <script>
     const asientosSeleccionados = new Set();
-    const PRECIO_UNITARIO = 4500;
-
+    const PRECIO_UNITARIO = parseFloat("{{ funcion.precio_unitario|default(4500.00) }}");
     const idFuncionActual      = "{{ funcion.idFuncion }}";
     const tituloPeliculaActual = "{{ funcion.titulo }}";
 
