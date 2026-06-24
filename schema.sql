@@ -12,8 +12,9 @@ CREATE TABLE Usuario (
     nombre VARCHAR(100) NOT NULL,
     apellido VARCHAR(100),
     email VARCHAR(150) NOT NULL UNIQUE,
-    contrasenia VARCHAR(255) NOT NULL, -- Ampliado a 255 para soportar los hashes de Werkzeug/scrypt
-    tipo VARCHAR(50) DEFAULT 'Cliente' NOT NULL
+    contrasenia VARCHAR(255) NULL, -- NULL permitido: los usuarios de Google no tienen clave local
+    tipo VARCHAR(50) DEFAULT 'Cliente' NOT NULL,
+    google_id VARCHAR(255) UNIQUE NULL
 ) ENGINE=InnoDB;
 
 -- 2. Tabla: Pelicula
