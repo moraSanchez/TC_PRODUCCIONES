@@ -184,6 +184,14 @@ document.addEventListener("DOMContentLoaded", async function() {
     });
 
     try {
+        console.log('🔵 Pidiendo preferencia con datos:', {
+            titulo: reserva.titulo,
+            cantidad: reserva.cantidad,
+            precio_unitario: reserva.precio_unitario,
+            id_funcion: reserva.id_funcion,
+            asientos: reserva.asientos
+        });
+
         const response = await fetch(window.location.origin + '/api/crear_preferencia', {
             method: 'POST',
             headers: {
@@ -199,11 +207,23 @@ document.addEventListener("DOMContentLoaded", async function() {
             })
         });
 
-        if (!response.ok) return;
+        if (!response.ok) {
+            const errorBody = await response.text();
+            console.error('❌ Falló /api/crear_preferencia. Status:', response.status, '| Respuesta:', errorBody);
+            return;
+        }
+
         const preference = await response.json();
-        if (!preference.id) return;
+        console.log('🟢 Preferencia recibida:', preference);
+
+        if (!preference.id) {
+            console.error('❌ La preferencia no trajo un "id":', preference);
+            return;
+        }
 
         preferenceIdGlobal = preference.id;
+
+        console.log('🔵 Public key usada:', '{{ public_key }}');
 
         const mp = new MercadoPago('{{ public_key }}', { locale: 'es-AR' });
         const bricksBuilder = mp.bricks();
@@ -236,7 +256,7 @@ document.addEventListener("DOMContentLoaded", async function() {
                 }
             },
             callbacks: {
-                onReady: () => { console.log('Formulario nativo de MP cargado de fondo.'); },
+                onReady: () => { console.log('✅ Formulario nativo de MP cargado.'); },
                 onSubmit: ({ selectedPaymentMethod, formData }) => {
                     return new Promise((resolve, reject) => {
                         fetch("/process_payment", {
@@ -260,11 +280,11 @@ document.addEventListener("DOMContentLoaded", async function() {
                         });
                     });
                 },
-                onError: (error) => { console.error(error); },
+                onError: (error) => { console.error('❌ Error del Brick (onError):', error); },
             },
         });
     } catch (error) {
-        console.error(error);
+        console.error('❌ Error general inicializando MercadoPago:', error);
     }
 });
 </script>
