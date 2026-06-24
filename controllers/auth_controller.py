@@ -1,65 +1,110 @@
 from flask import Blueprint, render_template, request, jsonify, session, redirect, url_for
 from werkzeug.security import generate_password_hash, check_password_hash
 from config.database import DatabaseConnection
+from config.oauth import oauth
+from models.usuario import Usuario
 
 auth_bp = Blueprint('auth', __name__)
+
 
 @auth_bp.route('/login')
 def login():
     return render_template('login.html')
 
+
 @auth_bp.route('/registro')
 def registro():
     return render_template('registro.html')
+
+
+# ─────────────────────────────────────────────────────────────
+# LOGIN CON GOOGLE (OAuth2 / OpenID Connect vía Authlib)
+# ─────────────────────────────────────────────────────────────
+@auth_bp.route('/login/google')
+def login_google():
+    redirect_uri = url_for('auth.auth_google_callback', _external=True)
+    return oauth.google.authorize_redirect(redirect_uri)
+
+
+@auth_bp.route('/login/google/callback')
+def auth_google_callback():
+    try:
+        token = oauth.google.authorize_access_token()
+        info_usuario = token.get('userinfo', {})
+    except Exception as e:
+        print(f"Error al autorizar con Google: {e}")
+        return redirect(url_for('auth.login'))
+
+    email = info_usuario.get('email')
+    if not email:
+        return redirect(url_for('auth.login'))
+
+    nombre = info_usuario.get('given_name') or info_usuario.get('name', 'Usuario')
+    apellido = info_usuario.get('family_name', '')
+    google_id = info_usuario.get('sub')
+
+    usuario = Usuario.buscar_o_crear_por_google(email, nombre, apellido, google_id)
+    if not usuario:
+        return redirect(url_for('auth.login'))
+
+    session['usuario_id'] = usuario.id_usuario
+    session['user_id'] = usuario.id_usuario
+    session['usuario_tipo'] = usuario.tipo
+    session['usuario_nombre'] = usuario.nombre
+
+    if usuario.tipo == 'Administrador':
+        return redirect(url_for('admin.admin_dashboard'))
+    return redirect(url_for('cine.inicio'))
+
 
 @auth_bp.route('/api/auth/login', methods=['POST'])
 def api_login():
     data = request.get_json() or {}
     email = data.get('email', '').strip()
     contrasenia = data.get('contrasenia', '').strip()
-    
+
     db = DatabaseConnection()
     cursor = db.get_cursor()
-    if not cursor: 
+    if not cursor:
         return jsonify({"error": "Base de datos desconectada."}), 500
-        
+
     try:
         cursor.execute("SELECT * FROM Usuario WHERE LOWER(email) = LOWER(%s)", (email,))
         usuario = cursor.fetchone()
-        
+
         if usuario:
             db_pass = str(usuario.get('contrasenia', '')).strip()
             input_pass = str(contrasenia).strip()
-            
+
             es_valida = (email.lower() == 'admin@cine.com' and input_pass == 'admin123') or (db_pass == input_pass)
             if not es_valida and db_pass.startswith(('scrypt:', 'pbkdf2:', 'bcrypt:')):
-                try: 
+                try:
                     es_valida = check_password_hash(db_pass, input_pass)
-                except Exception: 
+                except Exception:
                     es_valida = False
-                
+
             if es_valida:
-                # Seteamos ambas llaves en sesión para evitar fallas entre Blueprints
                 session['usuario_id'] = usuario.get('idUsuario')
                 session['user_id'] = usuario.get('idUsuario')
                 session['usuario_tipo'] = usuario.get('tipo', 'Cliente')
                 session['usuario_nombre'] = usuario.get('nombre', 'Admin')
-                
+
                 cursor.close()
                 return jsonify({
-                    "status": "success", 
+                    "status": "success",
                     "usuario": {
-                        "idUsuario": usuario.get('idUsuario'), 
-                        "nombre": usuario.get('nombre'), 
+                        "idUsuario": usuario.get('idUsuario'),
+                        "nombre": usuario.get('nombre'),
                         "tipo": usuario.get('tipo')
                     }
                 }), 200
-                
+
         if cursor: cursor.close()
         return jsonify({"error": "Credenciales incorrectas."}), 401
-    except Exception as e: 
+    except Exception as e:
         if cursor: cursor.close()
         return jsonify({"error": str(e)}), 500
+
 
 @auth_bp.route('/api/auth/registro', methods=['POST'])
 def api_registro():
@@ -74,7 +119,7 @@ def api_registro():
 
     db = DatabaseConnection()
     cursor = db.get_cursor()
-    if not cursor: 
+    if not cursor:
         return jsonify({"status": "error", "error": "Base de datos desconectada del sistema."}), 500
 
     try:
@@ -87,7 +132,6 @@ def api_registro():
         query = "INSERT INTO Usuario (nombre, apellido, email, contrasenia, tipo) VALUES (%s, %s, %s, %s, %s)"
         cursor.execute(query, (nombre, apellido, email, pass_encriptada, 'Cliente'))
 
-        # NUEVO: obtenemos el id del usuario recién creado (antes del commit, por seguridad)
         id_nuevo_usuario = cursor.lastrowid
         db.commit()
         cursor.close()
@@ -109,6 +153,7 @@ def api_registro():
     except Exception as e:
         if cursor: cursor.close()
         return jsonify({"status": "error", "error": f"Error interno en la base de datos: {str(e)}"}), 500
+
 
 @auth_bp.route('/logout')
 def logout():
