@@ -53,6 +53,62 @@ class Usuario:
             "tipo": self.tipo
         }
 
+    @classmethod
+    def buscar_o_crear_por_google(cls, email, nombre, apellido, google_id):
+        """
+        Busca un usuario por su google_id o email. Si no existe, crea un
+        Cliente nuevo vinculado a esa cuenta de Google (sin contraseña local).
+        Retorna una instancia de Cliente o Administrador, o None si falla.
+        """
+        from models.cliente import Cliente
+        from models.administrador import Administrador
+
+        db = DatabaseConnection()
+        cursor = db.get_cursor()
+        if not cursor:
+            return None
+
+        try:
+            cursor.execute(
+                "SELECT * FROM Usuario WHERE google_id = %s OR LOWER(email) = LOWER(%s)",
+                (google_id, email)
+            )
+            resultado = cursor.fetchone()
+
+            if resultado:
+                if not resultado.get('google_id'):
+                    cursor.execute(
+                        "UPDATE Usuario SET google_id = %s WHERE idUsuario = %s",
+                        (google_id, resultado['idUsuario'])
+                    )
+                    db.commit()
+                id_usuario = resultado['idUsuario']
+                tipo = resultado.get('tipo', 'Cliente')
+                nombre_final = resultado['nombre']
+                apellido_final = resultado.get('apellido')
+            else:
+                cursor.execute(
+                    """INSERT INTO Usuario (nombre, apellido, email, contrasenia, tipo, google_id)
+                    VALUES (%s, %s, %s, %s, 'Cliente', %s)""",
+                    (nombre, apellido, email, None, google_id)
+                )
+                db.commit()
+                id_usuario = cursor.lastrowid
+                tipo = 'Cliente'
+                nombre_final = nombre
+                apellido_final = apellido
+
+            cursor.close()
+
+            if tipo == 'Administrador':
+                return Administrador(id_usuario=id_usuario, nombre=nombre_final, apellido=apellido_final, email=email)
+            return Cliente(id_usuario=id_usuario, nombre=nombre_final, apellido=apellido_final, email=email)
+
+        except Exception as e:
+            print(f"Error en buscar_o_crear_por_google: {e}")
+            cursor.close()
+            return None
+
 class Cliente(Usuario):
     def __init__(self, id_usuario=None, nombre=None, apellido=None, email=None, contrasenia=None):
         super().__init__(id_usuario, nombre, apellido, email, contrasenia, tipo='Cliente')
