@@ -576,7 +576,7 @@
         }
     }
 
-    // ── Cargar historial de reservas 
+    // ── Cargar historial de reservas ───────────────────────
     async function cargarReservas() {
         const contenedor = document.getElementById('contenedorReservas');
         contenedor.innerHTML = `
@@ -655,7 +655,7 @@
         }).join('');
     }
 
-    // ── Cancelar una reserva 
+    // ── Cancelar una reserva ───────────────────────────────
     function cancelarReserva(idReserva, btnEl) {
         idReservaPendienteCancelar = idReserva;
         btnReservaPendienteCancelar = btnEl;
