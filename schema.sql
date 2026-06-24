@@ -85,6 +85,19 @@ CREATE TABLE ReservaAsiento (
     FOREIGN KEY (Asiento_idAsiento) REFERENCES Asiento(idAsiento) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
+-- 8. Tabla: Entrada (Precios por formato de función: 2D, 3D, 4D, XD)  -- ★ NUEVA
+CREATE TABLE Entrada (
+    id_entrada VARCHAR(20) PRIMARY KEY, -- Coincide con el campo 'formato' de la tabla Funcion
+    precio DECIMAL(10,2) NOT NULL
+) ENGINE=InnoDB;
+
+-- Precios iniciales por formato  -- ★ NUEVO
+INSERT INTO Entrada (id_entrada, precio) VALUES
+('2D', 4500.00),
+('3D', 5500.00),
+('4D', 7000.00),
+('XD', 6500.00);
+
 -- =====================================================================
 -- INSERCIÓN DE USUARIO ADMINISTRADOR DE PRUEBA
 -- =====================================================================

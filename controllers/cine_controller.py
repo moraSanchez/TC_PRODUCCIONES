@@ -106,6 +106,11 @@ def seleccionar_butacas(id_funcion):
         funcion = dict(funcion)
         funcion['num_sala'] = funcion.get('Sala_idSala')
 
+        # ── Buscamos el precio según el formato (2D, 3D, 4D, XD) en la tabla Entrada ──  ★ NUEVO
+        cursor.execute("SELECT precio FROM Entrada WHERE id_entrada = %s", (funcion.get('formato'),))
+        entrada_precio = cursor.fetchone()
+        funcion['precio_unitario'] = float(entrada_precio['precio']) if entrada_precio else 4500.00
+
         if funcion.get('hora'):
             if hasattr(funcion['hora'], 'total_seconds'):
                 seg             = funcion['hora'].seconds
