@@ -17,9 +17,9 @@ def registro():
     return render_template('registro.html')
 
 
-# ─────────────────────────────────────────────────────────────
+
 # LOGIN CON GOOGLE (OAuth2 / OpenID Connect vía Authlib)
-# ─────────────────────────────────────────────────────────────
+
 @auth_bp.route('/login/google')
 def login_google():
     redirect_uri = url_for('auth.auth_google_callback', _external=True)

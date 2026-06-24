@@ -18,8 +18,6 @@ def vista_pago():
     public_key = os.getenv("MERCADOPAGO_PUBLIC_KEY")
     return render_template('pago.html', public_key=public_key)
 
-
-# POST /api/crear_preferencia
 # Crea la preferencia en MercadoPago y pre-guarda la reserva
 # en estado 'pendiente' para reservar los asientos de inmediato.
 @pago_bp.route('/api/crear_preferencia', methods=['POST'])
@@ -42,7 +40,7 @@ def crear_preferencia():
         if not cursor:
             return jsonify({"error": "Sin conexión a la base de datos."}), 500
 
-        # ── Verificar que la función existe ──────────────────
+        # ── Verificar que la función existe
         cursor.execute("""
             SELECT p.titulo, f.formato, f.Sala_idSala
             FROM Funcion f
@@ -73,7 +71,7 @@ def crear_preferencia():
                 cursor.close()
                 return jsonify({"error": f"El asiento {cod} ya fue reservado. Seleccioná otro."}), 409
 
-        # ── Pre-guardar Reserva en estado 'pendiente' ────────
+        # ── Pre-guardar Reserva en estado 'pendiente' 
         # Esto bloquea los asientos para que nadie más los tome
         cursor.execute("""
             INSERT INTO Reserva
@@ -83,7 +81,7 @@ def crear_preferencia():
         db.commit()
         id_reserva = cursor.lastrowid
 
-        # ── Guardar cada asiento en ReservaAsiento ───────────
+        # ── Guardar cada asiento en ReservaAsiento
         for cod in asientos_lista:
             id_asiento = _obtener_o_crear_asiento(cursor, db, cod, id_sala)
             if id_asiento:
@@ -94,7 +92,7 @@ def crear_preferencia():
         db.commit()
         cursor.close()
 
-        # ── Crear preferencia en MercadoPago ─────────────────
+        # ── Crear preferencia en MercadoPago
         preference_data = {
             "items": [{
                 "title": f"Cine - {titulo_pelicula} ({formato_funcion})",
@@ -191,7 +189,6 @@ def pago_exitoso():
         db     = DatabaseConnection()
         cursor = db.get_cursor()
 
-        # ── Buscar la reserva por preference_id o external_reference ──
         id_reserva = None
 
         if preference_id and preference_id != 'simulado_ok':
@@ -203,7 +200,7 @@ def pago_exitoso():
             if row:
                 id_reserva = row['idReserva']
 
-        # Fallback: buscar la reserva más reciente del usuario en sesión
+        # buscar la reserva más reciente del usuario en sesión
         if not id_reserva:
             id_usuario = session.get('usuario_id') or session.get('user_id')
             if id_usuario:
@@ -217,7 +214,7 @@ def pago_exitoso():
                     id_reserva = row['idReserva']
 
         if id_reserva:
-            # ── Confirmar la reserva (aprobado)
+            # ── Confirmar la reserva 
             cursor.execute(
                 "UPDATE Reserva SET estado_pago = 'aprobado' WHERE idReserva = %s",
                 (id_reserva,)

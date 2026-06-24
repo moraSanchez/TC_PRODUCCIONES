@@ -71,7 +71,7 @@ def seleccionar_funcion(id_pelicula):
 
     except Exception as e:
         if cursor: cursor.close()
-        print(f"❌ Error en seleccionar_funcion: {e}")
+        print(f"Error en seleccionar_funcion: {e}")
         return redirect(url_for('cine.inicio'))
 
 
@@ -106,7 +106,7 @@ def seleccionar_butacas(id_funcion):
         funcion = dict(funcion)
         funcion['num_sala'] = funcion.get('Sala_idSala')
 
-        # ── Buscamos el precio según el formato (2D, 3D, 4D, XD) en la tabla Entrada ──  ★ NUEVO
+        # ── Buscamos el precio según el formato (2D, 3D, 4D, XD) en la tabla Entrada 
         cursor.execute("SELECT precio FROM Entrada WHERE id_entrada = %s", (funcion.get('formato'),))
         entrada_precio = cursor.fetchone()
         funcion['precio_unitario'] = float(entrada_precio['precio']) if entrada_precio else 4500.00
@@ -142,7 +142,7 @@ def seleccionar_butacas(id_funcion):
 
     except Exception as e:
         if cursor: cursor.close()
-        print(f"❌ Error en seleccionar_butacas: {e}")
+        print(f"Error en seleccionar_butacas: {e}")
         return redirect(url_for('cine.inicio'))
 
 
@@ -171,5 +171,5 @@ def asientos_ocupados(id_funcion):
         return jsonify(lista), 200
 
     except Exception as e:
-        print(f"❌ Error en API asientos_ocupados: {e}")
+        print(f"Error en API asientos_ocupados: {e}")
         return jsonify([]), 500

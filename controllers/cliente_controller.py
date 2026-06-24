@@ -11,7 +11,7 @@ def _get_usuario_id():
 
 
 # Devuelve los datos del usuario autenticado (sin contraseña).
-# ─────────────────────────────────────────────────────────────
+
 @cliente_bp.route('/api/cliente/perfil', methods=['GET'])
 def api_perfil():
     id_usuario = _get_usuario_id()
@@ -25,11 +25,9 @@ def api_perfil():
     return jsonify(perfil), 200
 
 
-# ─────────────────────────────────────────────────────────────
-# PUT /api/cliente/perfil
+
 # Actualiza nombre y apellido del usuario autenticado.
-# Body JSON: { "nombre": "...", "apellido": "..." }
-# ─────────────────────────────────────────────────────────────
+
 @cliente_bp.route('/api/cliente/perfil', methods=['PUT'])
 def api_actualizar_perfil():
     id_usuario = _get_usuario_id()
@@ -50,10 +48,8 @@ def api_actualizar_perfil():
     return jsonify({"error": mensaje}), 400
 
 
-# ─────────────────────────────────────────────────────────────
-# GET /api/cliente/reservas
+
 # Devuelve el historial completo de reservas del usuario.
-# ─────────────────────────────────────────────────────────────
 @cliente_bp.route('/api/cliente/reservas', methods=['GET'])
 def api_historial_reservas():
     id_usuario = _get_usuario_id()
@@ -64,10 +60,9 @@ def api_historial_reservas():
     return jsonify(historial), 200
 
 
-# ─────────────────────────────────────────────────────────────
-# DELETE /api/cliente/reservas/<id_reserva>
+
 # Cancela una reserva propia del usuario autenticado.
-# ─────────────────────────────────────────────────────────────
+
 @cliente_bp.route('/api/cliente/reservas/<int:id_reserva>', methods=['DELETE'])
 def api_cancelar_reserva(id_reserva):
     id_usuario = _get_usuario_id()

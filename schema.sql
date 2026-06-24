@@ -12,7 +12,7 @@ CREATE TABLE Usuario (
     nombre VARCHAR(100) NOT NULL,
     apellido VARCHAR(100),
     email VARCHAR(150) NOT NULL UNIQUE,
-    contrasenia VARCHAR(255) NULL, -- NULL permitido: los usuarios de Google no tienen clave local
+    contrasenia VARCHAR(255) NULL, 
     tipo VARCHAR(50) DEFAULT 'Cliente' NOT NULL,
     google_id VARCHAR(255) UNIQUE NULL
 ) ENGINE=InnoDB;
@@ -41,14 +41,14 @@ INSERT INTO Sala (idSala, nombre, capacidad) VALUES
 (3, 'Sala 3D Max', 45),
 (4, 'Sala VIP', 30);
 
--- 4. Tabla: Funcion (Estructura Relacional Limpia y Corregida)
+-- 4. Tabla: Funcion 
 CREATE TABLE Funcion (
     idFuncion INT AUTO_INCREMENT PRIMARY KEY,
     Sala_idSala INT NOT NULL,
     Pelicula_idPelicula INT NOT NULL,
     fecha DATE NOT NULL,
     hora TIME NOT NULL,
-    estado VARCHAR(50) DEFAULT 'activa' NOT NULL, -- Garantiza que 'activa' no quede NULL
+    estado VARCHAR(50) DEFAULT 'activa' NOT NULL, 
     idioma VARCHAR(50) DEFAULT 'Doblada',
     formato VARCHAR(20) DEFAULT '2D',
     FOREIGN KEY (Sala_idSala) REFERENCES Sala(idSala) ON DELETE CASCADE,
@@ -86,27 +86,22 @@ CREATE TABLE ReservaAsiento (
     FOREIGN KEY (Asiento_idAsiento) REFERENCES Asiento(idAsiento) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
--- 8. Tabla: Entrada (Precios por formato de función: 2D, 3D, 4D, XD)  -- ★ NUEVA
+-- 8. Tabla: Entrada (Precios por formato de función: 2D, 3D, 4D, XD)  
 CREATE TABLE Entrada (
-    id_entrada VARCHAR(20) PRIMARY KEY, -- Coincide con el campo 'formato' de la tabla Funcion
+    id_entrada VARCHAR(20) PRIMARY KEY, 
     precio DECIMAL(10,2) NOT NULL
 ) ENGINE=InnoDB;
 
--- Precios iniciales por formato  -- ★ NUEVO
+-- Precios iniciales por formato  
 INSERT INTO Entrada (id_entrada, precio) VALUES
 ('2D', 4500.00),
 ('3D', 5500.00),
 ('4D', 7000.00),
 ('XD', 6500.00);
 
--- =====================================================================
--- INSERCIÓN DE USUARIO ADMINISTRADOR DE PRUEBA
--- =====================================================================
--- Nota: La contraseña 'admin123' está hardcodeada temporalmente como fallback en tu auth_controller.py
+
 INSERT INTO Usuario (nombre, apellido, email, contrasenia, tipo) 
 VALUES ('Admin', 'Cine', 'admin@cine.com', 'admin123', 'Administrador');
 
--- =====================================================================
--- VERIFICACIÓN FINAL
--- =====================================================================
+
 SHOW TABLES;
