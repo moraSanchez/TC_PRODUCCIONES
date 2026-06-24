@@ -23,7 +23,7 @@
         padding: 20px;
         position: relative;
     }
-    /* Detalles de los círculos laterales estilo ticket de cine */
+
     .ticket-summary::before, .ticket-summary::after {
         content: '';
         position: absolute;
@@ -48,7 +48,6 @@
         width: 100%;
         min-height: 400px;
     }
-    /* Botón de compra premium adaptado al diseño dark */
     .btn-realizar-compra {
         background-color: #dc2626;
         color: #ffffff;
@@ -186,7 +185,7 @@ document.addEventListener("DOMContentLoaded", async function() {
         window.location.href = `/pago/exitoso?payment_id=${fakeId}&preference_id=${preferenceIdGlobal}`;
     }
 
-    // CLICK EN "REALIZAR COMPRA": Ejecuta el flujo directo salvando el problema del Sandbox
+    
     document.getElementById('btn-realizar-compra').addEventListener('click', function() {
         procesarYRedirigir("REALIZAR_COMPRA_DIRECTA");
     });
@@ -264,7 +263,7 @@ document.addEventListener("DOMContentLoaded", async function() {
                 }
             },
             callbacks: {
-                onReady: () => { console.log('✅ Formulario nativo de MP cargado.'); },
+                onReady: () => { console.log('Formulario nativo de MP cargado.'); },
                 onSubmit: ({ selectedPaymentMethod, formData }) => {
                     return new Promise((resolve, reject) => {
                         fetch("/process_payment", {
@@ -288,11 +287,11 @@ document.addEventListener("DOMContentLoaded", async function() {
                         });
                     });
                 },
-                onError: (error) => { console.error('❌ Error del Brick (onError):', error); },
+                onError: (error) => { console.error('Error del Brick (onError):', error); },
             },
         });
     } catch (error) {
-        console.error('❌ Error general inicializando MercadoPago:', error);
+        console.error('Error general inicializando MercadoPago:', error);
     }
 });
 </script>

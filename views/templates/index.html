@@ -90,7 +90,6 @@ function crearCardPelicula(f) {
     const img = f.imagen_url ? f.imagen_url : "https://placehold.co/400x600/141417/ffffff?text=TC+Cine";
     const generoBadge = f.genero ? f.genero.split(' ')[0] : 'Cine';
     
-    // CORRECCIÓN EXACTA AQUÍ: Ya no se rompe el botón "Comprar Entradas"
     const idAsignado = f.Pelicula_idPelicula || f.idPelicula || f.idFuncion;
     const urlDestino = idAsignado ? `/pelicula/${idAsignado}/funciones` : '#';
 
