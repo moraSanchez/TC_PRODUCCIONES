@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, session, redirect, url_for, jsonify
 from config.database import DatabaseConnection
 from datetime import datetime
+from babel.dates import format_date
 
 cine_bp = Blueprint('cine', __name__)
 
@@ -48,7 +49,7 @@ def seleccionar_funcion(id_pelicula):
 
             try:
                 dt               = datetime.strptime(fecha_str, "%Y-%m-%d")
-                fecha_formateada = dt.strftime("%d de %B, %Y").upper()
+                fecha_formateada = format_date(dt, format="d 'de' MMMM, y", locale='es').upper()
             except Exception:
                 fecha_formateada = fecha_str.upper()
 
