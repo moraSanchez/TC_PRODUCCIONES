@@ -1,10 +1,7 @@
 {% extends 'base.html' %}
-
 {% block content %}
-
 <div class="container my-5 pt-4">
     <div class="row g-4 text-white p-4 rounded-4" style="background: #141417; border: 1px solid #27272a;">
-
         {# Info película #}
         <div class="col-12 col-md-4 col-lg-3 text-center text-md-start border-end border-dark pe-md-4">
             <img src="{{ funcion.imagen_url if funcion.imagen_url else 'https://placehold.co/400x600/141417/ffffff?text=Cine' }}"
@@ -14,18 +11,15 @@
             <p class="text-muted small">📅 {{ funcion.fecha }} — ⏰ {{ funcion.hora }} HS</p>
             <p class="text-muted extra-small" style="font-size: 0.75rem;">Idioma: {{ funcion.idioma }} | Formato: {{ funcion.formato }}</p>
         </div>
-
         {# Grilla de butacas #}
         <div class="col-12 col-md-5 col-lg-6">
             <div class="border-bottom border-dark pb-3 mb-4">
                 <h2 class="h4 fw-bold m-0">💺 SELECCIONÁ TUS BUTACAS</h2>
             </div>
-
             <div class="w-100 text-center mb-5 mt-3">
                 <div class="mx-auto" style="width: 80%; height: 6px; background: linear-gradient(90deg, transparent, #dc3545, transparent); border-radius: 50%; box-shadow: 0 4px 20px #dc3545;"></div>
                 <p class="text-uppercase text-muted mt-2 small" style="letter-spacing: 2px; font-size: 0.7rem;">PANTALLA</p>
             </div>
-
             <div class="d-flex flex-column align-items-center gap-2 overflow-auto py-4 mb-4"
                  style="background: #1e1e24; border: 1px solid #27272a; border-radius: 1rem;">
                 {% for fila in ['A', 'B', 'C', 'D', 'E'] %}
@@ -44,7 +38,6 @@
                 </div>
                 {% endfor %}
             </div>
-
             <div class="d-flex justify-content-center flex-wrap gap-4 small mb-4 text-muted">
                 <div class="d-flex align-items-center gap-2">
                     <div style="width:16px;height:16px;background:#141417;border:1px solid #3f3f46;border-radius:4px;"></div>
@@ -60,14 +53,12 @@
                 </div>
             </div>
         </div>
-
         {# Resumen y botón #}
         <div class="col-12 col-md-3 border-start border-dark ps-md-4 d-flex flex-column justify-content-between">
             <div>
                 <div class="border-bottom border-dark pb-3 mb-4">
                     <h2 class="h4 fw-bold m-0">💰 RESUMEN</h2>
                 </div>
-
                 <div class="mb-3 d-flex justify-content-between align-items-center">
                     <span class="text-muted small">Precio Unitario:</span>
                     <span class="fw-bold text-success">${{ "%.2f"|format(funcion.precio_unitario) }}</span>
@@ -85,7 +76,6 @@
                     <span id="txtTotal" class="h4 m-0 fw-bold text-danger">$0.00</span>
                 </div>
             </div>
-
             <form id="formReserva" onsubmit="irAlPago(event)" class="mt-4">
                 <button type="submit" id="btnContinuarReserva"
                         class="btn btn-light fw-bold py-2 w-100 rounded-3"
@@ -94,21 +84,17 @@
                 </button>
             </form>
         </div>
-
     </div>
 </div>
-
 <script>
     const asientosSeleccionados = new Set();
     const PRECIO_UNITARIO = parseFloat("{{ funcion.precio_unitario|default(4500.00) }}");
     const idFuncionActual      = "{{ funcion.idFuncion }}";
     const tituloPeliculaActual = "{{ funcion.titulo }}";
-
     const btnContinuar    = document.getElementById('btnContinuarReserva');
     const txtCantidad     = document.getElementById('txtCantidad');
     const txtAsientosLista = document.getElementById('txtAsientosLista');
     const txtTotal        = document.getElementById('txtTotal');
-
     document.querySelectorAll('.btn-seat:not(.occupied)').forEach(seat => {
         seat.addEventListener('click', () => {
             const id = seat.getAttribute('data-asiento');
@@ -119,10 +105,8 @@
                 asientosSeleccionados.add(id);
                 seat.classList.add('selected');
             }
-
             const cantidad = asientosSeleccionados.size;
             txtCantidad.innerText = cantidad;
-
             if (cantidad > 0) {
                 txtAsientosLista.innerText = Array.from(asientosSeleccionados).join(', ');
                 txtTotal.innerText = `$${(cantidad * PRECIO_UNITARIO).toFixed(2)}`;
@@ -134,12 +118,9 @@
             }
         });
     });
-
     function irAlPago(event) {
         event.preventDefault();
-
         const listaAsientos = Array.from(asientosSeleccionados);
-
         const datosReserva = {
             id_funcion:      "{{ funcion.idFuncion }}",
             titulo:          "{{ funcion.titulo }}",
@@ -154,41 +135,8 @@
             cantidad:        listaAsientos.length,
             total:           listaAsientos.length * PRECIO_UNITARIO
         };
-
         localStorage.setItem('reserva_actual', JSON.stringify(datosReserva));
         window.location.href = '/checkout';
     }
 </script>
-
-
-<style>
-.btn-seat:not(.selected):not(.occupied) {
-    background: #141417 !important;
-    border: 1px solid #3f3f46 !important;
-    color: #ffffff !important;
-}
-.btn-seat.selected {
-    background-color: #dc3545 !important;
-    border-color: #dc3545 !important;
-    color: #ffffff !important;
-    box-shadow: 0 0 12px rgba(220, 53, 69, 0.4) !important;
-}
-.btn-seat.occupied {
-    background-color: #27272a !important;
-    border-color: #3f3f46 !important;
-    color: #71717a !important;
-    cursor: not-allowed;
-    opacity: 0.4;
-}
-.fw-bold.text-muted.me-2,
-.fw-bold.text-muted.ms-2 {
-    color: #f87171 !important;
-    font-size: 0.95rem !important;
-    font-weight: 800 !important;
-}
-.btn-seat:hover:not(.occupied):not(.selected) {
-    border-color: #dc3545 !important;
-    background-color: rgba(220, 53, 69, 0.2) !important;
-}
-</style>
 {% endblock %}
