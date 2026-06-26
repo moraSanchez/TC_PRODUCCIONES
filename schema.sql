@@ -1,6 +1,4 @@
--- =====================================================================
--- SCRIPT COMPLETO DE BASE DE DATOS: tc_producciones
--- =====================================================================
+
 
 DROP DATABASE IF EXISTS tc_producciones;
 CREATE DATABASE tc_producciones CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
