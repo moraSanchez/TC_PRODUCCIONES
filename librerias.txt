@@ -1,0 +1,9 @@
+pip install flask python-dotenv mysql-connector-python
+
+pip  install  mercadopago
+
+pip install Authlib
+
+python app.py
+
+
