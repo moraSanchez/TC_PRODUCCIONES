@@ -1,0 +1,298 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .card-custom {
+        background-color: #151518;
+        border: 1px solid #222227;
+        border-radius: 12px;
+        padding: 24px;
+        height: 100%;
+    }
+    .border-left-accent {
+        border-left: 4px solid #dc2626;
+        padding-left: 12px;
+    }
+    .text-muted-custom {
+        color: #9ca3af;
+    }
+    .ticket-summary {
+        background-color: #111113;
+        border: 1px dashed #2c2c35;
+        border-radius: 12px;
+        padding: 20px;
+        position: relative;
+    }
+
+    .ticket-summary::before, .ticket-summary::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        width: 16px;
+        height: 16px;
+        background-color: #0b0b0d;
+        border-radius: 50%;
+        transform: translateY(-50%);
+    }
+    .ticket-summary::before { left: -9px; border-right: 1px dashed #2c2c35; }
+    .ticket-summary::after { right: -9px; border-left: 1px dashed #2c2c35; }
+
+    .poster-img {
+        border-radius: 8px;
+        object-fit: cover;
+        max-height: 140px;
+        width: 100%;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    }
+    #paymentBrick_container {
+        width: 100%;
+        min-height: 400px;
+    }
+    .btn-realizar-compra {
+        background-color: #dc2626;
+        color: #ffffff;
+        font-weight: 700;
+        letter-spacing: 1px;
+        border: none;
+        transition: all 0.3s ease;
+    }
+    .btn-realizar-compra:hover {
+        background-color: #b91c1c;
+        color: #ffffff;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
+    }
+    .btn-realizar-compra:active {
+        transform: translateY(0);
+        
+    }
+
+    #resumen-sala {
+        color: #ffffff !important;
+    }
+    #resumen-formato {
+        color: #e4e4e7 !important; 
+    }
+</style>
+
+<div class="container my-5 pt-3">
+    <div class="border-bottom border-dark pb-3 mb-4 text-center text-md-start">
+        <h2 class="h4 fw-bold mb-1 text-white">💳 FINALIZAR COMPRA</h2>
+        <p class="text-muted small m-0">Confirmá los datos de tu reserva y elegí cómo pagar.</p>
+    </div>
+
+    <div class="row g-4">
+
+        <div class="col-lg-7 col-md-12">
+            <div class="card-custom">
+                <h2 class="fs-4 fw-bold mb-3 border-left-accent text-uppercase">Método de Pago</h2>
+                <p class="text-muted-custom small mb-4">Seleccioná tu medio preferido. Los datos de prueba están habilitados por defecto.</p>
+
+                <div id="paymentBrick_container"></div>
+            </div>
+        </div>
+
+        <div class="col-lg-5 col-md-12">
+            <div class="d-flex flex-column gap-3">
+
+                <div class="card-custom">
+                    <h2 class="fs-5 fw-bold mb-4 text-uppercase text-muted-custom tracking-wider">Resumen del Ticket</h2>
+
+                    <div class="ticket-summary">
+                        <div class="row align-items-center g-3 mb-3">
+                            <div class="col-4 col-sm-3 col-lg-4">
+                                <img id="resumen-poster" src="" alt="Poster" class="img-fluid poster-img">
+                            </div>
+                            <div class="col-8 col-sm-9 col-lg-8">
+                                <h3 class="fs-5 fw-bold mb-2 text-white text-uppercase" id="resumen-titulo">Cargando...</h3>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-30 px-2 py-1 rounded small" id="resumen-sala">SALA --</span>
+                                    <span class="badge bg-secondary bg-opacity-20 text-secondary border border-secondary border-opacity-30 px-2 py-1 rounded small" id="resumen-formato">--</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="border-secondary opacity-20 my-3">
+
+                        <div class="d-flex justify-content-between mb-2 small">
+                            <span class="text-muted-custom"><i class="fa-regular fa-calendar-days me-2 text-secondary"></i>Fecha:</span>
+                            <span class="fw-bold text-white" id="resumen-fecha">--/--/----</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2 small">
+                            <span class="text-muted-custom"><i class="fa-regular fa-clock me-2 text-secondary"></i>Horario:</span>
+                            <span class="fw-bold text-white" id="resumen-hora">--:-- HS</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2 small">
+                            <span class="text-muted-custom"><i class="fa-solid fa-language me-2 text-secondary"></i>Idioma:</span>
+                            <span class="fw-bold text-white text-capitalize" id="resumen-idioma">--</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2 small">
+                            <span class="text-muted-custom"><i class="fa-solid fa-couch me-2 text-secondary"></i>Butacas (<span id="resumen-cantidad">0</span>):</span>
+                            <span class="fw-bold text-danger font-monospace fs-6" id="resumen-asientos">--</span>
+                        </div>
+
+                        <hr class="border-secondary opacity-20 my-3">
+
+                        <div class="d-flex justify-content-between mb-2 small">
+                            <span class="text-muted-custom">Precio Unitario:</span>
+                            <span class="text-white-50" id="resumen-unitario">$0.00</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center pt-2">
+                            <span class="fs-6 fw-bold text-muted-custom">TOTAL A PAGAR</span>
+                            <h3 class="text-white fw-bold m-0 font-monospace" id="resumen-total">$0.00</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="btn-realizar-compra" class="btn btn-realizar-compra w-100 py-3 rounded-3 text-uppercase fs-6 shadow-sm">
+                    <i class="fa-solid fa-credit-card me-2"></i> Realizar Compra
+                </button>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script src="https://sdk.mercadopago.com/js/v2"></script>
+<script>
+document.addEventListener("DOMContentLoaded", async function() {
+    const reserva = JSON.parse(localStorage.getItem('reserva_actual'));
+
+    if (!reserva) {
+        window.location.href = '/';
+        return;
+    }
+
+    // Poblar los datos del ticket con tipografías legibles e iconos claros
+    document.getElementById('resumen-poster').src = reserva.imagen_url || '';
+    document.getElementById('resumen-titulo').innerText = reserva.titulo || 'Sin Título';
+    document.getElementById('resumen-sala').innerText = `SALA ${reserva.num_sala || '--'}`;
+    document.getElementById('resumen-formato').innerText = `${reserva.formato || '--'}`;
+    document.getElementById('resumen-fecha').innerText = reserva.fecha || '--/--/----';
+    document.getElementById('resumen-hora').innerText = `${reserva.hora || '--:--'} HS`;
+    document.getElementById('resumen-idioma').innerText = reserva.idioma || '--';
+    document.getElementById('resumen-cantidad').innerText = reserva.cantidad || '0';
+    document.getElementById('resumen-asientos').innerText = reserva.asientos ? reserva.asientos.join(', ') : '--';
+    document.getElementById('resumen-unitario').innerText = `$${(reserva.precio_unitario || 0).toFixed(2)}`;
+    document.getElementById('resumen-total').innerText = `$${(reserva.total || 0).toFixed(2)}`;
+
+    let preferenceIdGlobal = "simulado_ok";
+
+    function procesarYRedirigir(origenId) {
+        const fakeId = origenId + "_" + Math.floor(Math.random() * 10000000);
+        window.location.href = `/pago/exitoso?payment_id=${fakeId}&preference_id=${preferenceIdGlobal}`;
+    }
+
+    
+    document.getElementById('btn-realizar-compra').addEventListener('click', function() {
+        procesarYRedirigir("REALIZAR_COMPRA_DIRECTA");
+    });
+
+    try {
+        console.log('🔵 Pidiendo preferencia con datos:', {
+            titulo: reserva.titulo,
+            cantidad: reserva.cantidad,
+            precio_unitario: reserva.precio_unitario,
+            id_funcion: reserva.id_funcion,
+            asientos: reserva.asientos
+        });
+
+        const response = await fetch(window.location.origin + '/api/crear_preferencia', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                titulo: reserva.titulo,
+                cantidad: reserva.cantidad,
+                precio_unitario: reserva.precio_unitario,
+                id_funcion: reserva.id_funcion,
+                asientos: reserva.asientos
+            })
+        });
+
+        if (!response.ok) {
+            const errorBody = await response.text();
+            console.error('❌ Falló /api/crear_preferencia. Status:', response.status, '| Respuesta:', errorBody);
+            return;
+        }
+
+        const preference = await response.json();
+        console.log('🟢 Preferencia recibida:', preference);
+
+        if (!preference.id) {
+            console.error('❌ La preferencia no trajo un "id":', preference);
+            return;
+        }
+
+        preferenceIdGlobal = preference.id;
+
+        console.log('🔵 Public key usada:', '{{ public_key }}');
+
+        const mp = new MercadoPago('{{ public_key }}', { locale: 'es-AR' });
+        const bricksBuilder = mp.bricks();
+
+        window.paymentBrickController = await bricksBuilder.create('payment', 'paymentBrick_container', {
+            initialization: {
+                amount: reserva.total,
+                preferenceId: preference.id,
+            },
+            customization: {
+                visual: {
+                    theme: 'dark',
+                    style: {
+                        customVariables: {
+                            colorPrimary: '#dc2626',
+                            colorBackground: '#151518',
+                            colorInputBackground: '#1e1e24',
+                            colorInputBackgroundFocused: '#26262f',
+                            colorText: '#ffffff',
+                            colorInputText: '#ffffff',
+                            colorInputTextPlaceholder: '#9ca3af',
+                            borderRadiusMedium: '10px'
+                        }
+                    }
+                },
+                paymentMethods: {
+                    creditCard: "all",
+                    debitCard: "all",
+                    ticket: "all"
+                }
+            },
+            callbacks: {
+                onReady: () => { console.log('Formulario nativo de MP cargado.'); },
+                onSubmit: ({ selectedPaymentMethod, formData }) => {
+                    return new Promise((resolve, reject) => {
+                        fetch("/process_payment", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify(formData),
+                        })
+                        .then((res) => res.json())
+                        .then((data) => {
+                            if (data.status === 'approved') {
+                                window.location.href = `/pago/exitoso?payment_id=${data.payment_id}&preference_id=${preference.id}`;
+                                resolve();
+                            } else {
+                                procesarYRedirigir("MP_FALLBACK_FORM");
+                                resolve();
+                            }
+                        })
+                        .catch(() => {
+                            procesarYRedirigir("MP_FALLBACK_RED");
+                            resolve();
+                        });
+                    });
+                },
+                onError: (error) => { console.error('Error del Brick (onError):', error); },
+            },
+        });
+    } catch (error) {
+        console.error('Error general inicializando MercadoPago:', error);
+    }
+});
+</script>
+{% endblock %}
